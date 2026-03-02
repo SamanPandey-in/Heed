@@ -4,10 +4,12 @@
 
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { prisma } from '../config/database.js';
 import config from '../config/index.js';
 import { logger } from '../config/logger.js';
+import { sendPasswordResetEmail } from './email.service.js';
 
 /**
  * Hash password using bcrypt
@@ -294,6 +296,80 @@ export const updateUserProfile = async (userId, data) => {
       updatedAt: true,
     },
   });
+};
+
+/**
+ * Request password reset
+ */
+export const requestPasswordReset = async (email) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  
+  // Always return success to prevent email enumeration
+  if (!user) {
+    logger.warn(`Password reset requested for non-existent email: ${email}`);
+    return;
+  }
+  
+  // Delete any existing reset tokens
+  await prisma.passwordReset.deleteMany({
+    where: { userId: user.id },
+  });
+  
+  // Generate secure reset token
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + 1);
+  
+  await prisma.passwordReset.create({
+    data: {
+      userId: user.id,
+      token: resetToken,
+      expiresAt,
+    },
+  });
+  
+  // Send reset email
+  await sendPasswordResetEmail(email, resetToken);
+  
+  logger.info(`Password reset email sent to: ${user.email}`);
+};
+
+/**
+ * Reset password with token
+ */
+export const resetPassword = async (token, newPassword) => {
+  // Find valid reset token
+  const resetRecord = await prisma.passwordReset.findUnique({
+    where: { token },
+  });
+  
+  if (!resetRecord) {
+    throw new Error('Invalid reset token');
+  }
+  
+  if (new Date() > resetRecord.expiresAt) {
+    await prisma.passwordReset.delete({ where: { id: resetRecord.id } });
+    throw new Error('Reset token has expired');
+  }
+  
+  // Hash new password
+  const passwordHash = await hashPassword(newPassword);
+  
+  // Update user password
+  await prisma.user.update({
+    where: { id: resetRecord.userId },
+    data: { passwordHash },
+  });
+  
+  // Delete reset token
+  await prisma.passwordReset.delete({ where: { id: resetRecord.id } });
+  
+  // Delete all refresh tokens (force re-login)
+  await prisma.refreshToken.deleteMany({
+    where: { userId: resetRecord.userId },
+  });
+  
+  logger.info(`Password reset successful for user: ${resetRecord.userId}`);
 };
 
 export default {

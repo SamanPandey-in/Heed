@@ -7,7 +7,12 @@ import { successResponse } from '../utils/apiResponse.js';
 
 export const getDashboard = async (req, res) => {
   const stats = await dashboardService.getDashboardStats(req.user.id);
-  return successResponse(res, 'Dashboard data retrieved', stats);
+  return successResponse(res, 'Dashboard stats retrieved', stats);
 };
 
-export default { getDashboard };
+export const getRecentActivity = async (req, res) => {
+  const activity = await dashboardService.getRecentActivity(req.user.id);
+  return successResponse(res, 'Recent activity retrieved', activity);
+};
+
+export default { getDashboard, getRecentActivity };

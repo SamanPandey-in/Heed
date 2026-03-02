@@ -7,6 +7,11 @@ import { logger } from '../config/logger.js';
 import { createNotification } from './notification.service.js';
 
 export const createTask = async (data, reporterId) => {
+  const membership = await prisma.projectMember.findFirst({
+    where: { projectId: data.projectId, userId: reporterId }
+  });
+  if (!membership) throw new Error('Access denied');
+
   const project = await prisma.project.findUnique({ where: { id: data.projectId } });
   if (!project) throw new Error('Project not found');
 
@@ -58,7 +63,7 @@ export const getTaskById = async (taskId, userId) => {
   const task = await prisma.task.findUnique({
     where: { id: taskId },
     include: {
-      project: { select: { id: true, name: true, workspaceId: true } },
+      project: { select: { id: true, name: true, workspaceId: true, startDate: true, status: true, priority: true, progress: true } },
       assignee: { select: { id: true, name: true, imageUrl: true } },
       reporter: { select: { id: true, name: true, imageUrl: true } },
     },
@@ -68,7 +73,11 @@ export const getTaskById = async (taskId, userId) => {
   const membership = await prisma.projectMember.findFirst({ where: { projectId: task.projectId, userId } });
   if (!membership) throw new Error('Access denied');
 
-  return task;
+  // Return task with projectId at top level for convenience
+  return {
+    ...task,
+    projectId: task.project.id,
+  };
 };
 
 export const updateTask = async (taskId, userId, data) => {

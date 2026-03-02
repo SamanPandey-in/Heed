@@ -39,8 +39,8 @@ export const errorResponse = (res, message = 'Internal Server Error', statusCode
   return apiResponse(res, statusCode, false, message);
 };
 
-export const badRequestResponse = (res, message = 'Bad Request') => {
-  return apiResponse(res, 400, false, message);
+export const badRequestResponse = (res, message = 'Bad Request', errors = null) => {
+  return apiResponse(res, 400, false, message, errors);
 };
 
 export const unauthorizedResponse = (res, message = 'Unauthorized') => {

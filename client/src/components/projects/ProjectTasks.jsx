@@ -1,11 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { Bug, CalendarIcon, GitCommit, MessageSquare, Square, Trash, XIcon, Zap } from 'lucide-react';
 
-import { deleteTask, updateTask } from '../../store';
+import { useUpdateTaskMutation, useDeleteTaskMutation } from '../../store/slices/apiSlice';
 
 const typeIcons = {
     BUG: { icon: Bug, color: "text-red-600 dark:text-red-400" },
@@ -19,12 +18,14 @@ const priorityTexts = {
     LOW: { background: "bg-red-100 dark:bg-red-950", prioritycolor: "text-red-600 dark:text-red-400" },
     MEDIUM: { background: "bg-blue-100 dark:bg-blue-950", prioritycolor: "text-blue-600 dark:text-blue-400" },
     HIGH: { background: "bg-emerald-100 dark:bg-emerald-950", prioritycolor: "text-emerald-600 dark:text-emerald-400" },
+    URGENT: { background: "bg-orange-100 dark:bg-orange-950", prioritycolor: "text-orange-600 dark:text-orange-400" },
 };
 
-const ProjectTasks = ({ tasks }) => {
-    const dispatch = useDispatch();
+const ProjectTasks = ({ tasks, projectId }) => {
     const navigate = useNavigate();
     const [selectedTasks, setSelectedTasks] = useState([]);
+    const [updateTaskMutation] = useUpdateTaskMutation();
+    const [deleteTaskMutation] = useDeleteTaskMutation();
 
     const [filters, setFilters] = useState({
         status: "",
@@ -58,19 +59,12 @@ const ProjectTasks = ({ tasks }) => {
     const handleStatusChange = async (taskId, newStatus) => {
         try {
             toast.loading("Updating status...");
-
-            //  Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-
-            let updatedTask = structuredClone(tasks.find((t) => t.id === taskId));
-            updatedTask.status = newStatus;
-            dispatch(updateTask(updatedTask));
-
-            toast.dismissAll();
+            await updateTaskMutation({ id: taskId, status: newStatus }).unwrap();
+            toast.dismiss();
             toast.success("Task status updated successfully");
         } catch (error) {
-            toast.dismissAll();
-            toast.error(error?.response?.data?.message || error.message);
+            toast.dismiss();
+            toast.error(error?.data?.message || error.message);
         }
     };
 
@@ -80,17 +74,15 @@ const ProjectTasks = ({ tasks }) => {
             if (!confirm) return;
 
             toast.loading("Deleting tasks...");
-
-            //  Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-
-            dispatch(deleteTask(selectedTasks));
-
-            toast.dismissAll();
+            await Promise.all(selectedTasks.map(taskId =>
+                deleteTaskMutation(taskId).unwrap()
+            ));
+            setSelectedTasks([]);
+            toast.dismiss();
             toast.success("Tasks deleted successfully");
         } catch (error) {
-            toast.dismissAll();
-            toast.error(error?.response?.data?.message || error.message);
+            toast.dismiss();
+            toast.error(error?.data?.message || error.message);
         }
     };
 
@@ -104,6 +96,7 @@ const ProjectTasks = ({ tasks }) => {
                             { label: "All Statuses", value: "" },
                             { label: "To Do", value: "TODO" },
                             { label: "In Progress", value: "IN_PROGRESS" },
+                            { label: "In Review", value: "IN_REVIEW" },
                             { label: "Done", value: "DONE" },
                         ],
                         type: [
@@ -119,6 +112,7 @@ const ProjectTasks = ({ tasks }) => {
                             { label: "Low", value: "LOW" },
                             { label: "Medium", value: "MEDIUM" },
                             { label: "High", value: "HIGH" },
+                            { label: "Urgent", value: "URGENT" },
                         ],
                         assignee: [
                             { label: "All Assignees", value: "" },
@@ -174,7 +168,7 @@ const ProjectTasks = ({ tasks }) => {
                                         const { background, prioritycolor } = priorityTexts[task.priority] || {};
 
                                         return (
-                                            <tr key={task.id} onClick={() => navigate(`/taskDetails?projectId=${task.projectId}&taskId=${task.id}`)} className=" border-t border-zinc-300 dark:border-zinc-800 group hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all cursor-pointer" >
+                                            <tr key={task.id} onClick={() => navigate(`/tasks/${task.id}?projectId=${task.projectId}`)} className=" border-t border-zinc-300 dark:border-zinc-800 group hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all cursor-pointer" >
                                                 <td onClick={e => e.stopPropagation()} className="pl-2 pr-1">
                                                     <input type="checkbox" className="size-3 accent-zinc-600 dark:accent-zinc-500" onChange={() => selectedTasks.includes(task.id) ? setSelectedTasks(selectedTasks.filter((i) => i !== task.id)) : setSelectedTasks((prev) => [...prev, task.id])} checked={selectedTasks.includes(task.id)} />
                                                 </td>
@@ -194,6 +188,7 @@ const ProjectTasks = ({ tasks }) => {
                                                     <select name="status" onChange={(e) => handleStatusChange(task.id, e.target.value)} value={task.status} className="group-hover:ring ring-zinc-100 outline-none px-2 pr-4 py-1 rounded text-sm text-zinc-900 dark:text-zinc-200 cursor-pointer" >
                                                         <option value="TODO">To Do</option>
                                                         <option value="IN_PROGRESS">In Progress</option>
+                                                        <option value="IN_REVIEW">In Review</option>
                                                         <option value="DONE">Done</option>
                                                     </select>
                                                 </td>
@@ -206,7 +201,7 @@ const ProjectTasks = ({ tasks }) => {
                                                 <td className="px-4 py-2">
                                                     <div className="flex items-center gap-1 text-zinc-600 dark:text-zinc-400">
                                                         <CalendarIcon className="size-4" />
-                                                        {format(new Date(task.due_date), "dd MMMM")}
+                                                        {task.dueDate ? format(new Date(task.dueDate), "dd MMMM") : "-"}
                                                     </div>
                                                 </td>
                                             </tr>
@@ -253,6 +248,7 @@ const ProjectTasks = ({ tasks }) => {
                                             <select name="status" onChange={(e) => handleStatusChange(task.id, e.target.value)} value={task.status} className="w-full mt-1 bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-300 dark:ring-zinc-700 outline-none px-2 py-1 rounded text-sm text-zinc-900 dark:text-zinc-200" >
                                                 <option value="TODO">To Do</option>
                                                 <option value="IN_PROGRESS">In Progress</option>
+                                                <option value="IN_REVIEW">In Review</option>
                                                 <option value="DONE">Done</option>
                                             </select>
                                         </div>
@@ -264,7 +260,7 @@ const ProjectTasks = ({ tasks }) => {
 
                                         <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
                                             <CalendarIcon className="size-4" />
-                                            {format(new Date(task.due_date), "dd MMMM")}
+                                            {task.dueDate ? format(new Date(task.dueDate), "dd MMMM") : "-"}
                                         </div>
                                     </div>
                                 );

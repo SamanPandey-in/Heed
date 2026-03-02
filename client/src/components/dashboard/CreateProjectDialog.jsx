@@ -1,9 +1,13 @@
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { XIcon } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { addProject } from '../../store/slices/workspaceSlice';
+import { useCreateProjectMutation } from '../../store/slices/apiSlice';
 
 const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 
+    const dispatch = useDispatch();
     const { currentWorkspace } = useSelector((state) => state.workspace);
 
     const [formData, setFormData] = useState({
@@ -18,15 +22,44 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
         progress: 0,
     });
 
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [createProjectMutation, { isLoading: isSubmitting }] = useCreateProjectMutation();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+        if (!currentWorkspace) return;
+        try {
+            const project = await createProjectMutation({
+                name: formData.name,
+                description: formData.description,
+                status: formData.status,
+                priority: formData.priority,
+                startDate: formData.start_date || null,
+                endDate: formData.end_date || null,
+                workspaceId: currentWorkspace.id,
+                teamLeadId: formData.team_lead || null,
+                memberIds: formData.team_members,
+            }).unwrap();
+            dispatch(addProject(project));
+            setIsDialogOpen(false);
+            toast.success('Project created');
+            setFormData({
+                name: "",
+                description: "",
+                status: "PLANNING",
+                priority: "MEDIUM",
+                start_date: "",
+                end_date: "",
+                team_members: [],
+                team_lead: "",
+                progress: 0,
+            });
+        } catch (err) {
+            toast.error(err?.data?.message || err.message);
+        }
     };
 
-    const removeTeamMember = (email) => {
-        setFormData((prev) => ({ ...prev, team_members: prev.team_members.filter(m => m !== email) }));
+    const removeTeamMember = (memberId) => {
+        setFormData((prev) => ({ ...prev, team_members: prev.team_members.filter(id => id !== memberId) }));
     };
 
     if (!isDialogOpen) return null;
@@ -67,7 +100,7 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                                 <option value="ACTIVE">Active</option>
                                 <option value="COMPLETED">Completed</option>
                                 <option value="ON_HOLD">On Hold</option>
-                                <option value="CANCELLED">Cancelled</option>
+
                             </select>
                         </div>
 
@@ -77,6 +110,7 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                                 <option value="LOW">Low</option>
                                 <option value="MEDIUM">Medium</option>
                                 <option value="HIGH">High</option>
+                                <option value="URGENT">Urgent</option>
                             </select>
                         </div>
                     </div>
@@ -99,8 +133,8 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                         <select value={formData.team_lead} onChange={(e) => setFormData({ ...formData, team_lead: e.target.value, team_members: e.target.value ? [...new Set([...formData.team_members, e.target.value])] : formData.team_members, })} className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm" >
                             <option value="">No lead</option>
                             {currentWorkspace?.members?.map((member) => (
-                                <option key={member.user.email} value={member.user.email}>
-                                    {member.user.email}
+                                <option key={member.user.id} value={member.user.id}>
+                                    {member.user.name} ({member.user.email})
                                 </option>
                             ))}
                         </select>
@@ -118,24 +152,27 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                         >
                             <option value="">Add team members</option>
                             {currentWorkspace?.members
-                                ?.filter((email) => !formData.team_members.includes(email))
+                                ?.filter((member) => !formData.team_members.includes(member.user.id))
                                 .map((member) => (
-                                    <option key={member.user.email} value={member.email}>
-                                        {member.user.email}
+                                    <option key={member.user.id} value={member.user.id}>
+                                        {member.user.name} ({member.user.email})
                                     </option>
                                 ))}
                         </select>
 
                         {formData.team_members.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-2">
-                                {formData.team_members.map((email) => (
-                                    <div key={email} className="flex items-center gap-1 bg-blue-200/50 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-md text-sm" >
-                                        {email}
-                                        <button type="button" onClick={() => removeTeamMember(email)} className="ml-1 hover:bg-blue-300/30 dark:hover:bg-blue-500/30 rounded" >
-                                            <XIcon className="w-3 h-3" />
-                                        </button>
-                                    </div>
-                                ))}
+                                {formData.team_members.map((memberId) => {
+                                    const member = currentWorkspace.members.find(m => m.user.id === memberId);
+                                    return (
+                                        <div key={memberId} className="flex items-center gap-1 bg-blue-200/50 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-md text-sm" >
+                                            {member?.user.name}
+                                            <button type="button" onClick={() => removeTeamMember(memberId)} className="ml-1 hover:bg-blue-300/30 dark:hover:bg-blue-500/30 rounded" >
+                                                <XIcon className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

@@ -3,17 +3,15 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-import { useBackendAuth } from '../../hooks/useBackendAuth';
+import { useAuth } from '../../context/AuthContext';
 import { Logo } from '../../components';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, requestPasswordReset, signInWithOAuth } = useBackendAuth();
+  const { login, signInWithOAuth } = useAuth();
 
-  const [mode, setMode] = useState('login'); // 'login', 'forgot', 'emailsignin'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
 
   const [formData, setFormData] = useState({
     email: "",
@@ -38,21 +36,6 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
-  };  /* Handle Forgot Password - Neon Auth */
-  const handleForgotPassword = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccessMsg("");
-    setLoading(true);
-    
-    const result = await requestPasswordReset(formData.email);
-    setLoading(false);
-    
-    if (result.success) {
-      setSuccessMsg("Password reset link sent! Check your email.");
-    } else {
-      setError(result.error || "Failed to send reset link");
-    }
   };
 
   /* Handle Google OAuth */
@@ -64,7 +47,6 @@ export default function Login() {
       setError(result.error || "Google sign-in failed");
       setLoading(false);
     }
-    // OAuth will redirect, so we don't set loading back on failure
   };
 
   return (
@@ -89,151 +71,86 @@ export default function Login() {
           <Logo />
         </motion.div>
 
-        {mode === 'login' && (
-          <motion.div
-            key="login"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-6"
-          >
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-white tracking-tight">Welcome back</h1>
-              <p className="text-zinc-400 mt-2">Resume your team's relay.</p>
-            </div>
+        <motion.div
+          key="login"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="space-y-6"
+        >
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-white tracking-tight">Welcome back</h1>
+            <p className="text-zinc-400 mt-2">Resume your team's relay.</p>
+          </div>
 
-            {error && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400"
-              >
-                {error}
-              </motion.div>
-            )}
-
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
-              <AuthInput
-                label="Email"
-                icon={<Mail size={18} />}
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
-              <AuthInput
-                label="Password"
-                icon={<Lock size={18} />}
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              />
-
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMode('forgot');
-                    setError("");
-                    setSuccessMsg("");
-                  }}
-                  className="text-xs text-zinc-400 hover:text-white transition-colors"
-                >
-                  Forgot password?
-                </button>
-              </div>
-
-              <AuthButton loading={loading} disabled={!isEmailValid(formData.email) || formData.password === ""}>
-                Sign In
-              </AuthButton>
-            </form>
-
-            <div className="relative py-2">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/5"></div>
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-zinc-900/40 px-2 text-zinc-500">Or continue with</span>
-              </div>
-            </div>
-
-            {/* Google OAuth Sign In */}
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={loading}
-              className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+          {error && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400"
             >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M12 10.8v3.6h5.1c-.2 1.3-1.5 3.8-5.1 3.8A6 6 0 1 1 12 6c1.7 0 2.9.7 3.6 1.3l2.4-2.3C16.5 3.6 14.4 2.5 12 2.5A9.5 9.5 0 1 0 21.5 12c0-.6-.1-1.1-.2-1.7H12z" />
-              </svg>
-              Google
-            </button>
+              {error}
+            </motion.div>
+          )}
 
-            <div className="text-center text-sm text-zinc-400">
-              Don't have an account?{" "}
-              <Link to="/signup" className="text-white hover:underline font-semibold transition-colors">
-                Sign up
+          <form onSubmit={handleLoginSubmit} className="space-y-4">
+            <AuthInput
+              label="Email"
+              icon={<Mail size={18} />}
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            />
+            <AuthInput
+              label="Password"
+              icon={<Lock size={18} />}
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            />
+
+            <div className="flex justify-end">
+              <Link
+                to="/forgot-password"
+                className="text-xs text-zinc-400 hover:text-white transition-colors"
+              >
+                Forgot password?
               </Link>
             </div>
-          </motion.div>
-        )}
 
-        {mode === 'forgot' && (
-          <motion.div
-            key="forgot"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-6"
-          >
-            <button
-              onClick={() => {
-                setMode('login');
-                setError("");
-                setSuccessMsg("");
-              }}
-              className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-sm"
-            >
-              <ArrowLeft size={16} /> Back to Login
-            </button>
-            <div>
-              <h1 className="text-3xl font-bold text-white">Reset Password</h1>
-              <p className="text-zinc-400 mt-2">Enter your email to receive a reset link.</p>
+            <AuthButton loading={loading} disabled={!isEmailValid(formData.email) || formData.password === ""}>
+              Sign In
+            </AuthButton>
+          </form>
+
+          <div className="relative py-2">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-white/5"></div>
             </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-zinc-900/40 px-2 text-zinc-500">Or continue with</span>
+            </div>
+          </div>
 
-            {error && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400"
-              >
-                {error}
-              </motion.div>
-            )}
+          {/* Google OAuth Sign In */}
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M12 10.8v3.6h5.1c-.2 1.3-1.5 3.8-5.1 3.8A6 6 0 1 1 12 6c1.7 0 2.9.7 3.6 1.3l2.4-2.3C16.5 3.6 14.4 2.5 12 2.5A9.5 9.5 0 1 0 21.5 12c0-.6-.1-1.1-.2-1.7H12z" />
+            </svg>
+            Google
+          </button>
 
-            <form onSubmit={handleForgotPassword} className="space-y-4">
-              <AuthInput
-                label="Email"
-                icon={<Mail size={18} />}
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
-              <AuthButton loading={loading} disabled={!isEmailValid(formData.email)}>
-                Send Reset Link
-              </AuthButton>
-              {successMsg && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-zinc-400 text-sm text-center"
-                >
-                  {successMsg}
-                </motion.p>
-              )}
-            </form>
-          </motion.div>
-        )}
-
-
+          <div className="text-center text-sm text-zinc-400">
+            Don't have an account?{" "}
+            <Link to="/signup" className="text-white hover:underline font-semibold transition-colors">
+              Sign up
+            </Link>
+          </div>
+        </motion.div>
       </motion.div>
     </div>
   );

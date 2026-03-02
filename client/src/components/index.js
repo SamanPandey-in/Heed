@@ -24,6 +24,7 @@ export { default as ProjectCalendar } from './projects/ProjectCalendar';
 export { default as ProjectCard } from './projects/ProjectCard';
 export { default as ProjectSettings } from './projects/ProjectSettings';
 export { default as ProjectTasks } from './projects/ProjectTasks';
+export { default as ProjectChat } from './projects/ProjectChat';
 
 // Team Components
 export { default as InviteMemberDialog } from './team/InviteMemberDialog';

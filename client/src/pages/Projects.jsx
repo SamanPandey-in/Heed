@@ -3,11 +3,13 @@ import { useSelector } from 'react-redux';
 import { Plus, Search, FolderOpen } from 'lucide-react';
 
 import { ProjectCard, CreateProjectDialog, Button } from '../components';
+import { useGetProjectsQuery } from '../store/slices/apiSlice';
 
 export default function Projects() {
-    
-    const projects = useSelector(
-        (state) => state?.workspace?.currentWorkspace?.projects || []
+    const { currentWorkspace } = useSelector((state) => state.workspace);
+    const { data: projects = [], isLoading } = useGetProjectsQuery(
+        currentWorkspace?.id,
+        { skip: !currentWorkspace?.id }
     );
 
     const [filteredProjects, setFilteredProjects] = useState([]);
@@ -54,13 +56,13 @@ export default function Projects() {
                     <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-1"> Projects </h1>
                     <p className="text-gray-500 dark:text-zinc-400 text-sm"> Manage and track your projects </p>
                 </div>
-                <Button 
-                  variant='contained' 
-                  color='primary'
-                  startIcon={<Plus size={16} />}
-                  onClick={() => setIsDialogOpen(true)}
+                <Button
+                    variant='contained'
+                    color='primary'
+                    startIcon={<Plus size={16} />}
+                    onClick={() => setIsDialogOpen(true)}
                 >
-                  New Project
+                    New Project
                 </Button>
                 <CreateProjectDialog isDialogOpen={isDialogOpen} setIsDialogOpen={setIsDialogOpen} />
             </div>
@@ -100,7 +102,7 @@ export default function Projects() {
                         <p className="text-gray-500 dark:text-zinc-400 mb-6 text-sm">
                             Create your first project to get started
                         </p>
-                        <button onClick={() => setIsDialogOpen(true)} className="flex items-center gap-1.5 text-white px-4 py-2 rounded mx-auto text-sm" style={{backgroundColor: 'var(--color-btn-bg)'}}>
+                        <button onClick={() => setIsDialogOpen(true)} className="flex items-center gap-1.5 text-white px-4 py-2 rounded mx-auto text-sm" style={{ backgroundColor: 'var(--color-btn-bg)' }}>
                             <Plus className="size-4" />
                             Create Project
                         </button>

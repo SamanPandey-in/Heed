@@ -1,31 +1,59 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { SearchIcon, PanelLeft, LogOut, User } from 'lucide-react';
+import { SearchIcon, PanelLeft, LogOut, User, Bell } from 'lucide-react';
 
-import { useBackendAuth } from '../../hooks/useBackendAuth';
+import { useAuth } from '../../context/AuthContext';
 import { assets } from '../../assets/assets';
 import ThemeToggle from '../theme/ThemeToggle';
+import { useGetNotificationsQuery, useGetUnreadNotificationCountQuery, useMarkNotificationReadMutation, useMarkAllNotificationsReadMutation } from '../../store/slices/apiSlice';
+import { formatDistanceToNow } from 'date-fns';
 
 const Navbar = ({ setIsSidebarOpen }) => {
-
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { logout } = useBackendAuth();
+  const { logout } = useAuth();
   const { theme } = useSelector(state => state.theme);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const profileMenuRef = useRef(null);
+  const notificationRef = useRef(null);
+
+  // Notifications
+  const { data: unreadCount } = useGetUnreadNotificationCountQuery(undefined, { pollingInterval: 30000 });
+  const { data: notifications } = useGetNotificationsQuery(undefined, { 
+    skip: !showNotifications,
+    pollingInterval: showNotifications ? 10000 : undefined 
+  });
+  const [markRead] = useMarkNotificationReadMutation();
+  const [markAllRead] = useMarkAllNotificationsReadMutation();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
         setShowProfileMenu(false);
       }
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const handleNotificationClick = async (notification) => {
+    if (!notification.isRead) {
+      await markRead(notification.id);
+    }
+    setShowNotifications(false);
+    // Navigate based on notification type
+    if (notification.data?.taskId) {
+      navigate(`/tasks/${notification.data.taskId}`);
+    } else if (notification.data?.projectId) {
+      navigate(`/projects/${notification.data.projectId}`);
+    }
+  };
 
   const handleProfileClick = () => {
     navigate('/profile');
@@ -60,7 +88,76 @@ const Navbar = ({ setIsSidebarOpen }) => {
         </div>
 
         {/* Right section */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          {/* Notifications Bell */}
+          <div className="relative" ref={notificationRef}>
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors relative"
+            >
+              <Bell className="w-5 h-5 text-gray-700 dark:text-white" />
+              {(unreadCount || 0) > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs font-medium rounded-full w-4 h-4 flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {/* Notifications Dropdown */}
+            {showNotifications && (
+              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-zinc-950 border border-gray-200 dark:border-white/10 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                <div className="p-3 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Notifications</p>
+                  {(unreadCount || 0) > 0 && (
+                    <button
+                      onClick={() => markAllRead()}
+                      className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+
+                {notifications?.length > 0 ? (
+                  <div className="divide-y divide-gray-100 dark:divide-zinc-800">
+                    {notifications.map((notification) => (
+                      <button
+                        key={notification.id}
+                        onClick={() => handleNotificationClick(notification)}
+                        className={`w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors ${
+                          !notification.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          {!notification.isRead && (
+                            <span className="w-2 h-2 mt-2 rounded-full bg-blue-500 flex-shrink-0" />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                              {notification.title}
+                            </p>
+                            {notification.message && (
+                              <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5 line-clamp-2">
+                                {notification.message}
+                              </p>
+                            )}
+                            <p className="text-xs text-gray-400 dark:text-zinc-500 mt-1">
+                              {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 text-center text-sm text-gray-500 dark:text-zinc-400">
+                    No notifications
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <ThemeToggle />
 
           {/* User Profile Dropdown */}

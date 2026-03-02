@@ -1,35 +1,31 @@
 import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeftIcon, PlusIcon, SettingsIcon, BarChart3Icon, CalendarIcon, FileStackIcon, ZapIcon } from 'lucide-react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeftIcon, PlusIcon, SettingsIcon, BarChart3Icon, CalendarIcon, FileStackIcon, MessageSquareIcon, ZapIcon } from 'lucide-react';
 
-import { ProjectAnalytics, ProjectSettings, CreateTaskDialog, ProjectCalendar, ProjectTasks, Button } from '../components';
+import { ProjectAnalytics, ProjectSettings, CreateTaskDialog, ProjectCalendar, ProjectTasks, ProjectChat, Button } from '../components';
+import { useGetProjectByIdQuery } from '../store/slices/apiSlice';
 
 export default function ProjectDetail() {
-
-    const [searchParams, setSearchParams] = useSearchParams();
-    const tab = searchParams.get('tab');
-    const id = searchParams.get('id');
-
+    const { projectId } = useParams();
+    const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const projects = useSelector((state) => state?.workspace?.currentWorkspace?.projects || []);
 
-    const [project, setProject] = useState(null);
-    const [tasks, setTasks] = useState([]);
+    // Read tab from URL on initial load, default to "tasks"
+    const initialTab = searchParams.get('tab') || 'tasks';
+    const [tab, setTab] = useState(initialTab);
+
+    // Use RTK Query to fetch project from API
+    const { data: project, isLoading, error } = useGetProjectByIdQuery(projectId, {
+        skip: !projectId,
+    });
+
+    const tasks = project?.tasks || [];
     const [showCreateTask, setShowCreateTask] = useState(false);
-    const [activeTab, setActiveTab] = useState(tab || "tasks");
+    const [activeTab, setActiveTab] = useState(tab);
 
     useEffect(() => {
         if (tab) setActiveTab(tab);
     }, [tab]);
-
-    useEffect(() => {
-        if (projects && projects.length > 0) {
-            const proj = projects.find((p) => p.id === id);
-            setProject(proj);
-            setTasks(proj?.tasks || []);
-        }
-    }, [id, projects]);
 
     const statusColors = {
         PLANNING: "bg-zinc-200 text-zinc-900 dark:bg-zinc-600 dark:text-zinc-200",
@@ -39,14 +35,22 @@ export default function ProjectDetail() {
         CANCELLED: "bg-red-200 text-red-900 dark:bg-red-500 dark:text-red-900",
     };
 
-    if (!project) {
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+            </div>
+        );
+    }
+
+    if (error || !project) {
         return (
             <div className="p-6 text-center text-zinc-900 dark:text-zinc-200">
                 <p className="text-3xl md:text-5xl mt-40 mb-10">Project not found</p>
-                <Button 
-                  variant='contained'
-                  color='primary'
-                  onClick={() => navigate('/projects')}
+                <Button
+                    variant='contained'
+                    color='primary'
+                    onClick={() => navigate('/projects')}
                 >
                     Back to Projects
                 </Button>
@@ -69,11 +73,11 @@ export default function ProjectDetail() {
                         </span>
                     </div>
                 </div>
-                <Button 
-                  variant='contained'
-                  color='primary'
-                  startIcon={<PlusIcon size={16} />}
-                  onClick={() => setShowCreateTask(true)}
+                <Button
+                    variant='contained'
+                    color='primary'
+                    startIcon={<PlusIcon size={16} />}
+                    onClick={() => setShowCreateTask(true)}
                 >
                     New Task
                 </Button>
@@ -104,9 +108,10 @@ export default function ProjectDetail() {
                         { key: "tasks", label: "Tasks", icon: FileStackIcon },
                         { key: "calendar", label: "Calendar", icon: CalendarIcon },
                         { key: "analytics", label: "Analytics", icon: BarChart3Icon },
+                        { key: "chat", label: "Chat", icon: MessageSquareIcon },
                         { key: "settings", label: "Settings", icon: SettingsIcon },
                     ].map((tabItem) => (
-                        <button key={tabItem.key} onClick={() => { setActiveTab(tabItem.key); setSearchParams({ id: id, tab: tabItem.key }) }} className={`flex items-center gap-2 px-4 py-2 text-sm transition-all ${activeTab === tabItem.key ? "bg-zinc-100 dark:bg-zinc-800/80" : "hover:bg-zinc-50 dark:hover:bg-zinc-700"}`} >
+                        <button key={tabItem.key} onClick={() => { setActiveTab(tabItem.key); navigate(`/projects/${projectId}?tab=${tabItem.key}`); }} className={`flex items-center gap-2 px-4 py-2 text-sm transition-all ${activeTab === tabItem.key ? "bg-zinc-100 dark:bg-zinc-800/80" : "hover:bg-zinc-50 dark:hover:bg-zinc-700"}`} >
                             <tabItem.icon className="size-3.5" />
                             {tabItem.label}
                         </button>
@@ -116,7 +121,7 @@ export default function ProjectDetail() {
                 <div className="mt-6">
                     {activeTab === "tasks" && (
                         <div className=" dark:bg-zinc-900/40 rounded max-w-6xl">
-                            <ProjectTasks tasks={tasks} />
+                            <ProjectTasks tasks={tasks} projectId={projectId} />
                         </div>
                     )}
                     {activeTab === "analytics" && (
@@ -129,6 +134,11 @@ export default function ProjectDetail() {
                             <ProjectCalendar tasks={tasks} />
                         </div>
                     )}
+                    {activeTab === "chat" && (
+                        <div className=" dark:bg-zinc-900/40 rounded max-w-6xl">
+                            <ProjectChat projectId={projectId} />
+                        </div>
+                    )}
                     {activeTab === "settings" && (
                         <div className=" dark:bg-zinc-900/40 rounded max-w-6xl">
                             <ProjectSettings project={project} />
@@ -138,7 +148,7 @@ export default function ProjectDetail() {
             </div>
 
             {/* Create Task Modal */}
-            {showCreateTask && <CreateTaskDialog showCreateTask={showCreateTask} setShowCreateTask={setShowCreateTask} projectId={id} />}
+            {showCreateTask && <CreateTaskDialog showCreateTask={showCreateTask} setShowCreateTask={setShowCreateTask} projectId={projectId} />}
         </div>
     );
 }

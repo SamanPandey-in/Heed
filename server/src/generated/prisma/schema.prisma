@@ -36,6 +36,7 @@ model User {
   messages             Message[]         @relation("MessageAuthor")
   notifications        Notification[]
   refreshTokens        RefreshToken[]
+  passwordResets       PasswordReset[]
 
   @@index([email])
   @@index([role])
@@ -108,13 +109,13 @@ model Project {
   endDate     DateTime?     @map("end_date")
   progress    Int           @default(0)
   workspaceId String        @map("workspace_id")
-  teamLeadId  String        @map("team_lead_id")
+  teamLeadId  String?       @map("team_lead_id")
   createdAt   DateTime      @default(now()) @map("created_at")
   updatedAt   DateTime      @updatedAt @map("updated_at")
 
   // Relations
   workspace Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  teamLead  User            @relation("ProjectTeamLead", fields: [teamLeadId], references: [id])
+  teamLead  User?           @relation("ProjectTeamLead", fields: [teamLeadId], references: [id])
   members   ProjectMember[]
   tasks     Task[]
   messages  Message[]
@@ -222,6 +223,7 @@ enum TaskType {
 model Message {
   id        String   @id @default(uuid())
   projectId String   @map("project_id")
+  taskId    String?  @map("task_id")
   authorId  String   @map("author_id")
   parentId  String?  @map("parent_id")
   content   String
@@ -236,6 +238,7 @@ model Message {
   replies Message[] @relation("MessageThread")
 
   @@index([projectId])
+  @@index([taskId])
   @@index([authorId])
   @@index([parentId])
   @@index([createdAt])
@@ -290,4 +293,22 @@ model RefreshToken {
   @@index([userId])
   @@index([token])
   @@map("refresh_tokens")
+}
+
+// ============================================================================
+// PASSWORD RESET MODEL
+// ============================================================================
+model PasswordReset {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("password_resets")
 }

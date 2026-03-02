@@ -4,6 +4,7 @@
 
 import { logger } from '../config/logger.js';
 import { errorResponse } from '../utils/apiResponse.js';
+import { AppError } from '../utils/errors.js';
 
 /**
  * Wraps async route handlers to catch errors and pass to Express error handler
@@ -12,12 +13,15 @@ import { errorResponse } from '../utils/apiResponse.js';
  */
 export const asyncHandler = (fn) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch((error) => {
-    logger.error(`Route Error: ${req.method} ${req.path}`, {
-      error: error.message,
-      stack: error.stack,
-      path: req.path,
-      method: req.method,
-    });
+    // Handle operational errors (known errors with status codes)
+    if (error instanceof AppError) {
+      logger.warn(`Operational Error: ${error.message}`, {
+        statusCode: error.statusCode,
+        path: req.path,
+        method: req.method,
+      });
+      return errorResponse(res, error.message, error.statusCode);
+    }
     
     // Handle specific error types
     if (error.name === 'ValidationError') {
@@ -28,8 +32,16 @@ export const asyncHandler = (fn) => (req, res, next) => {
       return errorResponse(res, 'Unauthorized access', 401);
     }
     
+    // Unknown error — log full stack
+    logger.error(`Route Error: ${req.method} ${req.path}`, {
+      error: error.message,
+      stack: error.stack,
+      path: req.path,
+      method: req.method,
+    });
+    
     // Default to 500 internal server error
-    return errorResponse(res, error.message || 'Internal Server Error', 500);
+    return errorResponse(res, 'Internal Server Error', 500);
   });
 };
 

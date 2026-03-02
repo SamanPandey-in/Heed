@@ -5,6 +5,12 @@
 import { prisma } from '../config/database.js';
 
 export const createMessage = async (data, authorId) => {
+  // Verify user is a member of the project
+  const membership = await prisma.projectMember.findFirst({
+    where: { projectId: data.projectId, userId: authorId }
+  });
+  if (!membership) throw new Error('Access denied');
+
   const message = await prisma.message.create({
     data: {
       projectId: data.projectId,
@@ -60,4 +66,54 @@ export const deleteMessage = async (messageId, userId) => {
   await prisma.message.delete({ where: { id: messageId } });
 };
 
-export default { createMessage, getProjectMessages, updateMessage, deleteMessage };
+// ============================================================================
+// TASK COMMENTS
+// ============================================================================
+
+export const createTaskComment = async (data, authorId) => {
+  // Verify task exists and user has access
+  const task = await prisma.task.findUnique({ where: { id: data.taskId } });
+  if (!task) throw new Error('Task not found');
+
+  const membership = await prisma.projectMember.findFirst({ where: { projectId: task.projectId, userId: authorId } });
+  if (!membership) throw new Error('Access denied');
+
+  const message = await prisma.message.create({
+    data: {
+      projectId: task.projectId,
+      taskId: data.taskId,
+      authorId,
+      content: data.content,
+      parentId: data.parentId || null,
+    },
+    include: {
+      author: { select: { id: true, name: true, imageUrl: true } },
+    },
+  });
+  return message;
+};
+
+export const getTaskComments = async (taskId, userId) => {
+  // Verify task exists and user has access
+  const task = await prisma.task.findUnique({ where: { id: taskId } });
+  if (!task) throw new Error('Task not found');
+
+  const membership = await prisma.projectMember.findFirst({ where: { projectId: task.projectId, userId } });
+  if (!membership) throw new Error('Access denied');
+
+  const messages = await prisma.message.findMany({
+    where: { taskId, parentId: null },
+    include: {
+      author: { select: { id: true, name: true, imageUrl: true } },
+      replies: {
+        include: { author: { select: { id: true, name: true, imageUrl: true } } },
+        orderBy: { createdAt: 'asc' },
+      },
+    },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  return messages;
+};
+
+export default { createMessage, getProjectMessages, updateMessage, deleteMessage, createTaskComment, getTaskComments };

@@ -16,4 +16,8 @@ router.get('/project/:projectId', asyncHandler(messageController.getMessages));
 router.put('/:messageId', asyncHandler(messageController.updateMessage));
 router.delete('/:messageId', asyncHandler(messageController.deleteMessage));
 
+// Task comments routes
+router.post('/task/:taskId', asyncHandler(messageController.createTaskComment));
+router.get('/task/:taskId', asyncHandler(messageController.getTaskComments));
+
 export default router;

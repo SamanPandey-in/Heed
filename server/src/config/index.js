@@ -30,6 +30,16 @@ const envSchema = z.object({
   
   // CORS
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
+  
+  // Email (SMTP)
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().optional(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM: z.string().email().optional(),
+  
+  // Frontend URL for password reset links
+  FRONTEND_URL: z.string().default('http://localhost:5173'),
 });
 
 // Validate environment variables

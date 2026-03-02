@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, User, Loader2, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 
-import { useBackendAuth } from '../../hooks/useBackendAuth';
+import { useAuth } from '../../context/AuthContext';
 import { Logo } from '../../components';
 
 export default function Signup() {
   const navigate = useNavigate();
-  const { register, signInWithOAuth } = useBackendAuth();
+  const { register } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -45,7 +46,7 @@ export default function Signup() {
         if (result.message) {
           setError(""); // Clear any existing errors
           // Show success message and stay on page
-          alert(result.message);
+          toast.success(result.message);
         } else {
           navigate("/dashboard");
         }

@@ -70,10 +70,11 @@ export const createProjectSchema = z.object({
   description: z.string().optional().nullable(),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).default('MEDIUM'),
   status: z.enum(['PLANNING', 'ACTIVE', 'ON_HOLD', 'COMPLETED', 'ARCHIVED']).default('PLANNING'),
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
+  startDate: z.string().date().optional().nullable(),
+  endDate: z.string().date().optional().nullable(),
   workspaceId: uuidSchema,
-  teamLeadId: uuidSchema,
+  teamLeadId: uuidSchema.optional().nullable(),
+  memberIds: z.array(uuidSchema).optional(),
 });
 
 export const updateProjectSchema = z.object({
@@ -81,10 +82,10 @@ export const updateProjectSchema = z.object({
   description: z.string().optional().nullable(),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
   status: z.enum(['PLANNING', 'ACTIVE', 'ON_HOLD', 'COMPLETED', 'ARCHIVED']).optional(),
-  startDate: z.string().datetime().optional().nullable(),
-  endDate: z.string().datetime().optional().nullable(),
+  startDate: z.string().date().optional().nullable(),
+  endDate: z.string().date().optional().nullable(),
   progress: z.number().int().min(0).max(100).optional(),
-  teamLeadId: uuidSchema.optional(),
+  teamLeadId: uuidSchema.optional().nullable(),
 });
 
 export const addProjectMemberSchema = z.object({
@@ -108,7 +109,7 @@ export const createTaskSchema = z.object({
   type: z.enum(['TASK', 'FEATURE', 'BUG', 'IMPROVEMENT', 'OTHER']).default('TASK'),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).default('MEDIUM'),
   assigneeId: uuidSchema.optional().nullable(),
-  dueDate: z.string().datetime().optional().nullable(),
+  dueDate: z.string().date().optional().nullable(),
 });
 
 export const updateTaskSchema = z.object({
@@ -118,7 +119,7 @@ export const updateTaskSchema = z.object({
   type: z.enum(['TASK', 'FEATURE', 'BUG', 'IMPROVEMENT', 'OTHER']).optional(),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
   assigneeId: uuidSchema.optional().nullable(),
-  dueDate: z.string().datetime().optional().nullable(),
+  dueDate: z.string().date().optional().nullable(),
 });
 
 export const taskFilterSchema = z.object({

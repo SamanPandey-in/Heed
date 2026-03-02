@@ -11,6 +11,7 @@ const router = Router();
 
 router.use(authenticate);
 
-router.get('/', asyncHandler(dashboardController.getDashboard));
+router.get('/stats', asyncHandler(dashboardController.getDashboard));
+router.get('/activity', asyncHandler(dashboardController.getRecentActivity));
 
 export default router;

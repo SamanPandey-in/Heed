@@ -1,82 +1,97 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
-import { CalendarIcon, MessageCircle, PenIcon } from 'lucide-react';
+import { CalendarIcon, MessageCircle, PenIcon, ArrowLeftIcon } from 'lucide-react';
 
 import { Button } from '../components';
-import { assets } from '../assets/assets';
+import { useGetTaskByIdQuery, useGetProjectByIdQuery, useGetTaskCommentsQuery, useAddTaskCommentMutation } from '../store/slices/apiSlice';
+import { useAuth } from '../context/AuthContext';
 
 const TaskDetails = () => {
-
+    const { taskId } = useParams();
     const [searchParams] = useSearchParams();
-    const projectId = searchParams.get("projectId");
-    const taskId = searchParams.get("taskId");
+    const navigate = useNavigate();
+    const { user: currentUser } = useAuth();
 
-    const user = { id : 'user_1'}
-    const [task, setTask] = useState(null);
-    const [project, setProject] = useState(null);
-    const [comments, setComments] = useState([]);
+    // Get projectId from query param (optional, for back navigation)
+    const projectIdFromQuery = searchParams.get('projectId');
+
+    // Fetch task from API using RTK Query
+    const { data: task, isLoading: taskLoading, error: taskError } = useGetTaskByIdQuery(taskId, {
+        skip: !taskId,
+    });
+
+    // Fetch project if we have projectId from task
+    const projectId = task?.projectId || projectIdFromQuery;
+    const { data: project, isLoading: projectLoading } = useGetProjectByIdQuery(projectId, {
+        skip: !projectId,
+    });
+
     const [newComment, setNewComment] = useState("");
-    const [loading, setLoading] = useState(true);
-
-    const { currentWorkspace } = useSelector((state) => state.workspace);
-
-    const fetchComments = async () => {
-
-    };
-
-    const fetchTaskDetails = async () => {
-        setLoading(true);
-        if (!projectId || !taskId) return;
-
-        const proj = currentWorkspace.projects.find((p) => p.id === projectId);
-        if (!proj) return;
-
-        const tsk = proj.tasks.find((t) => t.id === taskId);
-        if (!tsk) return;
-
-        setTask(tsk);
-        setProject(proj);
-        setLoading(false);
-    };
+    
+    // Fetch comments using RTK Query with polling for real-time updates
+    const { data: commentsData, refetch: refetchComments } = useGetTaskCommentsQuery(taskId, {
+        skip: !taskId,
+        pollingInterval: 10000, // Poll every 10 seconds for new comments
+    });
+    const [addTaskComment, { isLoading: isAddingComment }] = useAddTaskCommentMutation();
+    
+    const comments = commentsData || [];
 
     const handleAddComment = async () => {
-        if (!newComment.trim()) return;
+        if (!newComment.trim() || !taskId) return;
 
         try {
-
             toast.loading("Adding comment...");
 
-            //  Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-
-            const dummyComment = { id: Date.now(), user: { id: 1, name: "User", image: assets.profile_img_a }, content: newComment, createdAt: new Date() };
+            await addTaskComment({ taskId, content: newComment }).unwrap();
             
-            setComments((prev) => [...prev, dummyComment]);
             setNewComment("");
             toast.dismissAll();
             toast.success("Comment added.");
         } catch (error) {
             toast.dismissAll();
-            toast.error(error?.response?.data?.message || error.message);
+            toast.error(error?.data?.message || error.message || "Failed to add comment");
             console.error(error);
         }
     };
 
-    useEffect(() => { fetchTaskDetails(); }, [taskId]);
+    
 
-    useEffect(() => {
-        if (taskId && task) {
-            fetchComments();
-            const interval = setInterval(() => { fetchComments(); }, 10000);
-            return () => clearInterval(interval);
+    const handleGoBack = () => {
+        if (projectId) {
+            navigate(`/projects/${projectId}?tab=tasks`);
+        } else {
+            navigate('/projects');
         }
-    }, [taskId, task]);
+    };
 
-    if (loading) return <div className="text-gray-500 dark:text-zinc-400 px-4 py-6">Loading task details...</div>;
-    if (!task) return <div style={{color: 'var(--color-error)'}} className="px-4 py-6">Task not found.</div>;
+    if (taskLoading || projectLoading) {
+        return <div className="text-gray-500 dark:text-zinc-400 px-4 py-6">Loading task details...</div>;
+    }
+
+    if (taskError) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+                <div style={{color: 'var(--color-error)'}} className="px-4 py-6">Failed to load task details.</div>
+                <Button variant="outlined" onClick={handleGoBack}>
+                    <ArrowLeftIcon className="size-4 mr-2" /> Back to Project
+                </Button>
+            </div>
+        );
+    }
+
+    if (!task) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+                <div style={{color: 'var(--color-error)'}} className="px-4 py-6">Task not found.</div>
+                <Button variant="outlined" onClick={handleGoBack}>
+                    <ArrowLeftIcon className="size-4 mr-2" /> Back to Project
+                </Button>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col-reverse lg:flex-row gap-6 sm:p-4 text-gray-900 dark:text-zinc-100 max-w-6xl mx-auto">
@@ -91,7 +106,7 @@ const TaskDetails = () => {
                         {comments.length > 0 ? (
                             <div className="flex flex-col gap-4 mb-6 mr-2">
                                 {comments.map((comment) => (
-                                    <div key={comment.id} className={`sm:max-w-4/5 dark:bg-gradient-to-br dark:from-zinc-800 dark:to-zinc-900 border border-gray-300 dark:border-zinc-700 p-3 rounded-md ${comment.user.id === user?.id ? "ml-auto" : "mr-auto"}`} >
+                                    <div key={comment.id} className={`sm:max-w-4/5 dark:bg-gradient-to-br dark:from-zinc-800 dark:to-zinc-900 border border-gray-300 dark:border-zinc-700 p-3 rounded-md ${comment.user.id === currentUser?.id ? "ml-auto" : "mr-auto"}`} >
                                         <div className="flex items-center gap-2 mb-1 text-sm text-gray-500 dark:text-zinc-400">
                                             <img src={comment.user.image} alt="avatar" className="size-5 rounded-full" />
                                             <span className="font-medium text-gray-900 dark:text-white">{comment.user.name}</span>
@@ -131,6 +146,15 @@ const TaskDetails = () => {
 
             {/* Right: Task + Project Info */}
             <div className="w-full lg:w-1/2 flex flex-col gap-6">
+                {/* Back Button */}
+                <Button 
+                    variant="text" 
+                    onClick={handleGoBack}
+                    className="self-start"
+                >
+                    <ArrowLeftIcon className="size-4 mr-1" /> Back to {project?.name || 'Project'}
+                </Button>
+
                 {/* Task Info */}
                 <div className="p-5 rounded-md bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-800 ">
                     <div className="mb-3">
@@ -156,12 +180,12 @@ const TaskDetails = () => {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-zinc-300">
                         <div className="flex items-center gap-2">
-                            <img src={task.assignee?.image} className="size-5 rounded-full" alt="avatar" />
+                            <img src={task.assignee?.imageUrl || task.assignee?.image} className="size-5 rounded-full" alt="avatar" />
                             {task.assignee?.name || "Unassigned"}
                         </div>
                         <div className="flex items-center gap-2">
                             <CalendarIcon className="size-4 text-gray-500 dark:text-zinc-500" />
-                            Due : {format(new Date(task.due_date), "dd MMM yyyy")}
+                            Due : {task.dueDate ? format(new Date(task.dueDate), "dd MMM yyyy") : 'Not set'}
                         </div>
                     </div>
                 </div>
@@ -170,12 +194,17 @@ const TaskDetails = () => {
                 {project && (
                     <div className="p-4 rounded-md bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 border border-gray-300 dark:border-zinc-800 ">
                         <p className="text-xl font-medium mb-4">Project Details</p>
-                        <h2 className="text-gray-900 dark:text-zinc-100 flex items-center gap-2"> <PenIcon className="size-4" /> {project.name}</h2>
-                        <p className="text-xs mt-3">Project Start Date: {format(new Date(project.start_date), "dd MMM yyyy")}</p>
+                        <h2 
+                            className="text-gray-900 dark:text-zinc-100 flex items-center gap-2 cursor-pointer hover:underline" 
+                            onClick={() => navigate(`/projects/${project.id}`)}
+                        > 
+                            <PenIcon className="size-4" /> {project.name}
+                        </h2>
+                        <p className="text-xs mt-3">Project Start Date: {project.startDate ? format(new Date(project.startDate), "dd MMM yyyy") : 'Not set'}</p>
                         <div className="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-zinc-400 mt-3">
                             <span>Status: {project.status}</span>
                             <span>Priority: {project.priority}</span>
-                            <span>Progress: {project.progress}%</span>
+                            <span>Progress: {project.progress || 0}%</span>
                         </div>
                     </div>
                 )}

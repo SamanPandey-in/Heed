@@ -2,10 +2,17 @@
 // SERVER ENTRY POINT
 // ============================================================================
 
+import { createServer } from 'http';
+import { initSocket } from './src/lib/socket.js';
+
 import app from './src/app.js';
 import config from './src/config/index.js';
 import { logger } from './src/config/logger.js';
 import { testConnection } from './src/config/database.js';
+
+// Create HTTP server and initialize Socket.io via library
+const httpServer = createServer(app);
+initSocket(httpServer, config);
 
 const startServer = async () => {
   // Test database connection
@@ -16,7 +23,7 @@ const startServer = async () => {
   }
 
   // Start server
-  const server = app.listen(config.PORT, () => {
+  httpServer.listen(config.PORT, () => {
     logger.info(`🚀 Server running on port ${config.PORT}`);
     logger.info(`📚 API available at http://localhost:${config.PORT}/api`);
     logger.info(`🏥 Health check at http://localhost:${config.PORT}/health`);
@@ -25,10 +32,10 @@ const startServer = async () => {
   // Graceful shutdown
   const shutdown = async (signal) => {
     logger.info(`${signal} received. Shutting down gracefully...`);
-    
-    server.close(async () => {
+
+    httpServer.close(async () => {
       logger.info('HTTP server closed');
-      
+
       // Close database connection
       try {
         const { prisma } = await import('./src/config/database.js');
@@ -37,7 +44,7 @@ const startServer = async () => {
       } catch (err) {
         logger.error('Error closing database:', err);
       }
-      
+
       process.exit(0);
     });
 

@@ -11,25 +11,21 @@ import { registerSchema, loginSchema, refreshTokenSchema } from '../utils/valida
  * Register new user
  */
 export const register = async (req, res) => {
-  const validation = validate(registerSchema)(req.body);
-  if (!validation.valid) {
-    return badRequestResponse(res, 'Validation failed', validation.errors);
-  }
+  const user = await authService.registerUser(req.validated);
 
-  const user = await authService.registerUser(validation.data);
-  return createdResponse(res, 'User registered successfully', user);
+  // Auto-login: generate tokens
+  const accessToken = authService.generateAccessToken(user.id);
+  const refreshToken = authService.generateRefreshToken(user.id);
+  await authService.saveRefreshToken(user.id, refreshToken);
+
+  return createdResponse(res, 'User registered successfully', { user, accessToken, refreshToken });
 };
 
 /**
  * Login user
  */
 export const login = async (req, res) => {
-  const validation = validate(loginSchema)(req.body);
-  if (!validation.valid) {
-    return badRequestResponse(res, 'Validation failed', validation.errors);
-  }
-
-  const result = await authService.loginUser(validation.data);
+  const result = await authService.loginUser(req.validated);
   return successResponse(res, 'Login successful', result);
 };
 
@@ -37,12 +33,7 @@ export const login = async (req, res) => {
  * Refresh access token
  */
 export const refreshToken = async (req, res) => {
-  const validation = validate(refreshTokenSchema)(req.body);
-  if (!validation.valid) {
-    return badRequestResponse(res, 'Validation failed', validation.errors);
-  }
-
-  const result = await authService.refreshAccessToken(validation.data.refreshToken);
+  const result = await authService.refreshAccessToken(req.validated.refreshToken);
   return successResponse(res, 'Token refreshed', result);
 };
 
@@ -70,6 +61,33 @@ export const updateProfile = async (req, res) => {
   return successResponse(res, 'Profile updated', user);
 };
 
+/**
+ * Request password reset
+ */
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return badRequestResponse(res, 'Email is required');
+  }
+
+  await authService.requestPasswordReset(email);
+  return successResponse(res, 'If the email exists, a reset link has been sent');
+};
+
+/**
+ * Reset password with token
+ */
+export const resetPassword = async (req, res) => {
+  const { token, password } = req.body;
+
+  if (!token || !password) {
+    return badRequestResponse(res, 'Token and new password are required');
+  }
+
+  await authService.resetPassword(token, password);
+  return successResponse(res, 'Password reset successful. Please login with your new password.');
+};
+
 export default {
   register,
   login,
@@ -77,4 +95,6 @@ export default {
   logout,
   getProfile,
   updateProfile,
+  forgotPassword,
+  resetPassword,
 };

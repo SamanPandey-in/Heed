@@ -18,6 +18,23 @@ export const createProject = async (data, userId) => {
     throw new Error('Not a member of this workspace');
   }
 
+  const effectiveLeadId = data.teamLeadId || userId;
+  const membersToCreate = [{ userId: effectiveLeadId, role: 'LEAD' }];
+
+  if (effectiveLeadId !== userId) {
+    membersToCreate.push({ userId, role: 'MEMBER' });
+  }
+
+  // Add additional members from memberIds
+  if (data.memberIds && data.memberIds.length > 0) {
+    const existingIds = membersToCreate.map(m => m.userId);
+    data.memberIds.forEach(id => {
+      if (!existingIds.includes(id)) {
+        membersToCreate.push({ userId: id, role: 'MEMBER' });
+      }
+    });
+  }
+
   const project = await prisma.project.create({
     data: {
       name: data.name,
@@ -27,19 +44,9 @@ export const createProject = async (data, userId) => {
       startDate: data.startDate ? new Date(data.startDate) : null,
       endDate: data.endDate ? new Date(data.endDate) : null,
       workspaceId: data.workspaceId,
-      teamLeadId: data.teamLeadId,
+      teamLeadId: effectiveLeadId,
       members: {
-        create: {
-          userId: data.teamLeadId,
-          role: 'LEAD',
-        },
-        // Add creator as member if different from team lead
-        ...(data.teamLeadId !== userId && {
-          create: {
-            userId,
-            role: 'MEMBER',
-          },
-        }),
+        create: membersToCreate,
       },
     },
     include: {
@@ -120,7 +127,7 @@ export const updateProject = async (projectId, userId, data) => {
       ...(data.startDate !== undefined && { startDate: data.startDate ? new Date(data.startDate) : null }),
       ...(data.endDate !== undefined && { endDate: data.endDate ? new Date(data.endDate) : null }),
       ...(data.progress !== undefined && { progress: data.progress }),
-      ...(data.teamLeadId && { teamLeadId: data.teamLeadId }),
+      ...(data.teamLeadId !== undefined && { teamLeadId: data.teamLeadId }),
     },
     include: {
       teamLead: { select: { id: true, name: true, imageUrl: true } },
@@ -148,13 +155,13 @@ export const deleteProject = async (projectId, userId) => {
 };
 
 export const addProjectMember = async (projectId, userId, data) => {
-  // Check if user is lead or admin
+  // Check if user is lead only (not regular members)
   const membership = await prisma.projectMember.findFirst({
-    where: { projectId, userId, role: { in: ['LEAD', 'MEMBER'] } },
+    where: { projectId, userId, role: 'LEAD' },
   });
 
   if (!membership) {
-    throw new Error('Not authorized to add members');
+    throw new Error('Only project lead can add members');
   }
 
   const existingMember = await prisma.projectMember.findUnique({

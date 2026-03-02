@@ -200,6 +200,7 @@ exports.Prisma.TaskScalarFieldEnum = {
 exports.Prisma.MessageScalarFieldEnum = {
   id: 'id',
   projectId: 'projectId',
+  taskId: 'taskId',
   authorId: 'authorId',
   parentId: 'parentId',
   content: 'content',
@@ -221,6 +222,14 @@ exports.Prisma.NotificationScalarFieldEnum = {
 };
 
 exports.Prisma.RefreshTokenScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  token: 'token',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.PasswordResetScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   token: 'token',
@@ -311,7 +320,8 @@ exports.Prisma.ModelName = {
   Task: 'Task',
   Message: 'Message',
   Notification: 'Notification',
-  RefreshToken: 'RefreshToken'
+  RefreshToken: 'RefreshToken',
+  PasswordReset: 'PasswordReset'
 };
 
 /**

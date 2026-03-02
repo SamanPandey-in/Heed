@@ -1,14 +1,17 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 
-import { useBackendAuth } from './hooks/useBackendAuth';
+import { useAuth } from './context/AuthContext';
+import { fetchWorkspaces } from './store/slices/workspaceSlice';
 import { ThemeProvider, Layout } from './components';
 
 // Pages
-import { Landing, Login, Signup, ForgotPassword, Dashboard, Projects, ProjectDetails, Team, TaskDetails, Settings, Profile } from './pages/index'
+import { Landing, Login, Signup, ForgotPassword, ResetPassword, Dashboard, Projects, ProjectDetails, Team, TaskDetails, Settings, Profile } from './pages/index'
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useBackendAuth();
+  const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return (
@@ -23,7 +26,7 @@ const ProtectedRoute = ({ children }) => {
 
 // Public Route Component (redirect to dashboard if already authenticated)
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useBackendAuth();
+  const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return (
@@ -37,6 +40,15 @@ const PublicRoute = ({ children }) => {
 };
 
 function AppRoutes() {
+  const dispatch = useDispatch();
+  const { isAuthenticated, loading } = useAuth();
+
+  // Fetch workspaces after auth is confirmed
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(fetchWorkspaces());
+    }
+  }, [isAuthenticated, dispatch]);
   return (
     <Routes>
       {/* Public Routes */}
@@ -73,6 +85,14 @@ function AppRoutes() {
           </PublicRoute>
         }
       />
+      <Route
+        path="/reset-password"
+        element={
+          <PublicRoute>
+            <ResetPassword />
+          </PublicRoute>
+        }
+      />
 
       {/* Protected Routes */}
       <Route
@@ -85,9 +105,9 @@ function AppRoutes() {
       >
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="projects" element={<Projects />} />
-        <Route path="projectsDetail" element={<ProjectDetails />} />
+        <Route path="projects/:projectId" element={<ProjectDetails />} />
         <Route path="team" element={<Team />} />
-        <Route path="taskDetails" element={<TaskDetails />} />
+        <Route path="tasks/:taskId" element={<TaskDetails />} />
         <Route path="settings" element={<Settings />} />
         <Route path="profile" element={<Profile />} />
         {/* Add more routes */}
@@ -102,9 +122,9 @@ function AppRoutes() {
 function App() {
   return (
     <Router>
-        <ThemeProvider>
-          <AppRoutes />
-        </ThemeProvider>
+      <ThemeProvider>
+        <AppRoutes />
+      </ThemeProvider>
     </Router>
   );
 }

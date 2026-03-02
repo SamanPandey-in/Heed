@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { useGetProjectByIdQuery } from '../../store/slices/apiSlice';
+import { addTask } from '../../store';
 
 export default function CreateTaskDialog({ showCreateTask, setShowCreateTask, projectId }) {
-    const currentWorkspace = useSelector((state) => state.workspace?.currentWorkspace || null);
-    const project = currentWorkspace?.projects.find((p) => p.id === projectId);
+    const dispatch = useDispatch();
+    const { data: project } = useGetProjectByIdQuery(projectId, { skip: !projectId });
     const teamMembers = project?.members || [];
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -21,8 +24,36 @@ export default function CreateTaskDialog({ showCreateTask, setShowCreateTask, pr
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-
+        if (!projectId) return;
+        setIsSubmitting(true);
+        try {
+            const token = localStorage.getItem('accessToken');
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+            const res = await fetch(`${API_URL}/tasks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({
+                    projectId,
+                    title: formData.title,
+                    description: formData.description || null,
+                    type: formData.type,
+                    status: formData.status,
+                    priority: formData.priority,
+                    assigneeId: formData.assigneeId || null,
+                    dueDate: formData.due_date || null,
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Failed to create task');
+            dispatch(addTask({ projectId, task: data.data }));
+            setShowCreateTask(false);
+            setFormData({ title: '', description: '', type: 'TASK', status: 'TODO', priority: 'MEDIUM', assigneeId: '', due_date: '' });
+            toast.success('Task created');
+        } catch (err) {
+            toast.error(err.message);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return showCreateTask ? (
@@ -62,6 +93,7 @@ export default function CreateTaskDialog({ showCreateTask, setShowCreateTask, pr
                                 <option value="LOW">Low</option>
                                 <option value="MEDIUM">Medium</option>
                                 <option value="HIGH">High</option>
+                                <option value="URGENT">Urgent</option>
                             </select>
                         </div>
                     </div>
@@ -74,7 +106,7 @@ export default function CreateTaskDialog({ showCreateTask, setShowCreateTask, pr
                                 <option value="">Unassigned</option>
                                 {teamMembers.map((member) => (
                                     <option key={member?.user.id} value={member?.user.id}>
-                                        {member?.user.email}
+                                        {member?.user.name || member?.user.email}
                                     </option>
                                 ))}
                             </select>
@@ -85,6 +117,7 @@ export default function CreateTaskDialog({ showCreateTask, setShowCreateTask, pr
                             <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className="w-full rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-3 py-2 text-zinc-900 dark:text-zinc-200 text-sm mt-1" >
                                 <option value="TODO">To Do</option>
                                 <option value="IN_PROGRESS">In Progress</option>
+                                <option value="IN_REVIEW">In Review</option>
                                 <option value="DONE">Done</option>
                             </select>
                         </div>
