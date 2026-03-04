@@ -4,6 +4,7 @@ import { selectDashboardStats } from '../../store';
 import { Box } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { MediumAvatar } from '../ui/ReusableStyled';
+import tokens from '../../theme/tokens';
 
 export default function StatsGrid() {
     const stats = useSelector(selectDashboardStats);
@@ -48,7 +49,7 @@ export default function StatsGrid() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 my-9">
             {statCards.map(
                 ({ icon: Icon, title, value, subtitle }, i) => (
-                    <div key={i} className="bg-white dark:bg-black border border-zinc-200 dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/20 transition duration-200 rounded-md" >
+                    <div key={i} className={tokens.cardBgClass}>
                         <div className="p-6 py-4">
                             <div className="flex items-start justify-between">
                                 <div>

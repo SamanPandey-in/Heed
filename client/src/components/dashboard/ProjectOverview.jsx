@@ -7,6 +7,7 @@ import { ArrowRight, Calendar, UsersIcon, FolderOpen } from 'lucide-react';
 import { selectAllTeams, selectProjectsForUserTeams, selectUserTeams } from '../../store';
 import { LinearProgressRounded } from '../ui/ReusableStyled';
 import CreateProjectDialog from './CreateProjectDialog';
+import tokens from '../../theme/tokens';
 
 const ProjectOverview = () => {
     const statusColors = {
@@ -27,7 +28,7 @@ const ProjectOverview = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     return (
-        <div className="bg-white dark:bg-black border border-zinc-200 dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/20 transition-all duration-200 rounded-lg overflow-hidden">
+        <div className={tokens.cardBgClass + " overflow-hidden"}>
             <div className="border-b border-zinc-200 dark:border-white/10 p-4 flex items-center justify-between">
                 <h2 className="text-md text-zinc-800 dark:text-zinc-300">Project Overview</h2>
                 <Link to={'/projects'} className="text-sm text-zinc-600 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 flex items-center">

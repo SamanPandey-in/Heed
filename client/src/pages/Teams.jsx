@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Button, InputAdornment, TextField } from '@mui/material';
 import { KeyRound, PlusCircle, UsersIcon } from 'lucide-react';
+import tokens from '../theme/tokens';
 
 import CreateTeamForm from '../components/team/CreateTeamForm';
 import {
@@ -105,7 +106,7 @@ export const Teams = () => {
                         <Link
                             key={team.id}
                             to={`/teams/${team.id}`}
-                            className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-5 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition"
+                            className={tokens.cardBgClass}
                         >
                             <div className="flex items-start justify-between gap-3">
                                 <div>

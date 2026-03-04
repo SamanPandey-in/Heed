@@ -33,6 +33,21 @@ const DARK_GRAY = {
   1000: "#ffffff",
 };
 
+
+const cardStatusColors = {
+  active: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300",
+  completed: "bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300",
+  deprecated: "bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-300",
+};
+
+const cardResultColors = {
+  success: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+  failed: "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300",
+  ongoing: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+};
+
+const cardBgClass = "bg-white dark:bg-zinc-950 dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-gray-200 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700 rounded-lg p-5 transition-all duration-200 group";
+
 const tokens = {
   gray: GRAY,
   darkGray: DARK_GRAY,
@@ -69,6 +84,9 @@ const tokens = {
     card: "0 2px 8px rgba(0,0,0,0.06)",
     cardHover: "0 4px 16px rgba(0,0,0,0.12)",
   },
+  cardStatusColors,
+  cardResultColors,
+  cardBgClass,
 };
 
 export default tokens;
