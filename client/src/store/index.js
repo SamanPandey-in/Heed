@@ -75,4 +75,8 @@ export {
   selectUserInfo,
   selectCurrentUser,
   selectTeamCount,
+  selectTasksForUser,
+  selectUserTasksSortedByDueDate,
+  selectUserTasksByStatus,
+  selectUserTasksCountByStatus,
 } from "./selectors.js";

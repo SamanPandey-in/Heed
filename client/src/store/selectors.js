@@ -2,16 +2,17 @@
  * Redux selectors for user and team state
  */
 
+import { createSelector } from 'reselect';
+
 // ==================== USER SELECTORS ====================
 
 /**
- * Select current user info
+ * Select current user info (memoized)
  */
-export const selectCurrentUser = (state) => ({
-  id: state.user.id,
-  name: state.user.name,
-  email: state.user.email,
-});
+export const selectCurrentUser = createSelector(
+  [(state) => state.user.id, (state) => state.user.name, (state) => state.user.email],
+  (id, name, email) => ({ id, name, email })
+);
 
 /**
  * Select user info with all details
@@ -29,14 +30,13 @@ export const selectUserTeams = (state) => state.user.teams || [];
 export const selectCurrentTeamId = (state) => state.user.currentTeamId;
 
 /**
- * Select full team objects for user's teams
+ * Select full team objects for user's teams (memoized)
  * Returns array of team objects user is a member of
  */
-export const selectUserTeamObjects = (state) => {
-  const userTeamIds = state.user.teams || [];
-  const allTeams = state.teams.teams || [];
-  return allTeams.filter((team) => userTeamIds.includes(team.id));
-};
+export const selectUserTeamObjects = createSelector(
+  [(state) => state.user.teams || [], (state) => state.teams.teams || []],
+  (userTeamIds, allTeams) => allTeams.filter((team) => userTeamIds.includes(team.id))
+);
 
 // ==================== TEAM SELECTORS ====================
 
@@ -61,20 +61,26 @@ export const selectCurrentTeam = (state) => {
 };
 
 /**
- * Select team members array for a specific team
+ * Select team members array for a specific team (memoized)
  */
-export const selectTeamMembers = (state, teamId) => {
-  const team = (state.teams.teams || []).find((t) => t.id === teamId);
-  return team ? team.members : [];
-};
+export const selectTeamMembers = createSelector(
+  [(state) => state.teams.teams || [], (state, teamId) => teamId],
+  (teams, teamId) => {
+    const team = teams.find((t) => t.id === teamId);
+    return team ? team.members : [];
+  }
+);
 
 /**
- * Select current team members
+ * Select current team members (memoized)
  */
-export const selectCurrentTeamMembers = (state) => {
-  const currentTeamId = state.user.currentTeamId;
-  return selectTeamMembers(state, currentTeamId);
-};
+export const selectCurrentTeamMembers = createSelector(
+  [(state) => state.user.currentTeamId, (state) => state.teams.teams || []],
+  (currentTeamId, teams) => {
+    const team = teams.find((t) => t.id === currentTeamId);
+    return team ? team.members : [];
+  }
+);
 
 /**
  * Select team count
@@ -141,3 +147,146 @@ export const selectCurrentTeamMemberCount = (state) => {
   const currentTeamId = state.user.currentTeamId;
   return selectTeamMemberCount(state, currentTeamId);
 };
+
+// ==================== TASK SELECTORS ====================
+
+/**
+ * Base selector for all projects
+ */
+const selectProjects = (state) => state.projects?.projects || [];
+
+/**
+ * Memoized selector to get all tasks assigned to a specific user across all projects
+ * @param {string} userId - User ID to filter tasks by
+ * @returns {Array} Array of task objects with project and team info
+ */
+export const selectTasksForUser = createSelector(
+  [selectProjects, (_, userId) => userId],
+  (projects, userId) => {
+    if (!userId) return [];
+    
+    const userTasks = [];
+    
+    projects.forEach((project) => {
+      (project.tasks || []).forEach((task) => {
+        // Match tasks assigned to this user
+        if (task.assigneeId === userId) {
+          userTasks.push({
+            id: task.id,
+            title: task.title,
+            assigneeId: task.assigneeId,
+            projectId: task.projectId,
+            projectName: project.name,
+            status: task.status,
+            priority: task.priority,
+            type: task.type,
+            dueDate: task.due_date,
+            description: task.description,
+            createdAt: task.createdAt,
+            updatedAt: task.updatedAt,
+          });
+        }
+      });
+    });
+    
+    return userTasks;
+  }
+);
+
+/**
+ * Selector to get tasks for current user, sorted by due date
+ */
+export const selectUserTasksSortedByDueDate = createSelector(
+  [(state) => state.user?.id, selectProjects],
+  (userId, projects) => {
+    if (!userId) return [];
+    
+    const userTasks = [];
+    
+    projects.forEach((project) => {
+      (project.tasks || []).forEach((task) => {
+        if (task.assigneeId === userId) {
+          userTasks.push({
+            id: task.id,
+            title: task.title,
+            assigneeId: task.assigneeId,
+            projectId: task.projectId,
+            projectName: project.name,
+            status: task.status,
+            priority: task.priority,
+            type: task.type,
+            dueDate: task.due_date,
+            description: task.description,
+            createdAt: task.createdAt,
+            updatedAt: task.updatedAt,
+          });
+        }
+      });
+    });
+    
+    // Sort by due date (earliest first, nulls at end)
+    return userTasks.sort((a, b) => {
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate) - new Date(b.dueDate);
+    });
+  }
+);
+
+/**
+ * Selector to get tasks grouped by status
+ */
+export const selectUserTasksByStatus = createSelector(
+  [(state) => state.user?.id, selectProjects],
+  (userId, projects) => {
+    if (!userId) return {};
+    
+    const tasksByStatus = {
+      TODO: [],
+      IN_PROGRESS: [],
+      IN_REVIEW: [],
+      DONE: [],
+    };
+    
+    projects.forEach((project) => {
+      (project.tasks || []).forEach((task) => {
+        if (task.assigneeId === userId) {
+          const taskObj = {
+            id: task.id,
+            title: task.title,
+            projectId: task.projectId,
+            projectName: project.name,
+            status: task.status,
+            priority: task.priority,
+            dueDate: task.due_date,
+          };
+          
+          if (tasksByStatus[task.status]) {
+            tasksByStatus[task.status].push(taskObj);
+          }
+        }
+      });
+    });
+    
+    return tasksByStatus;
+  }
+);
+
+/**
+ * Selector to get count of tasks by status for current user
+ */
+export const selectUserTasksCountByStatus = createSelector(
+  [selectUserTasksByStatus],
+  (tasksByStatus) => ({
+    todo: tasksByStatus.TODO?.length || 0,
+    inProgress: tasksByStatus.IN_PROGRESS?.length || 0,
+    inReview: tasksByStatus.IN_REVIEW?.length || 0,
+    done: tasksByStatus.DONE?.length || 0,
+    total: (
+      (tasksByStatus.TODO?.length || 0) +
+      (tasksByStatus.IN_PROGRESS?.length || 0) +
+      (tasksByStatus.IN_REVIEW?.length || 0) +
+      (tasksByStatus.DONE?.length || 0)
+    ),
+  })
+);
