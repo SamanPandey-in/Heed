@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import { dummyProjects } from "../../assets/assets";
 
 const FALLBACK_TEAM_ID = "team_1";
+const VALID_PROJECT_RESULTS = ["success", "failed", "ongoing"];
 
 const normalizeProjectStatus = (status) => {
   const normalized = String(status || "").trim().toLowerCase();
@@ -15,6 +16,27 @@ const normalizeProjectStatus = (status) => {
   }
 
   return "active";
+};
+
+const normalizeProjectResult = (status, result) => {
+  const normalizedStatus = normalizeProjectStatus(status);
+  if (normalizedStatus !== "completed") {
+    return null;
+  }
+
+  const normalizedResult = String(result ?? "")
+    .trim()
+    .toLowerCase();
+
+  if (!normalizedResult) {
+    return null;
+  }
+
+  if (normalizedResult === "in_progress") return "ongoing";
+  if (normalizedResult === "successful") return "success";
+  if (normalizedResult === "fail") return "failed";
+
+  return VALID_PROJECT_RESULTS.includes(normalizedResult) ? normalizedResult : null;
 };
 
 const normalizeTaskInput = (task = {}, fallbackProjectId) => {
@@ -45,7 +67,7 @@ const normalizeProject = (project, index = 0) => {
     ...projectRest,
     teamId: project.teamId || fallbackTeamId || FALLBACK_TEAM_ID,
     status: normalizedStatus,
-    result: normalizedStatus === "completed" ? String(project.result ?? "").trim() : "",
+    result: normalizeProjectResult(normalizedStatus, project.result),
     memberIds: [...new Set(memberIds)],
     taskIds: [...new Set(project.taskIds || [])],
   };
@@ -117,7 +139,7 @@ const projectsSlice = createSlice({
         name,
         teamId,
         status = "active",
-        result = "",
+        result = null,
         validTeamIds = [],
         tasks = [],
         ...rest
@@ -149,7 +171,7 @@ const projectsSlice = createSlice({
           id: projectId,
           name: name.trim(),
           teamId,
-          status: normalizeProjectStatus(status),
+          status,
           result,
           ...rest,
           taskIds: tasks.map((task, index) =>
@@ -178,9 +200,14 @@ const projectsSlice = createSlice({
       }
 
       const existingProject = state.projects[incomingProject.id];
+      const nextStatus = incomingProject.status ?? existingProject.status;
+      const nextTeamId = incomingProject.teamId || existingProject.teamId;
       const mergedProject = normalizeProject({
         ...existingProject,
         ...incomingProject,
+        teamId: nextTeamId,
+        status: nextStatus,
+        result: normalizeProjectResult(nextStatus, incomingProject.result ?? existingProject.result),
         taskIds: existingProject.taskIds,
       });
 
@@ -198,13 +225,7 @@ const projectsSlice = createSlice({
 
       const normalizedStatus = normalizeProjectStatus(status ?? project.status);
       project.status = normalizedStatus;
-
-      if (normalizedStatus === "completed") {
-        project.result =
-          typeof result === "string" ? result.trim() : String(project.result ?? "").trim();
-      } else {
-        project.result = "";
-      }
+      project.result = normalizeProjectResult(normalizedStatus, result ?? project.result);
 
       project.updatedAt = new Date().toISOString();
       state.error = null;

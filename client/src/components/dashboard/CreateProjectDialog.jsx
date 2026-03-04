@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { XIcon } from 'lucide-react';
 import { dummyUsers } from '../../assets/assets';
-import { addProject, selectCurrentTeamId, selectUserTeamObjects } from '../../store';
+import { createProjectAtomic, selectCurrentTeamId, selectUserTeamObjects } from '../../store';
 
 const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 
@@ -69,8 +69,8 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                 : formData.team_members
         )];
 
-        dispatch(
-            addProject({
+        const actionResult = dispatch(
+            createProjectAtomic({
                 id: `project_${Date.now()}`,
                 name: formData.name,
                 description: formData.description,
@@ -82,7 +82,7 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                 team_lead: formData.team_lead || null,
                 memberIds,
                 progress: formData.progress || 0,
-                result: formData.status === "completed" ? formData.result : "",
+                result: formData.status === "completed" ? (formData.result || null) : null,
                 tasks: [],
                 createdAt: now,
                 updatedAt: now,
@@ -91,6 +91,11 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
         );
 
         setIsSubmitting(false);
+        if (!actionResult?.ok) {
+            setSubmitError(actionResult?.error || "Failed to create project");
+            return;
+        }
+
         setIsDialogOpen(false);
         setFormData({
             name: "",
@@ -202,13 +207,16 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                     {formData.status === "completed" && (
                         <div>
                             <label className="block text-sm mb-1">Result</label>
-                            <input
-                                type="text"
+                            <select
                                 value={formData.result}
                                 onChange={(e) => setFormData({ ...formData, result: e.target.value })}
-                                placeholder="Final project outcome"
                                 className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
-                            />
+                            >
+                                <option value="">Not Set</option>
+                                <option value="success">Success</option>
+                                <option value="failed">Failed</option>
+                                <option value="ongoing">Ongoing</option>
+                            </select>
                         </div>
                     )}
 

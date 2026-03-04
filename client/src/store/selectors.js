@@ -77,7 +77,7 @@ export const selectCurrentUserId = createSelector(
 
 export const selectUserInfo = createSelector([selectUsersState], (usersState) => usersState);
 
-export const selectUserTeams = createSelector(
+const selectUserTeamIdsFromProfile = createSelector(
   [selectCurrentUser],
   (currentUser) => currentUser?.teamIds || []
 );
@@ -108,14 +108,40 @@ export const selectTeamById = createSelector(
   (teams, teamId) => teams[teamId] || null
 );
 
+export const selectTeamByInviteCode = createSelector(
+  [selectAllTeams, (_, inviteCode) => inviteCode],
+  (teams, inviteCode) => {
+    const normalizedInviteCode = String(inviteCode || "").trim().toLowerCase();
+    if (!normalizedInviteCode) return null;
+
+    return (
+      teams.find(
+        (team) => String(team?.inviteCode || "").trim().toLowerCase() === normalizedInviteCode
+      ) || null
+    );
+  }
+);
+
 export const selectCurrentTeam = createSelector(
   [selectCurrentTeamId, selectTeamEntities],
   (currentTeamId, teamEntities) => (currentTeamId ? teamEntities[currentTeamId] || null : null)
 );
 
 export const selectUserTeamObjects = createSelector(
-  [selectUserTeams, selectAllTeams],
-  (userTeamIds, allTeams) => allTeams.filter((team) => userTeamIds.includes(team.id))
+  [selectAllTeams, selectCurrentUserId],
+  (allTeams, currentUserId) => {
+    if (!currentUserId) return [];
+    return allTeams.filter((team) => (team?.members || []).includes(currentUserId));
+  }
+);
+
+export const selectUserTeams = createSelector(
+  [selectUserTeamObjects, selectUserTeamIdsFromProfile],
+  (teamsFromMembership, profileTeamIds) => {
+    const membershipTeamIds = teamsFromMembership.map((team) => team.id);
+    if (membershipTeamIds.length > 0) return membershipTeamIds;
+    return profileTeamIds;
+  }
 );
 
 export const selectTeamMembers = createSelector(
@@ -136,13 +162,13 @@ export const selectUserTeamCount = createSelector(
 );
 
 export const selectIsUserInTeam = createSelector(
-  [selectUserTeams, (_, teamId) => teamId],
-  (userTeamIds, teamId) => userTeamIds.includes(teamId)
+  [selectTeamById, selectCurrentUserId],
+  (team, currentUserId) => Boolean(team && currentUserId && (team.members || []).includes(currentUserId))
 );
 
 export const selectIsUserInCurrentTeam = createSelector(
-  [selectUserTeams, selectCurrentTeamId],
-  (userTeamIds, currentTeamId) => userTeamIds.includes(currentTeamId)
+  [selectCurrentTeam, selectCurrentUserId],
+  (team, currentUserId) => Boolean(team && currentUserId && (team.members || []).includes(currentUserId))
 );
 
 export const selectTeamsLoading = createSelector(
@@ -349,6 +375,11 @@ export const selectAllProjects = createSelector(
       .filter(Boolean)
 );
 
+export const selectProjectById = createSelector(
+  [selectAllProjects, (_, projectId) => projectId],
+  (projects, projectId) => projects.find((project) => project.id === projectId) || null
+);
+
 export const selectTeamProjects = createSelector(
   [selectAllProjects, (_, teamId) => teamId],
   (projects, teamId) => {
@@ -376,6 +407,18 @@ export const selectTeamProjectsByStatus = createSelector(
 );
 
 export const selectProjectsByTeam = selectTeamProjects;
+
+export const selectProjectsByTeamAndStatus = createSelector(
+  [selectTeamProjects, (_, __, status) => status ?? "all"],
+  (projects, status) => {
+    const normalizedStatus = String(status || "all").trim().toLowerCase();
+    if (normalizedStatus === "all") return projects;
+
+    return projects.filter(
+      (project) => normalizeProjectStatus(project.status) === normalizeProjectStatus(normalizedStatus)
+    );
+  }
+);
 
 export const selectProjectsByStatus = createSelector(
   [

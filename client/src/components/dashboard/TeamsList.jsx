@@ -47,9 +47,10 @@ const TeamsList = ({ userId, maxTeams = 6 }) => {
         ) : (
           <div className="space-y-3">
             {displayTeams.map((team) => (
-              <div
+              <Link
+                to={`/teams/${team.id}`}
                 key={team.id}
-                className={`p-3 rounded-lg border transition-colors ${
+                className={`block p-3 rounded-lg border transition-colors ${
                   currentTeamId === team.id
                     ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700'
                     : 'bg-zinc-50 dark:bg-white/5 border-zinc-200 dark:border-white/10 hover:bg-zinc-100 dark:hover:bg-white/10'
@@ -70,11 +71,11 @@ const TeamsList = ({ userId, maxTeams = 6 }) => {
                       <span>{team.members.length} member{team.members.length !== 1 ? 's' : ''}</span>
                     </div>
                   </div>
-                  <button className="flex-shrink-0 p-1.5 hover:bg-zinc-200 dark:hover:bg-white/10 rounded transition">
+                  <div className="flex-shrink-0 p-1.5 rounded">
                     <Settings className="w-4 h-4 text-zinc-500 dark:text-zinc-500" />
-                  </button>
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
 
             {/* Show "more teams" indicator */}

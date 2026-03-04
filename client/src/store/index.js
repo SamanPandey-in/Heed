@@ -2,7 +2,15 @@
 export { default as store } from "./store.js";
 
 // Thunks (for atomic multi-slice operations)
-export { deleteTeamAtomic, joinTeamAtomic } from "./thunks.js";
+export {
+  createProjectAtomic,
+  deleteProjectAtomic,
+  deleteTeamAtomic,
+  inviteMemberAtomic,
+  joinTeamAtomic,
+  joinTeamByIdentifierAtomic,
+  updateProjectAtomic,
+} from "./thunks.js";
 
 // Theme Slice
 export { toggleTheme, setTheme, loadTheme } from "./slices/themeSlice.js";
@@ -53,6 +61,8 @@ export {
   leaveTeam,
   addTeamMember,
   removeTeamMember,
+  addTeamProject,
+  removeTeamProject,
   updateTeam,
   deleteTeam,
   setTeams,
@@ -85,8 +95,11 @@ export {
   selectTeamMembers,
   selectAllTeams,
   selectTeamById,
+  selectTeamByInviteCode,
+  selectIsUserInTeam,
   selectTeamProjects,
   selectTeamProjectsByStatus,
+  selectTeamsError,
   selectUserInfo,
   selectCurrentUser,
   selectTeamCount,
@@ -101,8 +114,10 @@ export {
   selectRecentTasks,
   selectTaskSummaryCards,
   selectAllProjects,
+  selectProjectById,
   selectProjectsByStatus,
   selectProjectsByTeam,
+  selectProjectsByTeamAndStatus,
   selectProjectsForUserTeams,
   selectProjectsForCurrentTeam,
 } from "./selectors.js";

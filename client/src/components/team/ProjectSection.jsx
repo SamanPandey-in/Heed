@@ -25,7 +25,7 @@ const ProjectSection = ({ title, projects = [] }) => {
                     {projects.map((project) => (
                         <Link
                             key={project.id}
-                            to={`/projectsDetail?id=${project.id}&tab=tasks`}
+                            to={`/projects/${project.id}?tab=tasks`}
                             className="block rounded-lg border border-gray-200 dark:border-zinc-800 p-4 hover:bg-gray-50 dark:hover:bg-zinc-900/50 transition-colors"
                         >
                             <div className="flex items-start justify-between gap-4">

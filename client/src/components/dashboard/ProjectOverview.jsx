@@ -53,7 +53,7 @@ const ProjectOverview = () => {
                             const memberCount = project?.memberIds?.length ?? project?.members?.length ?? 0;
 
                             return (
-                                <Link key={project.id} to={`/projectsDetail?id=${project.id}&tab=tasks`} className="block p-6 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
+                                <Link key={project.id} to={`/projects/${project.id}?tab=tasks`} className="block p-6 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
                                 <div className="flex items-start justify-between mb-3">
                                     <div className="flex-1">
                                         <h3 className="font-semibold text-zinc-800 dark:text-zinc-300 mb-1">
