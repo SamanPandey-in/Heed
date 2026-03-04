@@ -7,7 +7,6 @@ export { default as ProjectOverview } from './dashboard/ProjectOverview';
 export { default as RecentActivity } from './dashboard/RecentActivity';
 export { default as StatsGrid } from './dashboard/StatsGrid';
 export { default as TasksSummary } from './dashboard/TasksSummary';
-export { default as WorkspaceDropdown } from './dashboard/WorkspaceDropdown';
 
 // Layout Components
 export { default as Layout } from './layout/Layout';

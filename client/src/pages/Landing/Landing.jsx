@@ -124,7 +124,7 @@ const Landing = () => {
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-8 tracking-tight">Decisions, not just discussions.</h2>
             <div className="space-y-6">
               {[
-                { title: "Contextual Search", desc: "Find the 'why' behind any decision across your entire workspace instantly." },
+                { title: "Contextual Search", desc: "Find the 'why' behind any decision across your entire organization instantly." },
                 { title: "Risk Mitigation", desc: "Identify project bottlenecks 72 hours before they occur using predictive AI." }
               ].map((item, i) => (
                 <div key={i} className="flex gap-4">

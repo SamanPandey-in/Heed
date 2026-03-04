@@ -4,16 +4,16 @@ import { ArrowRight, Clock, AlertTriangle, User } from 'lucide-react';
 
 export default function TasksSummary() {
 
-    const { currentWorkspace } = useSelector((state) => state.workspace);
+    const projects = useSelector((state) => state?.projects?.projects || []);
     const user = { id: 'user_1' }
     const [tasks, setTasks] = useState([]);
 
-    // Get all tasks for all projects in current workspace
+    // Get all tasks from all projects
     useEffect(() => {
-        if (currentWorkspace) {
-            setTasks(currentWorkspace.projects.flatMap((project) => project.tasks));
+        if (projects && projects.length > 0) {
+            setTasks(projects.flatMap((project) => project.tasks || []));
         }
-    }, [currentWorkspace]);
+    }, [projects]);
 
     const myTasks = tasks.filter(i => i.assigneeId === user.id);
     const overdueTasks = tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'DONE');

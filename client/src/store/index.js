@@ -8,19 +8,27 @@ export { default as themeReducer } from "./slices/themeSlice.js";
 // API Slice
 export { apiSlice } from "./slices/apiSlice.js";
 
-// Workspace Slice
-export { 
-  setWorkspaces, 
-  setCurrentWorkspace, 
-  addWorkspace, 
-  updateWorkspace, 
-  deleteWorkspace,
+// Projects Slice
+export {
+  setProjects,
+  setCurrentProjectId,
   addProject,
+  updateProject,
+  deleteProject,
   addTask,
   updateTask,
-  deleteTask
-} from "./slices/workspaceSlice.js";
-export { default as workspaceReducer } from "./slices/workspaceSlice.js";
+  deleteTask,
+} from "./slices/projectsSlice.js";
+export { default as projectsReducer } from "./slices/projectsSlice.js";
+
+// Teams Slice
+export {
+  setTeamMembers,
+  addTeamMember,
+  removeTeamMember,
+  updateTeamMember,
+} from "./slices/teamsSlice.js";
+export { default as teamsReducer } from "./slices/teamsSlice.js";
 
 // Settings Slice
 export {

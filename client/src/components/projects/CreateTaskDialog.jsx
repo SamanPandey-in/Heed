@@ -4,8 +4,8 @@ import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
 
 export default function CreateTaskDialog({ showCreateTask, setShowCreateTask, projectId }) {
-    const currentWorkspace = useSelector((state) => state.workspace?.currentWorkspace || null);
-    const project = currentWorkspace?.projects.find((p) => p.id === projectId);
+    const projects = useSelector((state) => state?.projects?.projects || []);
+    const project = projects.find((p) => p.id === projectId);
     const teamMembers = project?.members || [];
 
     const [isSubmitting, setIsSubmitting] = useState(false);

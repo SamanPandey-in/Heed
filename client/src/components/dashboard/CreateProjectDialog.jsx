@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { XIcon } from 'lucide-react';
+import { dummyUsers } from '../../assets/assets';
 
 const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 
-    const { currentWorkspace } = useSelector((state) => state.workspace);
+    // Get all team members from all projects
+    const projects = useSelector((state) => state?.projects?.projects || []);
+    const allTeamMembers = projects.flatMap((p) => p.members || []);
 
     const [formData, setFormData] = useState({
         name: "",
@@ -39,11 +42,9 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                 </button>
 
                 <h2 className="text-xl font-medium mb-1">Create New Project</h2>
-                {currentWorkspace && (
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                        In workspace: <span className="text-blue-600 dark:text-blue-400">{currentWorkspace.name}</span>
-                    </p>
-                )}
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+                    Add a new project to your workspace
+                </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Project Name */}
@@ -98,9 +99,9 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                         <label className="block text-sm mb-1">Project Lead</label>
                         <select value={formData.team_lead} onChange={(e) => setFormData({ ...formData, team_lead: e.target.value, team_members: e.target.value ? [...new Set([...formData.team_members, e.target.value])] : formData.team_members, })} className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm" >
                             <option value="">No lead</option>
-                            {currentWorkspace?.members?.map((member) => (
-                                <option key={member.user.email} value={member.user.email}>
-                                    {member.user.email}
+                            {dummyUsers.map((user) => (
+                                <option key={user.id} value={user.id}>
+                                    {user.name}
                                 </option>
                             ))}
                         </select>
@@ -117,11 +118,11 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                             }}
                         >
                             <option value="">Add team members</option>
-                            {currentWorkspace?.members
-                                ?.filter((email) => !formData.team_members.includes(email))
-                                .map((member) => (
-                                    <option key={member.user.email} value={member.email}>
-                                        {member.user.email}
+                            {dummyUsers
+                                ?.filter((user) => !formData.team_members.includes(user.id))
+                                .map((user) => (
+                                    <option key={user.id} value={user.id}>
+                                        {user.name}
                                     </option>
                                 ))}
                         </select>
@@ -145,7 +146,7 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                         <button type="button" onClick={() => setIsDialogOpen(false)} className="px-4 py-2 rounded border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-800" >
                             Cancel
                         </button>
-                        <button disabled={isSubmitting || !currentWorkspace} className="px-4 py-2 rounded bg-gradient-to-br from-blue-500 to-blue-600 text-white dark:text-zinc-200" >
+                        <button disabled={isSubmitting} className="px-4 py-2 rounded bg-gradient-to-br from-blue-500 to-blue-600 text-white dark:text-zinc-200" >
                             {isSubmitting ? "Creating..." : "Create Project"}
                         </button>
                     </div>

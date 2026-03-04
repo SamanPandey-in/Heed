@@ -9,7 +9,7 @@ import Sidebar from './Sidebar';
 
 const Layout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-    const { loading } = useSelector((state) => state.workspace)
+    const { loading } = useSelector((state) => state.projects)
     const dispatch = useDispatch()
 
     // Initial load of theme

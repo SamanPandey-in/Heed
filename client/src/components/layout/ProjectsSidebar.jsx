@@ -11,7 +11,7 @@ const ProjectSidebar = () => {
     const [searchParams] = useSearchParams();
 
     const projects = useSelector(
-        (state) => state?.workspace?.currentWorkspace?.projects || []
+        (state) => state?.projects?.projects || []
     );
 
     const getProjectSubItems = (projectId) => [

@@ -4,7 +4,7 @@ import { Mail, UserPlus } from 'lucide-react';
 
 const InviteMemberDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 
-    const currentWorkspace = useSelector((state) => state.workspace?.currentWorkspace || null);
+    const projects = useSelector((state) => state?.projects?.projects || []);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         email: "",
@@ -26,11 +26,9 @@ const InviteMemberDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                     <h2 className="text-xl font-bold flex items-center gap-2">
                         <UserPlus className="size-5 text-zinc-900 dark:text-zinc-200" /> Invite Team Member
                     </h2>
-                    {currentWorkspace && (
-                        <p className="text-sm text-zinc-700 dark:text-zinc-400">
-                            Inviting to workspace: <span style={{color: 'var(--color-primary)'}}>{currentWorkspace.name}</span>
-                        </p>
-                    )}
+                    <p className="text-sm text-zinc-700 dark:text-zinc-400">
+                        Inviting a new team member to your workspace
+                    </p>
                 </div>
 
                 {/* Form */}
@@ -60,7 +58,7 @@ const InviteMemberDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                         <button type="button" onClick={() => setIsDialogOpen(false)} className="px-5 py-2 rounded text-sm border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition" >
                             Cancel
                         </button>
-                        <button type="submit" disabled={isSubmitting || !currentWorkspace} className="px-5 py-2 rounded text-sm text-white disabled:opacity-50 hover:opacity-90 transition" style={{backgroundColor: isSubmitting || !currentWorkspace ? 'var(--color-btn-disabled-bg)' : 'var(--color-btn-bg)', color: isSubmitting || !currentWorkspace ? 'var(--color-btn-disabled-text)' : 'var(--color-btn-text)'}}>
+                        <button type="submit" disabled={isSubmitting || !projects.length} className="px-5 py-2 rounded text-sm text-white disabled:opacity-50 hover:opacity-90 transition" style={{backgroundColor: isSubmitting || !projects.length ? 'var(--color-btn-disabled-bg)' : 'var(--color-btn-bg)', color: isSubmitting || !projects.length ? 'var(--color-btn-disabled-text)' : 'var(--color-btn-text)'}}>
                             {isSubmitting ? "Sending..." : "Send Invitation"}
                         </button>
                     </div>

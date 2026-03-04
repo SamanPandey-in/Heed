@@ -19,19 +19,16 @@ const statusColors = {
 
 const RecentActivity = () => {
     const [tasks, setTasks] = useState([]);
-    const { currentWorkspace } = useSelector((state) => state.workspace);
+    const projects = useSelector((state) => state?.projects?.projects || []);
 
-    const getTasksFromCurrentWorkspace = () => {
-
-        if (!currentWorkspace) return;
-
-        const tasks = currentWorkspace.projects.flatMap((project) => project.tasks.map((task) => task));
+    const getTasksFromProjects = () => {
+        const tasks = projects.flatMap((project) => project.tasks?.map((task) => task) || []);
         setTasks(tasks);
     };
 
     useEffect(() => {
-        getTasksFromCurrentWorkspace();
-    }, [currentWorkspace]);
+        getTasksFromProjects();
+    }, [projects]);
 
     return (
         <div className="bg-white dark:bg-black border border-zinc-200 dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/20 rounded-lg transition-all overflow-hidden">

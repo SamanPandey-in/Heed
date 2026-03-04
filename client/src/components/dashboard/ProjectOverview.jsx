@@ -21,15 +21,15 @@ const ProjectOverview = () => {
         HIGH: "border-zinc-900 text-zinc-900 dark:border-white dark:text-white",
     };
 
-    const currentWorkspace = useSelector((state) => state?.workspace?.currentWorkspace || null);
+    const projects = useSelector((state) => state?.projects?.projects || []);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [projects, setProjects] = useState([]);
+    const [displayProjects, setDisplayProjects] = useState([]);
 
     useEffect(() => {
-        setProjects(currentWorkspace?.projects || []);
-    }, [currentWorkspace]);
+        setDisplayProjects(projects || []);
+    }, [projects]);
 
-    return currentWorkspace && (
+    return (
         <div className="bg-white dark:bg-black border border-zinc-200 dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/20 transition-all duration-200 rounded-lg overflow-hidden">
             <div className="border-b border-zinc-200 dark:border-white/10 p-4 flex items-center justify-between">
                 <h2 className="text-md text-zinc-800 dark:text-zinc-300">Project Overview</h2>
@@ -39,7 +39,7 @@ const ProjectOverview = () => {
             </div>
 
             <div className="p-0">
-                {projects.length === 0 ? (
+                {displayProjects.length === 0 ? (
                     <div className="p-12 text-center">
                         <div className="w-16 h-16 mx-auto mb-4 bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-500 rounded-full flex items-center justify-center">
                             <FolderOpen size={32} />
@@ -52,7 +52,7 @@ const ProjectOverview = () => {
                     </div>
                 ) : (
                     <div className="divide-y divide-zinc-200 dark:divide-white/10">
-                        {projects.slice(0, 5).map((project) => (
+                        {displayProjects.slice(0, 5).map((project) => (
                             <Link key={project.id} to={`/projectsDetail?id=${project.id}&tab=tasks`} className="block p-6 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
                                 <div className="flex items-start justify-between mb-3">
                                     <div className="flex-1">

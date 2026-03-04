@@ -21,7 +21,7 @@ const TaskDetails = () => {
     const [newComment, setNewComment] = useState("");
     const [loading, setLoading] = useState(true);
 
-    const { currentWorkspace } = useSelector((state) => state.workspace);
+    const projects = useSelector((state) => state?.projects?.projects || []);
 
     const fetchComments = async () => {
 
@@ -31,7 +31,7 @@ const TaskDetails = () => {
         setLoading(true);
         if (!projectId || !taskId) return;
 
-        const proj = currentWorkspace.projects.find((p) => p.id === projectId);
+        const proj = projects.find((p) => p.id === projectId);
         if (!proj) return;
 
         const tsk = proj.tasks.find((t) => t.id === taskId);

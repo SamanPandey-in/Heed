@@ -10,8 +10,27 @@ const Team = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [users, setUsers] = useState([]);
-    const currentWorkspace = useSelector((state) => state?.workspace?.currentWorkspace || null);
-    const projects = currentWorkspace?.projects || [];
+    
+    // Get all projects and flatten users from all projects
+    const projects = useSelector((state) => state?.projects?.projects || []);
+    
+    // Flatten unique users from all projects
+    const getAllTeamMembers = () => {
+        const userMap = new Map();
+        projects.forEach((project) => {
+            (project.members || []).forEach((member) => {
+                if (!userMap.has(member.userId)) {
+                    userMap.set(member.userId, member);
+                }
+            });
+        });
+        return Array.from(userMap.values());
+    };
+    
+    // Flatten all tasks from all projects
+    const getAllTasks = () => {
+        return projects.flatMap((project) => project.tasks || []);
+    };
 
     const filteredUsers = users.filter(
         (user) =>
@@ -20,9 +39,9 @@ const Team = () => {
     );
 
     useEffect(() => {
-        setUsers(currentWorkspace?.members || []);
-        setTasks(currentWorkspace?.projects?.reduce((acc, project) => [...acc, ...project.tasks], []) || []);
-    }, [currentWorkspace]);
+        setUsers(getAllTeamMembers());
+        setTasks(getAllTasks());
+    }, [projects]);
 
     return (
         <div className="space-y-6 max-w-6xl mx-auto">
