@@ -50,6 +50,9 @@ const teamsSlice = createSlice({
     },
 
     // Join team (add user to team members)
+    // ⚠️  IMPORTANT: This only updates teamsSlice.teams[].members
+    // If user joins, must also call addTeamToUser to add team to user.teams
+    // Use joinTeamAtomic thunk from store/thunks.js to ensure consistency
     joinTeam: (state, action) => {
       const { teamId, userId } = action.payload;
       const team = state.teams.find((t) => t.id === teamId);
@@ -144,6 +147,10 @@ const teamsSlice = createSlice({
     },
 
     // Delete team
+    // ⚠️  IMPORTANT: This only removes from teamsSlice
+    // If user has this team in user.teams, must also call removeTeamFromUser
+    // Use deleteTeamAtomic thunk from store/thunks.js to ensure consistency
+    // See: store/thunks.js for proper implementation
     deleteTeam: (state, action) => {
       const teamId = action.payload;
       const index = state.teams.findIndex((t) => t.id === teamId);

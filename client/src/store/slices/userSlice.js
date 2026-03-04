@@ -36,6 +36,9 @@ const userSlice = createSlice({
     },
 
     // Add team to user's teams (after successfully joining)
+    // ⚠️  IMPORTANT: This only updates userSlice.user.teams
+    // When user joins a team, must also call joinTeam to add user to team.members
+    // Use joinTeamAtomic thunk from store/thunks.js to ensure consistency
     addTeamToUser: (state, action) => {
       const teamId = action.payload;
       if (!state.teams.includes(teamId)) {
@@ -48,6 +51,9 @@ const userSlice = createSlice({
     },
 
     // Remove team from user's teams (after leaving)
+    // ⚠️  IMPORTANT: This only updates userSlice.user.teams
+    // When user leaves team or team is deleted, must also update team.members
+    // When team is deleted, use deleteTeamAtomic thunk from store/thunks.js
     removeTeamFromUser: (state, action) => {
       const teamId = action.payload;
       state.teams = state.teams.filter((id) => id !== teamId);

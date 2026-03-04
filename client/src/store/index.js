@@ -1,12 +1,27 @@
 // Store
 export { default as store } from "./store.js";
 
+// Thunks (for atomic multi-slice operations)
+export { deleteTeamAtomic, joinTeamAtomic } from "./thunks.js";
+
 // Theme Slice
 export { toggleTheme, setTheme, loadTheme } from "./slices/themeSlice.js";
 export { default as themeReducer } from "./slices/themeSlice.js";
 
 // API Slice
 export { apiSlice } from "./slices/apiSlice.js";
+
+// User Slice
+export {
+  setUser,
+  setCurrentTeamId,
+  addTeamToUser,
+  removeTeamFromUser,
+  setLoading as setUserLoading,
+  setError as setUserError,
+  clearError as clearUserError,
+} from "./slices/userSlice.js";
+export { default as userReducer } from "./slices/userSlice.js";
 
 // Projects Slice
 export {
@@ -23,10 +38,17 @@ export { default as projectsReducer } from "./slices/projectsSlice.js";
 
 // Teams Slice
 export {
-  setTeamMembers,
+  createTeam,
+  joinTeam,
+  leaveTeam,
   addTeamMember,
   removeTeamMember,
-  updateTeamMember,
+  updateTeam,
+  deleteTeam,
+  setTeams,
+  setLoading as setTeamsLoading,
+  setError as setTeamsError,
+  clearError as clearTeamsError,
 } from "./slices/teamsSlice.js";
 export { default as teamsReducer } from "./slices/teamsSlice.js";
 
@@ -41,3 +63,15 @@ export {
   setError as setSettingsError
 } from "./slices/settingsSlice.js";
 export { default as settingsReducer } from "./slices/settingsSlice.js";
+
+// Selectors
+export {
+  selectUserTeams,
+  selectCurrentTeam,
+  selectTeamMembers,
+  selectAllTeams,
+  selectTeamById,
+  selectUserInfo,
+  selectCurrentUser,
+  selectTeamCount,
+} from "./selectors.js";

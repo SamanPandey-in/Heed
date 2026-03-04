@@ -3,45 +3,23 @@ import { useSelector } from 'react-redux';
 import { UsersIcon, Search, UserPlus, Shield, Activity } from 'lucide-react';
 
 import { InviteMemberDialog, Button } from '../components';
+import { selectCurrentTeam, selectCurrentTeamMembers } from '../store';
 
 const Team = () => {
 
-    const [tasks, setTasks] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [users, setUsers] = useState([]);
     
-    // Get all projects and flatten users from all projects
+    // Get current team and its members from Redux
+    const currentTeam = useSelector(selectCurrentTeam);
+    const teamMembers = useSelector(selectCurrentTeamMembers);
     const projects = useSelector((state) => state?.projects?.projects || []);
-    
-    // Flatten unique users from all projects
-    const getAllTeamMembers = () => {
-        const userMap = new Map();
-        projects.forEach((project) => {
-            (project.members || []).forEach((member) => {
-                if (!userMap.has(member.userId)) {
-                    userMap.set(member.userId, member);
-                }
-            });
-        });
-        return Array.from(userMap.values());
-    };
-    
-    // Flatten all tasks from all projects
-    const getAllTasks = () => {
-        return projects.flatMap((project) => project.tasks || []);
-    };
 
-    const filteredUsers = users.filter(
-        (user) =>
-            user?.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user?.user?.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredUsers = teamMembers.filter(
+        (member) =>
+            member?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            member?.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-
-    useEffect(() => {
-        setUsers(getAllTeamMembers());
-        setTasks(getAllTasks());
-    }, [projects]);
 
     return (
         <div className="space-y-6 max-w-6xl mx-auto">
@@ -70,8 +48,8 @@ const Team = () => {
                 <div className="max-sm:w-full dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-gray-300 dark:border-zinc-800 rounded-lg p-6">
                     <div className="flex items-center justify-between gap-8 md:gap-22">
                         <div>
-                            <p className="text-sm text-gray-500 dark:text-zinc-400">Total Members</p>
-                            <p className="text-xl font-bold text-gray-900 dark:text-white">{users.length}</p>
+                            <p className="text-sm text-gray-500 dark:text-zinc-400">Team Members</p>
+                            <p className="text-xl font-bold text-gray-900 dark:text-white">{teamMembers.length}</p>
                         </div>
                         <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-500/10">
                             <UsersIcon className="size-4 text-blue-500 dark:text-blue-200" />
@@ -79,13 +57,13 @@ const Team = () => {
                     </div>
                 </div>
 
-                {/* Active Projects */}
+                {/* Team Name */}
                 <div className="max-sm:w-full dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-gray-300 dark:border-zinc-800 rounded-lg p-6">
                     <div className="flex items-center justify-between gap-8 md:gap-22">
                         <div>
-                            <p className="text-sm text-gray-500 dark:text-zinc-400">Active Projects</p>
+                            <p className="text-sm text-gray-500 dark:text-zinc-400">Current Team</p>
                             <p className="text-xl font-bold text-gray-900 dark:text-white">
-                                {projects.filter((p) => p.status !== "CANCELLED" && p.status !== "COMPLETED").length}
+                                {currentTeam?.name || "No Team"}
                             </p>
                         </div>
                         <div className="p-3 rounded-xl bg-emerald-100 dark:bg-emerald-500/10">
@@ -94,12 +72,14 @@ const Team = () => {
                     </div>
                 </div>
 
-                {/* Total Tasks */}
+                {/* Team Description */}
                 <div className="max-sm:w-full dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-gray-300 dark:border-zinc-800 rounded-lg p-6">
                     <div className="flex items-center justify-between gap-8 md:gap-22">
                         <div>
-                            <p className="text-sm text-gray-500 dark:text-zinc-400">Total Tasks</p>
-                            <p className="text-xl font-bold text-gray-900 dark:text-white">{tasks.length}</p>
+                            <p className="text-sm text-gray-500 dark:text-zinc-400">Team</p>
+                            <p className="text-xl font-bold text-gray-900 dark:text-white text-ellipsis line-clamp-1">
+                                {currentTeam?.description || "No description"}
+                            </p>
                         </div>
                         <div className="p-3 rounded-xl bg-purple-100 dark:bg-purple-500/10">
                             <Shield className="size-4 text-purple-500 dark:text-purple-200" />
