@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
+import { Button, InputAdornment, TextField } from '@mui/material';
 import { KeyRound, PlusCircle, UsersIcon } from 'lucide-react';
 
 import CreateTeamForm from '../components/team/CreateTeamForm';
@@ -65,23 +66,27 @@ export const Teams = () => {
                 <form onSubmit={handleJoinTeam} className="flex flex-col md:flex-row gap-3 md:items-end">
                     <div className="flex-1">
                         <label className="text-sm text-zinc-700 dark:text-zinc-300">Join Existing Team</label>
-                        <div className="relative mt-1">
-                            <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-500" />
-                            <input
-                                value={joinIdentifier}
-                                onChange={(e) => setJoinIdentifier(e.target.value)}
-                                placeholder="Enter team ID or invite code"
-                                className="w-full pl-9 pr-3 py-2 rounded border border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 text-sm"
-                            />
-                        </div>
+                        <TextField
+                            value={joinIdentifier}
+                            onChange={(e) => setJoinIdentifier(e.target.value)}
+                            placeholder="Enter team ID or invite code"
+                            sx={{ mt: 1 }}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <KeyRound className="size-4" />
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
                     </div>
-                    <button
+                    <Button
                         type="submit"
                         disabled={isJoining || !joinIdentifier.trim()}
-                        className="px-4 py-2 text-sm rounded bg-gradient-to-br from-blue-500 to-blue-600 text-white disabled:opacity-50"
+                        variant="contained"
                     >
                         {isJoining ? 'Joining...' : 'Join Team'}
-                    </button>
+                    </Button>
                 </form>
                 {teamsError && <p className="text-sm text-red-500 mt-2">{teamsError}</p>}
             </div>

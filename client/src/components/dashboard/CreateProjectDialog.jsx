@@ -1,5 +1,18 @@
 import { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import {
+    Box,
+    Button,
+    Chip,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    IconButton,
+    MenuItem,
+    TextField,
+    Typography,
+} from '@mui/material';
 import { XIcon } from 'lucide-react';
 import { dummyUsers } from '../../assets/assets';
 import { createProjectAtomic, selectCurrentTeamId, selectUserTeamObjects } from '../../store';
@@ -116,184 +129,198 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
         setFormData((prev) => ({ ...prev, team_members: prev.team_members.filter(m => m !== email) }));
     };
 
-    if (!isDialogOpen) return null;
-
     return (
-        <div className="fixed inset-0 bg-black/20 dark:bg-black/60 backdrop-blur flex items-center justify-center text-left z-50">
-            <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 w-full max-w-lg text-zinc-900 dark:text-zinc-200 relative">
-                <button className="absolute top-3 right-3 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200" onClick={() => setIsDialogOpen(false)} >
+        <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)} fullWidth maxWidth="md">
+            <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                Create New Project
+                <IconButton size="small" onClick={() => setIsDialogOpen(false)}>
                     <XIcon className="size-5" />
-                </button>
-
-                <h2 className="text-xl font-medium mb-1">Create New Project</h2>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+                </IconButton>
+            </DialogTitle>
+            <DialogContent>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                     Add a new project to your team
-                </p>
+                </Typography>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Team Selection */}
-                    <div>
-                        <label className="block text-sm mb-1">Team *</label>
-                        <select 
-                            value={formData.teamId} 
+                <Box component="form" onSubmit={handleSubmit} sx={{ display: 'grid', gap: 2 }}>
+                    <TextField
+                        select
+                        label="Team *"
+                        value={formData.teamId}
+                        onChange={(e) =>
+                            setFormData({
+                                ...formData,
+                                teamId: e.target.value,
+                                team_members: [],
+                                team_lead: "",
+                            })
+                        }
+                        required
+                    >
+                        <MenuItem value="">Select a team</MenuItem>
+                        {userTeams.map((team) => (
+                            <MenuItem key={team.id} value={team.id}>
+                                {team.name}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                    {userTeams.length === 0 && (
+                        <Typography variant="caption" color="warning.main">
+                            You must be a member of a team to create a project
+                        </Typography>
+                    )}
+
+                    <TextField
+                        label="Project Name"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        placeholder="Enter project name"
+                        required
+                    />
+
+                    <TextField
+                        label="Description"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        placeholder="Describe your project"
+                        multiline
+                        rows={3}
+                    />
+
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                        <TextField
+                            select
+                            label="Status"
+                            value={formData.status}
                             onChange={(e) =>
-                                setFormData({
-                                    ...formData,
-                                    teamId: e.target.value,
-                                    team_members: [],
-                                    team_lead: "",
-                                })
-                            } 
-                            className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
-                            required
+                                setFormData((prev) => ({
+                                    ...prev,
+                                    status: e.target.value,
+                                    result: e.target.value === "completed" ? prev.result : "",
+                                }))
+                            }
                         >
-                            <option value="">Select a team</option>
-                            {userTeams.map((team) => (
-                                <option key={team.id} value={team.id}>
-                                    {team.name}
-                                </option>
-                            ))}
-                        </select>
-                        {userTeams.length === 0 && (
-                            <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                                You must be a member of a team to create a project
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Project Name */}
-                    <div>
-                        <label className="block text-sm mb-1">Project Name</label>
-                        <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Enter project name" className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm" required />
-                    </div>
-
-                    {/* Description */}
-                    <div>
-                        <label className="block text-sm mb-1">Description</label>
-                        <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="Describe your project" className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm h-20" />
-                    </div>
-
-                    {/* Status & Priority */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm mb-1">Status</label>
-                            <select
-                                value={formData.status}
-                                onChange={(e) =>
-                                    setFormData((prev) => ({
-                                        ...prev,
-                                        status: e.target.value,
-                                        result: e.target.value === "completed" ? prev.result : "",
-                                    }))
-                                }
-                                className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
-                            >
-                                <option value="active">Active</option>
-                                <option value="completed">Completed</option>
-                                <option value="deprecated">Deprecated</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm mb-1">Priority</label>
-                            <select value={formData.priority} onChange={(e) => setFormData({ ...formData, priority: e.target.value })} className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm" >
-                                <option value="LOW">Low</option>
-                                <option value="MEDIUM">Medium</option>
-                                <option value="HIGH">High</option>
-                            </select>
-                        </div>
-                    </div>
+                            <MenuItem value="active">Active</MenuItem>
+                            <MenuItem value="completed">Completed</MenuItem>
+                            <MenuItem value="deprecated">Deprecated</MenuItem>
+                        </TextField>
+                        <TextField
+                            select
+                            label="Priority"
+                            value={formData.priority}
+                            onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                        >
+                            <MenuItem value="LOW">Low</MenuItem>
+                            <MenuItem value="MEDIUM">Medium</MenuItem>
+                            <MenuItem value="HIGH">High</MenuItem>
+                        </TextField>
+                    </Box>
 
                     {formData.status === "completed" && (
-                        <div>
-                            <label className="block text-sm mb-1">Result</label>
-                            <select
-                                value={formData.result}
-                                onChange={(e) => setFormData({ ...formData, result: e.target.value })}
-                                className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
-                            >
-                                <option value="">Not Set</option>
-                                <option value="success">Success</option>
-                                <option value="failed">Failed</option>
-                                <option value="ongoing">Ongoing</option>
-                            </select>
-                        </div>
-                    )}
-
-                    {/* Dates */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm mb-1">Start Date</label>
-                            <input type="date" value={formData.start_date} onChange={(e) => setFormData({ ...formData, start_date: e.target.value })} className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm" />
-                        </div>
-                        <div>
-                            <label className="block text-sm mb-1">End Date</label>
-                            <input type="date" value={formData.end_date} onChange={(e) => setFormData({ ...formData, end_date: e.target.value })} min={formData.start_date && new Date(formData.start_date).toISOString().split('T')[0]} className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm" />
-                        </div>
-                    </div>
-
-                    {/* Lead */}
-                    <div>
-                        <label className="block text-sm mb-1">Project Lead</label>
-                        <select value={formData.team_lead} onChange={(e) => setFormData({ ...formData, team_lead: e.target.value, team_members: e.target.value ? [...new Set([...formData.team_members, e.target.value])] : formData.team_members, })} className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm" >
-                            <option value="">No lead</option>
-                            {teamUserOptions.map((user) => (
-                                <option key={user.id} value={user.id}>
-                                    {user.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Team Members */}
-                    <div>
-                        <label className="block text-sm mb-1">Team Members</label>
-                        <select className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
-                            onChange={(e) => {
-                                if (e.target.value && !formData.team_members.includes(e.target.value)) {
-                                    setFormData((prev) => ({ ...prev, team_members: [...prev.team_members, e.target.value] }));
-                                }
-                            }}
+                        <TextField
+                            select
+                            label="Result"
+                            value={formData.result}
+                            onChange={(e) => setFormData({ ...formData, result: e.target.value })}
                         >
-                            <option value="">Add team members</option>
-                            {teamUserOptions
-                                ?.filter((user) => !formData.team_members.includes(user.id))
-                                .map((user) => (
-                                    <option key={user.id} value={user.id}>
-                                        {user.name}
-                                    </option>
-                                ))}
-                        </select>
-
-                        {formData.team_members.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-2">
-                                {formData.team_members.map((email) => (
-                                    <div key={email} className="flex items-center gap-1 bg-blue-200/50 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-md text-sm" >
-                                        {email}
-                                        <button type="button" onClick={() => removeTeamMember(email)} className="ml-1 hover:bg-blue-300/30 dark:hover:bg-blue-500/30 rounded" >
-                                            <XIcon className="w-3 h-3" />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Footer */}
-                    {(submitError || projectsError) && (
-                        <p className="text-sm text-red-600 dark:text-red-400">{submitError || projectsError}</p>
+                            <MenuItem value="">Not Set</MenuItem>
+                            <MenuItem value="success">Success</MenuItem>
+                            <MenuItem value="failed">Failed</MenuItem>
+                            <MenuItem value="ongoing">Ongoing</MenuItem>
+                        </TextField>
                     )}
-                    <div className="flex justify-end gap-3 pt-2 text-sm">
-                        <button type="button" onClick={() => setIsDialogOpen(false)} className="px-4 py-2 rounded border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-800" >
+
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                        <TextField
+                            type="date"
+                            label="Start Date"
+                            value={formData.start_date}
+                            onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                            InputLabelProps={{ shrink: true }}
+                        />
+                        <TextField
+                            type="date"
+                            label="End Date"
+                            value={formData.end_date}
+                            onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                            InputLabelProps={{ shrink: true }}
+                            inputProps={{
+                                min: formData.start_date && new Date(formData.start_date).toISOString().split('T')[0],
+                            }}
+                        />
+                    </Box>
+
+                    <TextField
+                        select
+                        label="Project Lead"
+                        value={formData.team_lead}
+                        onChange={(e) =>
+                            setFormData({
+                                ...formData,
+                                team_lead: e.target.value,
+                                team_members: e.target.value
+                                    ? [...new Set([...formData.team_members, e.target.value])]
+                                    : formData.team_members,
+                            })
+                        }
+                    >
+                        <MenuItem value="">No lead</MenuItem>
+                        {teamUserOptions.map((user) => (
+                            <MenuItem key={user.id} value={user.id}>
+                                {user.name}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+
+                    <TextField
+                        select
+                        label="Team Members"
+                        value=""
+                        onChange={(e) => {
+                            if (e.target.value && !formData.team_members.includes(e.target.value)) {
+                                setFormData((prev) => ({ ...prev, team_members: [...prev.team_members, e.target.value] }));
+                            }
+                        }}
+                    >
+                        <MenuItem value="">Add team members</MenuItem>
+                        {teamUserOptions
+                            ?.filter((user) => !formData.team_members.includes(user.id))
+                            .map((user) => (
+                                <MenuItem key={user.id} value={user.id}>
+                                    {user.name}
+                                </MenuItem>
+                            ))}
+                    </TextField>
+
+                    {formData.team_members.length > 0 && (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                            {formData.team_members.map((memberId) => (
+                                <Chip
+                                    key={memberId}
+                                    label={memberId}
+                                    onDelete={() => removeTeamMember(memberId)}
+                                    deleteIcon={<XIcon className="w-3 h-3" />}
+                                />
+                            ))}
+                        </Box>
+                    )}
+
+                    {(submitError || projectsError) && (
+                        <Typography variant="body2" color="error">
+                            {submitError || projectsError}
+                        </Typography>
+                    )}
+                    <DialogActions sx={{ px: 0 }}>
+                        <Button type="button" variant="outlined" onClick={() => setIsDialogOpen(false)}>
                             Cancel
-                        </button>
-                        <button disabled={isSubmitting || userTeams.length === 0} className="px-4 py-2 rounded bg-gradient-to-br from-blue-500 to-blue-600 text-white dark:text-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed" >
+                        </Button>
+                        <Button type="submit" variant="contained" disabled={isSubmitting || userTeams.length === 0}>
                             {isSubmitting ? "Creating..." : "Create Project"}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                        </Button>
+                    </DialogActions>
+                </Box>
+            </DialogContent>
+        </Dialog>
     );
 };
 

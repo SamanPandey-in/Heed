@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { Button, IconButton, MenuItem, Slider, TextField } from '@mui/material';
 import { format } from 'date-fns';
 import { Plus, Save, Trash2 } from 'lucide-react';
 import { dummyUsers } from '../../assets/assets';
@@ -101,8 +102,6 @@ export default function ProjectSettings({ project }) {
         navigate("/projects");
     };
 
-    const inputClasses = "w-full px-3 py-2 rounded mt-2 border text-sm dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-300";
-
     const cardClasses = "rounded-lg border p-6 not-dark:bg-white dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border-zinc-300 dark:border-zinc-800";
 
     const labelClasses = "text-sm text-zinc-600 dark:text-zinc-400";
@@ -126,18 +125,24 @@ export default function ProjectSettings({ project }) {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
                         <label className={labelClasses}>Project Name</label>
-                        <input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={inputClasses} required />
+                        <TextField value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
                     </div>
 
                     <div className="space-y-2">
                         <label className={labelClasses}>Description</label>
-                        <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className={inputClasses + " h-24"} />
+                        <TextField
+                            value={formData.description}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            multiline
+                            rows={4}
+                        />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className={labelClasses}>Status</label>
-                            <select
+                            <TextField
+                                select
                                 value={formData.status}
                                 onChange={(e) =>
                                     setFormData((prev) => ({
@@ -146,74 +151,75 @@ export default function ProjectSettings({ project }) {
                                         result: e.target.value === "completed" ? prev.result : "",
                                     }))
                                 }
-                                className={inputClasses}
                             >
                                 {statusOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <MenuItem key={option.value} value={option.value}>
                                         {option.label}
-                                    </option>
+                                    </MenuItem>
                                 ))}
-                            </select>
+                            </TextField>
                         </div>
 
                         <div className="space-y-2">
                             <label className={labelClasses}>Result</label>
-                            <select
+                            <TextField
+                                select
                                 value={formData.result || ""}
                                 onChange={(e) => setFormData({ ...formData, result: e.target.value })}
-                                className={inputClasses}
                                 disabled={formData.status !== "completed"}
                             >
                                 {resultOptions.map((option) => (
-                                    <option key={option.value || "not-set"} value={option.value}>
+                                    <MenuItem key={option.value || "not-set"} value={option.value}>
                                         {option.label}
-                                    </option>
+                                    </MenuItem>
                                 ))}
-                            </select>
+                            </TextField>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className={labelClasses}>Priority</label>
-                            <select value={formData.priority} onChange={(e) => setFormData({ ...formData, priority: e.target.value })} className={inputClasses} >
-                                <option value="LOW">Low</option>
-                                <option value="MEDIUM">Medium</option>
-                                <option value="HIGH">High</option>
-                            </select>
+                            <TextField select value={formData.priority} onChange={(e) => setFormData({ ...formData, priority: e.target.value })}>
+                                <MenuItem value="LOW">Low</MenuItem>
+                                <MenuItem value="MEDIUM">Medium</MenuItem>
+                                <MenuItem value="HIGH">High</MenuItem>
+                            </TextField>
                         </div>
 
                         <div className="space-y-2">
                             <label className={labelClasses}>Progress: {formData.progress}%</label>
-                            <input type="range" min="0" max="100" step="5" value={formData.progress} onChange={(e) => setFormData({ ...formData, progress: Number(e.target.value) })} className="w-full accent-blue-500 dark:accent-blue-400" />
+                            <Slider min={0} max={100} step={5} value={formData.progress} onChange={(_, value) => setFormData({ ...formData, progress: Number(value) })} />
                         </div>
                     </div>
 
                     <div className="space-y-4 grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className={labelClasses}>Start Date</label>
-                            <input type="date" value={formData.start_date} onChange={(e) => setFormData({ ...formData, start_date: e.target.value })} className={inputClasses} />
+                            <TextField type="date" value={formData.start_date} onChange={(e) => setFormData({ ...formData, start_date: e.target.value })} InputLabelProps={{ shrink: true }} />
                         </div>
                         <div className="space-y-2">
                             <label className={labelClasses}>End Date</label>
-                            <input type="date" value={formData.end_date} onChange={(e) => setFormData({ ...formData, end_date: e.target.value })} className={inputClasses} />
+                            <TextField type="date" value={formData.end_date} onChange={(e) => setFormData({ ...formData, end_date: e.target.value })} InputLabelProps={{ shrink: true }} />
                         </div>
                     </div>
 
                     {error && <p className="text-sm text-red-500">{error}</p>}
 
                     <div className="flex items-center justify-between gap-2">
-                        <button
+                        <Button
                             type="button"
                             disabled={isDeleting}
                             onClick={handleDeleteProject}
-                            className="flex items-center text-sm justify-center gap-2 border border-red-300 text-red-600 px-4 py-2 rounded disabled:opacity-60"
+                            variant="outlined"
+                            color="error"
+                            startIcon={<Trash2 className="size-4" />}
                         >
-                            <Trash2 className="size-4" /> {isDeleting ? "Deleting..." : "Delete Project"}
-                        </button>
-                        <button type="submit" disabled={isSubmitting || isDeleting} className="flex items-center text-sm justify-center gap-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white px-4 py-2 rounded disabled:opacity-60" >
-                            <Save className="size-4" /> {isSubmitting ? "Saving..." : "Save Changes"}
-                        </button>
+                            {isDeleting ? "Deleting..." : "Delete Project"}
+                        </Button>
+                        <Button type="submit" disabled={isSubmitting || isDeleting} variant="contained" startIcon={<Save className="size-4" />}>
+                            {isSubmitting ? "Saving..." : "Save Changes"}
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -224,9 +230,9 @@ export default function ProjectSettings({ project }) {
                         <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-300 mb-4">
                             Team Members <span className="text-sm text-zinc-600 dark:text-zinc-400">({memberRows.length})</span>
                         </h2>
-                        <button type="button" onClick={() => setIsDialogOpen(true)} className="p-2 rounded-lg border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800" >
+                        <IconButton type="button" onClick={() => setIsDialogOpen(true)} size="small">
                             <Plus className="size-4 text-zinc-900 dark:text-zinc-300" />
-                        </button>
+                        </IconButton>
                         <AddProjectMember
                             isDialogOpen={isDialogOpen}
                             setIsDialogOpen={setIsDialogOpen}

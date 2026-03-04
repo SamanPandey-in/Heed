@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Button, TextField } from '@mui/material';
 import { User, Mail, Calendar, LogOut } from 'lucide-react';
 
 import { useAuth } from '../firebase/auth';
-import { Button } from '../components';
 import { dummyUsers } from '../assets/assets';
 
 const Profile = () => {
@@ -148,11 +148,10 @@ const Profile = () => {
             <label className="block text-gray-700 dark:text-gray-300 font-medium text-sm mb-2">Full Name</label>
             {editingName ? (
               <div className="space-y-3">
-                <input
+                <TextField
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full px-4 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-white/20 focus:border-transparent outline-none"
                 />
                 <div className="flex gap-3">
                   <Button
@@ -196,11 +195,10 @@ const Profile = () => {
             <label className="block text-gray-700 dark:text-gray-300 font-medium text-sm mb-2">Username</label>
             {editingUsername ? (
               <div className="space-y-3">
-                <input
+                <TextField
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-4 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-white/20 focus:border-transparent outline-none"
                 />
                 <div className="flex gap-3">
                   <Button

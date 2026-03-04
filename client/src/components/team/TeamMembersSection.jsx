@@ -1,4 +1,17 @@
 import { Search, UsersIcon } from 'lucide-react';
+import {
+    Avatar,
+    Chip,
+    InputAdornment,
+    Paper,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    TextField,
+} from '@mui/material';
 
 const TeamMembersSection = ({
     members = [],
@@ -9,12 +22,17 @@ const TeamMembersSection = ({
     return (
         <section className="space-y-4">
             <div className="relative max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-zinc-400 size-3" />
-                <input
+                <TextField
                     placeholder="Search team members..."
                     value={searchTerm}
                     onChange={(e) => onSearchTermChange(e.target.value)}
-                    className="pl-8 w-full text-sm rounded-md border border-gray-300 dark:border-zinc-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-400 py-2 focus:outline-none focus:border-blue-500"
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <Search className="size-3" />
+                            </InputAdornment>
+                        ),
+                    }}
                 />
             </div>
 
@@ -35,47 +53,45 @@ const TeamMembersSection = ({
             ) : (
                 <div className="max-w-4xl w-full">
                     <div className="hidden sm:block overflow-x-auto rounded-md border border-gray-200 dark:border-zinc-800">
-                        <table className="min-w-full divide-y divide-gray-200 dark:divide-zinc-800">
-                            <thead className="bg-gray-50 dark:bg-zinc-900/50">
-                                <tr>
-                                    <th className="px-6 py-2.5 text-left font-medium text-sm">Name</th>
-                                    <th className="px-6 py-2.5 text-left font-medium text-sm">Email</th>
-                                    <th className="px-6 py-2.5 text-left font-medium text-sm">Role</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
+                        <TableContainer component={Paper} elevation={0}>
+                            <Table size="small">
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>Name</TableCell>
+                                        <TableCell>Email</TableCell>
+                                        <TableCell>Role</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
                                 {filteredMembers.map((member) => (
-                                    <tr
-                                        key={member.id}
-                                        className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors"
-                                    >
-                                        <td className="px-6 py-2.5 whitespace-nowrap flex items-center gap-3">
-                                            <img
+                                    <TableRow key={member.id} hover>
+                                        <TableCell>
+                                            <div className="whitespace-nowrap flex items-center gap-3">
+                                                <Avatar
                                                 src={member.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.id}`}
                                                 alt={member.name}
-                                                className="size-7 rounded-full bg-gray-200 dark:bg-zinc-800"
+                                                sx={{ width: 28, height: 28 }}
                                             />
-                                            <span className="text-sm text-zinc-800 dark:text-white truncate">
-                                                {member.name || "Unknown User"}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-2.5 whitespace-nowrap text-sm text-gray-500 dark:text-zinc-400">
+                                                <span className="text-sm text-zinc-800 dark:text-white truncate">
+                                                    {member.name || "Unknown User"}
+                                                </span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="whitespace-nowrap text-sm text-gray-500 dark:text-zinc-400">
                                             {member.email}
-                                        </td>
-                                        <td className="px-6 py-2.5 whitespace-nowrap">
-                                            <span
-                                                className={`px-2 py-1 text-xs rounded-md ${member.role === "ADMIN"
-                                                    ? "bg-purple-100 dark:bg-purple-500/20 text-purple-500 dark:text-purple-400"
-                                                    : "bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
-                                                    }`}
-                                            >
-                                                {member.role || "Member"}
-                                            </span>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                        <TableCell className="whitespace-nowrap">
+                                            <Chip
+                                                size="small"
+                                                color={member.role === "ADMIN" ? "secondary" : "default"}
+                                                label={member.role || "Member"}
+                                            />
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
-                            </tbody>
-                        </table>
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
                     </div>
 
                     <div className="sm:hidden space-y-3">
@@ -99,14 +115,11 @@ const TeamMembersSection = ({
                                         </p>
                                     </div>
                                 </div>
-                                <span
-                                    className={`px-2 py-1 text-xs rounded-md ${member.role === "ADMIN"
-                                        ? "bg-purple-100 dark:bg-purple-500/20 text-purple-500 dark:text-purple-400"
-                                        : "bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
-                                        }`}
-                                >
-                                    {member.role || "Member"}
-                                </span>
+                                <Chip
+                                    size="small"
+                                    color={member.role === "ADMIN" ? "secondary" : "default"}
+                                    label={member.role || "Member"}
+                                />
                             </div>
                         ))}
                     </div>

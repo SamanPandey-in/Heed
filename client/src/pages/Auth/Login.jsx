@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Button, IconButton, InputAdornment, TextField } from '@mui/material';
 import { Mail, Lock, Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
@@ -176,17 +177,19 @@ export default function Login() {
               />
 
               <div className="flex justify-end">
-                <button
+                <Button
                   type="button"
                   onClick={() => {
                     setMode('forgot');
                     setError("");
                     setSuccessMsg("");
                   }}
-                  className="text-xs text-zinc-400 hover:text-white transition-colors"
+                  variant="text"
+                  color="inherit"
+                  size="small"
                 >
                   Forgot password?
-                </button>
+                </Button>
               </div>
 
               <AuthButton loading={loading} disabled={!isEmailValid(formData.email) || formData.password === ""}>
@@ -203,29 +206,37 @@ export default function Login() {
               </div>
             </div>
 
-            <button
+            <Button
               type="button"
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+              fullWidth
+              variant="outlined"
+              color="inherit"
+              startIcon={
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path fill="currentColor" d="M12 10.8v3.6h5.1c-.2 1.3-1.5 3.8-5.1 3.8A6 6 0 1 1 12 6c1.7 0 2.9.7 3.6 1.3l2.4-2.3C16.5 3.6 14.4 2.5 12 2.5A9.5 9.5 0 1 0 21.5 12c0-.6-.1-1.1-.2-1.7H12z" />
+                </svg>
+              }
+              sx={{ py: 1.2 }}
             >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M12 10.8v3.6h5.1c-.2 1.3-1.5 3.8-5.1 3.8A6 6 0 1 1 12 6c1.7 0 2.9.7 3.6 1.3l2.4-2.3C16.5 3.6 14.4 2.5 12 2.5A9.5 9.5 0 1 0 21.5 12c0-.6-.1-1.1-.2-1.7H12z" />
-              </svg>
               Google
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
               onClick={() => {
                 setMode('emailsignin');
                 setError("");
                 setSuccessMsg("");
               }}
-              className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all text-sm font-medium"
+              fullWidth
+              variant="outlined"
+              color="inherit"
+              sx={{ py: 1.2 }}
             >
               Sign in with Email Link
-            </button>
+            </Button>
 
             <div className="text-center text-sm text-zinc-400">
               Don't have an account?{" "}
@@ -243,16 +254,18 @@ export default function Login() {
             animate={{ opacity: 1, x: 0 }}
             className="space-y-6"
           >
-            <button
+            <Button
               onClick={() => {
                 setMode('login');
                 setError("");
                 setSuccessMsg("");
               }}
-              className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-sm"
+              variant="text"
+              color="inherit"
+              startIcon={<ArrowLeft size={16} />}
             >
-              <ArrowLeft size={16} /> Back to Login
-            </button>
+              Back to Login
+            </Button>
             <div>
               <h1 className="text-3xl font-bold text-white">Reset Password</h1>
               <p className="text-zinc-400 mt-2">Enter your email to receive a reset link.</p>
@@ -299,16 +312,18 @@ export default function Login() {
             animate={{ opacity: 1, x: 0 }}
             className="space-y-6"
           >
-            <button
+            <Button
               onClick={() => {
                 setMode('login');
                 setError("");
                 setSuccessMsg("");
               }}
-              className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-sm"
+              variant="text"
+              color="inherit"
+              startIcon={<ArrowLeft size={16} />}
             >
-              <ArrowLeft size={16} /> Back to Login
-            </button>
+              Back to Login
+            </Button>
             <div>
               <h1 className="text-3xl font-bold text-white">Sign In with Email Link</h1>
               <p className="text-zinc-400 mt-2">Enter your email to receive a sign-in link.</p>
@@ -365,19 +380,25 @@ const AuthInput = ({ label, icon, type = 'text', ...props }) => {
         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-white transition-colors">
           {icon}
         </div>
-        <input
+        <TextField
           {...props}
           type={inputType}
-          className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/30 transition-all"
+          fullWidth
+          variant="outlined"
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              pl: 4,
+            },
+          }}
         />
         {isPasswordType && (
-          <button
+          <IconButton
             type="button"
             onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2"
           >
             {isPasswordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
-          </button>
+          </IconButton>
         )}
       </div>
     </div>
@@ -385,10 +406,12 @@ const AuthInput = ({ label, icon, type = 'text', ...props }) => {
 };
 
 const AuthButton = ({ children, loading, ...props }) => (
-  <button
+  <Button
     {...props}
-    className="w-full py-4 rounded-xl bg-white text-black font-bold shadow-[0_10px_20px_rgba(255,255,255,0.05)] hover:bg-zinc-200 active:scale-[0.98] transition-all flex items-center justify-center disabled:opacity-50 disabled:scale-100"
+    fullWidth
+    variant="contained"
+    sx={{ py: 1.4 }}
   >
     {loading ? <Loader2 className="animate-spin" size={20} /> : children}
-  </button>
+  </Button>
 );

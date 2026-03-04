@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Button, IconButton } from '@mui/material';
 import { ChevronRightIcon, SettingsIcon, KanbanIcon, ChartColumnIcon, CalendarIcon, ArrowRightIcon } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { selectAllProjects } from '../../store';
@@ -33,20 +34,20 @@ const ProjectSidebar = () => {
                     Projects
                 </h3>
                 <Link to="/projects">
-                    <button className="size-5 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded flex items-center justify-center transition-colors duration-200">
+                    <IconButton size="small">
                         <ArrowRightIcon className="size-3" />
-                    </button>
+                    </IconButton>
                 </Link>
             </div>
 
             <div className="space-y-1 px-3">
                 {projects.map((project) => (
                     <div key={project.id}>
-                        <button onClick={() => toggleProject(project.id)} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors duration-200 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white" >
+                        <Button onClick={() => toggleProject(project.id)} className="w-full justify-start gap-2" color="inherit" size="small">
                             <ChevronRightIcon className={`size-3 text-gray-500 dark:text-zinc-400 transition-transform duration-200 ${expandedProjects.has(project.id) && 'rotate-90'}`} />
                             <div className="size-2 rounded-full bg-white/20" />
                             <span className="truncate max-w-40 text-sm">{project.name}</span>
-                        </button>
+                        </Button>
 
                         {expandedProjects.has(project.id) && (
                             <div className="ml-5 mt-1 space-y-1">

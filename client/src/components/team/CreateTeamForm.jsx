@@ -1,5 +1,16 @@
 import { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import {
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  InputAdornment,
+  TextField,
+} from '@mui/material';
 import { Plus, UserPlus, X } from 'lucide-react';
 
 import { dummyUsers } from '../../assets/assets';
@@ -142,38 +153,34 @@ const CreateTeamForm = ({ onTeamCreated, userId }) => {
   return (
     <div>
       {!isOpen && (
-        <button
+        <Button
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white text-sm rounded-lg hover:opacity-90 transition"
+          variant="contained"
+          startIcon={<Plus className="w-4 h-4" />}
         >
-          <Plus className="w-4 h-4" />
           Create Team
-        </button>
+        </Button>
       )}
 
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-lg max-w-md w-full border border-zinc-200 dark:border-zinc-700">
-            <div className="border-b border-zinc-200 dark:border-zinc-700 p-6">
-              <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Create New Team</h2>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <Dialog open={isOpen} onClose={() => setIsOpen(false)} fullWidth maxWidth="sm">
+            <DialogTitle>Create New Team</DialogTitle>
+            <DialogContent>
+            <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, display: 'grid', gap: 2 }}>
               <div className="space-y-2">
                 <label htmlFor="name" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                   Team Name *
                 </label>
-                <input
+                <TextField
                   type="text"
                   id="name"
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
                   placeholder="e.g., Marketing Team"
-                  maxLength={50}
-                  className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-blue-500"
+                  inputProps={{ maxLength: 50 }}
                   disabled={isSubmitting}
-                  autoFocus
+                  autoFocus={true}
                 />
               </div>
 
@@ -181,15 +188,15 @@ const CreateTeamForm = ({ onTeamCreated, userId }) => {
                 <label htmlFor="description" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                   Description (optional)
                 </label>
-                <textarea
+                <TextField
                   id="description"
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
                   placeholder="Describe the purpose of this team..."
-                  maxLength={200}
+                  inputProps={{ maxLength: 200 }}
+                  multiline
                   rows={3}
-                  className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-blue-500 resize-none"
                   disabled={isSubmitting}
                 />
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">{formData.description.length}/200</p>
@@ -200,23 +207,31 @@ const CreateTeamForm = ({ onTeamCreated, userId }) => {
                   Add Members (optional)
                 </label>
                 <div className="flex gap-2">
-                  <input
+                  <TextField
                     list="team-member-suggestions"
                     name="memberInput"
                     value={formData.memberInput}
                     onChange={handleInputChange}
                     placeholder="Enter user ID or email"
-                    className="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-sm"
+                    className="flex-1"
                     disabled={isSubmitting}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <UserPlus className="size-4" />
+                        </InputAdornment>
+                      ),
+                    }}
                   />
-                  <button
+                  <Button
                     type="button"
                     onClick={handleAddMember}
                     disabled={isSubmitting || !formData.memberInput.trim()}
-                    className="px-3 py-2 text-sm rounded bg-zinc-900 text-white dark:bg-zinc-200 dark:text-zinc-900 disabled:opacity-50 inline-flex items-center gap-1"
+                    variant="contained"
+                    startIcon={<UserPlus className="size-4" />}
                   >
-                    <UserPlus className="size-4" /> Add
-                  </button>
+                    Add
+                  </Button>
                 </div>
                 <datalist id="team-member-suggestions">
                   {memberSuggestions.map((member) => (
@@ -227,20 +242,13 @@ const CreateTeamForm = ({ onTeamCreated, userId }) => {
                 {formData.memberIds.length > 0 && (
                   <div className="flex flex-wrap gap-2 pt-1">
                     {formData.memberIds.map((memberId) => (
-                      <span
+                      <Chip
                         key={memberId}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 text-xs"
-                      >
-                        {memberId}
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveMember(memberId)}
-                          className="hover:opacity-70"
-                          aria-label={`Remove ${memberId}`}
-                        >
-                          <X className="size-3" />
-                        </button>
-                      </span>
+                        label={memberId}
+                        size="small"
+                        onDelete={() => handleRemoveMember(memberId)}
+                        deleteIcon={<X className="size-3" />}
+                      />
                     ))}
                   </div>
                 )}
@@ -252,8 +260,8 @@ const CreateTeamForm = ({ onTeamCreated, userId }) => {
                 </p>
               )}
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-700">
-                <button
+              <DialogActions sx={{ px: 0, pt: 2 }}>
+                <Button
                   type="button"
                   onClick={() => {
                     setIsOpen(false);
@@ -261,21 +269,21 @@ const CreateTeamForm = ({ onTeamCreated, userId }) => {
                     dispatch(clearTeamsError());
                   }}
                   disabled={isSubmitting}
-                  className="px-4 py-2 text-sm border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition disabled:opacity-50"
+                  variant="outlined"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={isSubmitting || !formData.name.trim()}
-                  className="px-4 py-2 text-sm bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:opacity-90 transition disabled:opacity-50"
+                  variant="contained"
                 >
                   {isSubmitting ? 'Creating...' : 'Create Team'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+                </Button>
+              </DialogActions>
+            </Box>
+            </DialogContent>
+        </Dialog>
       )}
     </div>
   );

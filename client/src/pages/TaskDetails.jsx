@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { Button, Chip, TextField, Typography } from '@mui/material';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { CalendarIcon, MessageCircle, PenIcon } from 'lucide-react';
 
-import { Button } from '../components';
 import { assets } from '../assets/assets';
 import { selectAllProjects } from '../store';
 
@@ -77,7 +77,7 @@ const TaskDetails = () => {
     }, [taskId, task]);
 
     if (loading) return <div className="text-gray-500 dark:text-zinc-400 px-4 py-6">Loading task details...</div>;
-    if (!task) return <div style={{color: 'var(--color-error)'}} className="px-4 py-6">Task not found.</div>;
+    if (!task) return <Typography color="error" sx={{ px: 2, py: 3 }}>Task not found.</Typography>;
 
     return (
         <div className="flex flex-col-reverse lg:flex-row gap-6 sm:p-4 text-gray-900 dark:text-zinc-100 max-w-6xl mx-auto">
@@ -111,12 +111,12 @@ const TaskDetails = () => {
 
                     {/* Add Comment */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3">
-                        <textarea
+                        <TextField
                             value={newComment}
                             onChange={(e) => setNewComment(e.target.value)}
                             placeholder="Write a comment..."
-                            style={{color: 'var(--color-input-text)', backgroundColor: 'var(--color-input-bg)', borderColor: 'var(--color-input-border)'}}
-                            className="w-full border rounded-md p-2 text-sm resize-none focus:outline-none focus:ring-1"
+                            className="w-full"
+                            multiline
                             rows={3}
                         />
                         <Button 
@@ -137,15 +137,9 @@ const TaskDetails = () => {
                     <div className="mb-3">
                         <h1 className="text-lg font-medium text-gray-900 dark:text-zinc-100">{task.title}</h1>
                         <div className="flex flex-wrap gap-2 mt-2">
-                            <span style={{backgroundColor: 'var(--color-surface-variant)', color: 'var(--color-text)'}} className="px-2 py-0.5 rounded text-xs">
-                                {task.status}
-                            </span>
-                            <span style={{backgroundColor: 'var(--color-surface-variant)', color: 'var(--color-text)'}} className="px-2 py-0.5 rounded text-xs">
-                                {task.type}
-                            </span>
-                            <span style={{backgroundColor: 'var(--color-surface-variant)', color: 'var(--color-text)'}} className="px-2 py-0.5 rounded text-xs">
-                                {task.priority}
-                            </span>
+                            <Chip label={task.status} size="small" />
+                            <Chip label={task.type} size="small" />
+                            <Chip label={task.priority} size="small" />
                         </div>
                     </div>
 

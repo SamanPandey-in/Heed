@@ -1,5 +1,16 @@
 import { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import {
+    Box,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    InputAdornment,
+    TextField,
+    Typography,
+} from '@mui/material';
 import { Mail, UserPlus } from 'lucide-react';
 
 import { dummyUsers } from '../../assets/assets';
@@ -59,69 +70,78 @@ const InviteMemberDialog = ({ isDialogOpen, setIsDialogOpen, teamId, onInviteSuc
         }
     };
 
-    if (!isDialogOpen) return null;
-
     return (
-        <div className="fixed inset-0 bg-black/20 dark:bg-black/50 backdrop-blur flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-xl p-6 w-full max-w-md text-zinc-900 dark:text-zinc-200">
-                <div className="mb-4">
-                    <h2 className="text-xl font-bold flex items-center gap-2">
-                        <UserPlus className="size-5 text-zinc-900 dark:text-zinc-200" /> Add Team Member
-                    </h2>
-                    <p className="text-sm text-zinc-700 dark:text-zinc-400">
-                        Add a member to <span className="font-medium">{team?.name || 'this team'}</span>
-                    </p>
-                </div>
+        <Dialog
+            open={isDialogOpen}
+            onClose={() => {
+                setIsDialogOpen(false);
+                setUserIdentifier('');
+                dispatch(clearTeamsError());
+            }}
+            fullWidth
+            maxWidth="sm"
+        >
+            <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <UserPlus className="size-5" />
+                Add Team Member
+            </DialogTitle>
+            <DialogContent>
+                <Typography variant="body2" sx={{ mb: 2 }}>
+                    Add a member to <strong>{team?.name || 'this team'}</strong>
+                </Typography>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                        <label htmlFor="member-id" className="text-sm font-medium text-zinc-900 dark:text-zinc-200">
-                            User ID or Email
-                        </label>
-                        <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 dark:text-zinc-400 w-4 h-4" />
-                            <input
-                                id="member-id"
-                                list="team-invite-suggestions"
-                                value={userIdentifier}
-                                onChange={(e) => setUserIdentifier(e.target.value)}
-                                placeholder="e.g. user_2 or john@example.com"
-                                className="pl-10 mt-1 w-full rounded border border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-200 text-sm placeholder-zinc-400 dark:placeholder-zinc-500 py-2 focus:outline-none"
-                                required
-                            />
-                            <datalist id="team-invite-suggestions">
-                                {suggestedUsers.map((user) => (
-                                    <option key={user.id} value={user.id} label={`${user.name} (${user.email})`} />
-                                ))}
-                            </datalist>
-                        </div>
-                    </div>
+                <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+                    <TextField
+                        id="member-id"
+                        list="team-invite-suggestions"
+                        label="User ID or Email"
+                        value={userIdentifier}
+                        onChange={(e) => setUserIdentifier(e.target.value)}
+                        placeholder="e.g. user_2 or john@example.com"
+                        required
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <Mail className="w-4 h-4" />
+                                </InputAdornment>
+                            ),
+                        }}
+                    />
+                    <datalist id="team-invite-suggestions">
+                        {suggestedUsers.map((user) => (
+                            <option key={user.id} value={user.id} label={`${user.name} (${user.email})`} />
+                        ))}
+                    </datalist>
 
-                    {teamsError && <p className="text-sm text-red-500">{teamsError}</p>}
+                    {teamsError && (
+                        <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                            {teamsError}
+                        </Typography>
+                    )}
 
-                    <div className="flex justify-end gap-3 pt-2">
-                        <button
+                    <DialogActions sx={{ px: 0, pt: 3 }}>
+                        <Button
                             type="button"
+                            variant="outlined"
                             onClick={() => {
                                 setIsDialogOpen(false);
                                 setUserIdentifier('');
                                 dispatch(clearTeamsError());
                             }}
-                            className="px-5 py-2 rounded text-sm border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
                         >
                             Cancel
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="submit"
+                            variant="contained"
                             disabled={isSubmitting || !teamId || !userIdentifier.trim()}
-                            className="px-5 py-2 rounded text-sm text-white disabled:opacity-50 hover:opacity-90 transition bg-gradient-to-br from-blue-500 to-blue-600"
                         >
                             {isSubmitting ? 'Adding...' : 'Add Member'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                        </Button>
+                    </DialogActions>
+                </Box>
+            </DialogContent>
+        </Dialog>
     );
 };
 

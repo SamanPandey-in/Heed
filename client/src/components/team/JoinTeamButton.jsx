@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { Button } from '@mui/material';
 import { clearTeamsError, joinTeamAtomic, selectCurrentUserId } from '../../store';
 import { selectIsUserInTeam } from '../../store/selectors';
 import { UserPlus, Check } from 'lucide-react';
@@ -37,25 +38,26 @@ const JoinTeamButton = ({ teamId, userId, onJoinSuccess }) => {
 
   if (isUserInTeam) {
     return (
-      <button
+      <Button
         disabled
-        className="flex items-center gap-2 px-3 py-2 text-sm bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg border border-green-300 dark:border-green-700 cursor-default"
+        variant="outlined"
+        color="success"
+        startIcon={<Check className="w-4 h-4" />}
       >
-        <Check className="w-4 h-4" />
         Member
-      </button>
+      </Button>
     );
   }
 
   return (
-    <button
+    <Button
       onClick={handleJoin}
       disabled={isSubmitting}
-      className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition disabled:opacity-50"
+      variant="contained"
+      startIcon={<UserPlus className="w-4 h-4" />}
     >
-      <UserPlus className="w-4 h-4" />
       {isSubmitting ? 'Joining...' : 'Join Team'}
-    </button>
+    </Button>
   );
 };
 

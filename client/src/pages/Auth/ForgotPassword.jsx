@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@mui/material';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -23,16 +24,18 @@ export default function ForgotPassword({
       animate={{ opacity: 1, scale: 1 }}
       className="space-y-6"
     >
-      <button
+      <Button
         onClick={() => {
           setAuthMode('login');
           setError('');
           setSuccessMsg('');
         }}
-        className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-sm"
+        variant="text"
+        color="inherit"
+        startIcon={<ArrowLeft size={16} />}
       >
-        <ArrowLeft size={16} /> Back to Login
-      </button>
+        Back to Login
+      </Button>
 
       <div>
         <h1 className="text-3xl font-bold text-white">Reset Password</h1>

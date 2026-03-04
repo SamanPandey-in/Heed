@@ -1,9 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
+import {
+  Button,
+  Checkbox,
+  FormControl,
+  FormControlLabel,
+  MenuItem,
+  Select,
+} from '@mui/material';
 import { Bell, Lock, Settings as SettingsIcon, Check } from 'lucide-react';
 
 import { updateUserSettings } from '../store';
-import { Button } from '../components';
 
 const Settings = () => {
   const dispatch = useDispatch();
@@ -146,31 +153,25 @@ const Settings = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between p-3 rounded hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition">
               <label className="text-gray-700 dark:text-gray-300 font-medium text-sm">Email Notifications</label>
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={settings.notifications.email}
                 onChange={(e) => handleNotificationChange('email', e.target.checked)}
-                className="w-5 h-5 rounded border-gray-300 dark:border-zinc-600 cursor-pointer accent-blue-600"
               />
             </div>
 
             <div className="flex items-center justify-between p-3 rounded hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition">
               <label className="text-gray-700 dark:text-gray-300 font-medium text-sm">Task Reminders</label>
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={settings.notifications.taskReminders}
                 onChange={(e) => handleNotificationChange('taskReminders', e.target.checked)}
-                className="w-5 h-5 rounded border-gray-300 dark:border-zinc-600 cursor-pointer accent-blue-600"
               />
             </div>
 
             <div className="flex items-center justify-between p-3 rounded hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition">
               <label className="text-gray-700 dark:text-gray-300 font-medium text-sm">Project Updates</label>
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={settings.notifications.projectUpdates}
                 onChange={(e) => handleNotificationChange('projectUpdates', e.target.checked)}
-                className="w-5 h-5 rounded border-gray-300 dark:border-zinc-600 cursor-pointer accent-blue-600"
               />
             </div>
           </div>
@@ -186,24 +187,23 @@ const Settings = () => {
           <div className="space-y-4">
             <div className="p-3 rounded hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition">
               <label className="block text-gray-700 dark:text-gray-300 font-medium text-sm mb-2">Profile Visibility</label>
-              <select
+              <Select
                 value={settings.privacy.profileVisibility}
                 onChange={(e) => handlePrivacyChange('profileVisibility', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-white/20 focus:border-transparent outline-none"
+                fullWidth
+                size="small"
               >
-                <option value="public">Public</option>
-                <option value="team">Team Members Only</option>
-                <option value="private">Private</option>
-              </select>
+                <MenuItem value="public">Public</MenuItem>
+                <MenuItem value="team">Team Members Only</MenuItem>
+                <MenuItem value="private">Private</MenuItem>
+              </Select>
             </div>
 
             <div className="flex items-center justify-between p-3 rounded hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition">
               <label className="text-gray-700 dark:text-gray-300 font-medium text-sm">Show Activity Status</label>
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={settings.privacy.activityStatus}
                 onChange={(e) => handlePrivacyChange('activityStatus', e.target.checked)}
-                className="w-5 h-5 rounded border-gray-300 dark:border-white/10 cursor-pointer accent-white/20"
               />
             </div>
           </div>
@@ -216,44 +216,47 @@ const Settings = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-3 rounded hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition">
               <label className="block text-gray-700 dark:text-gray-300 font-medium text-sm mb-2">Language</label>
-              <select
+              <Select
                 value={settings.preferences.language}
                 onChange={(e) => handlePreferenceChange('language', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-white/20 focus:border-transparent outline-none"
+                fullWidth
+                size="small"
               >
-                <option value="en">English</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-                <option value="de">German</option>
-              </select>
+                <MenuItem value="en">English</MenuItem>
+                <MenuItem value="es">Spanish</MenuItem>
+                <MenuItem value="fr">French</MenuItem>
+                <MenuItem value="de">German</MenuItem>
+              </Select>
             </div>
 
             <div className="p-3 rounded hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition">
               <label className="block text-gray-700 dark:text-gray-300 font-medium text-sm mb-2">Timezone</label>
-              <select
+              <Select
                 value={settings.preferences.timezone}
                 onChange={(e) => handlePreferenceChange('timezone', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-white/20 focus:border-transparent outline-none"
+                fullWidth
+                size="small"
               >
-                <option value="UTC">UTC</option>
-                <option value="EST">Eastern Time (EST)</option>
-                <option value="CST">Central Time (CST)</option>
-                <option value="MST">Mountain Time (MST)</option>
-                <option value="PST">Pacific Time (PST)</option>
-              </select>
+                <MenuItem value="UTC">UTC</MenuItem>
+                <MenuItem value="EST">Eastern Time (EST)</MenuItem>
+                <MenuItem value="CST">Central Time (CST)</MenuItem>
+                <MenuItem value="MST">Mountain Time (MST)</MenuItem>
+                <MenuItem value="PST">Pacific Time (PST)</MenuItem>
+              </Select>
             </div>
 
             <div className="p-3 rounded hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition">
               <label className="block text-gray-700 dark:text-gray-300 font-medium text-sm mb-2">Date Format</label>
-              <select
+              <Select
                 value={settings.preferences.dateFormat}
                 onChange={(e) => handlePreferenceChange('dateFormat', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-white/20 focus:border-transparent outline-none"
+                fullWidth
+                size="small"
               >
-                <option value="MM/dd/yyyy">MM/dd/yyyy</option>
-                <option value="dd/MM/yyyy">dd/MM/yyyy</option>
-                <option value="yyyy-MM-dd">yyyy-MM-dd</option>
-              </select>
+                <MenuItem value="MM/dd/yyyy">MM/dd/yyyy</MenuItem>
+                <MenuItem value="dd/MM/yyyy">dd/MM/yyyy</MenuItem>
+                <MenuItem value="yyyy-MM-dd">yyyy-MM-dd</MenuItem>
+              </Select>
             </div>
           </div>
         </div>
