@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { Button, ButtonGroup } from '@mui/material';
 import { Plus, FolderOpen } from 'lucide-react';
 
-import { ProjectCard, CreateProjectDialog, Button } from '../components';
+import { ProjectCard, CreateProjectDialog } from '../components';
 import { selectProjectsByStatus, selectUserTeams } from '../store';
 
 export default function Projects() {
@@ -42,19 +43,18 @@ export default function Projects() {
 
             {/* Status Filters */}
             <div className="flex flex-wrap items-center gap-2">
+                <ButtonGroup size="small" variant="outlined">
                 {statusButtons.map((filter) => (
-                    <button
+                    <Button
                         key={filter.key}
                         type="button"
                         onClick={() => setStatusFilter(filter.key)}
-                        className={`px-3 py-1.5 rounded-md text-sm border transition-colors ${statusFilter === filter.key
-                            ? "bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-200 dark:text-zinc-900 dark:border-zinc-200"
-                            : "bg-white text-zinc-700 border-zinc-300 dark:bg-zinc-900 dark:text-zinc-300 dark:border-zinc-700"
-                            }`}
+                        variant={statusFilter === filter.key ? 'contained' : 'outlined'}
                     >
                         {filter.label}
-                    </button>
+                    </Button>
                 ))}
+                </ButtonGroup>
             </div>
 
             {/* Projects Grid */}
@@ -70,10 +70,13 @@ export default function Projects() {
                         <p className="text-gray-500 dark:text-zinc-400 mb-6 text-sm">
                             Create your first project to get started
                         </p>
-                        <button onClick={() => setIsDialogOpen(true)} className="flex items-center gap-1.5 text-white px-4 py-2 rounded mx-auto text-sm" style={{backgroundColor: 'var(--color-btn-bg)'}}>
-                            <Plus className="size-4" />
+                        <Button
+                            variant="contained"
+                            onClick={() => setIsDialogOpen(true)}
+                            startIcon={<Plus className="size-4" />}
+                        >
                             Create Project
-                        </button>
+                        </Button>
                     </div>
                 ) : (
                     projects.map((project) => (

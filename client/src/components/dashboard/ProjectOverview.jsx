@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useSelector } from 'react-redux';
+import { Button } from '@mui/material';
 import { ArrowRight, Calendar, UsersIcon, FolderOpen } from 'lucide-react';
 import { selectAllTeams, selectProjectsForUserTeams, selectUserTeams } from '../../store';
-
+import { LinearProgressRounded } from '../ui/ReusableStyled';
 import CreateProjectDialog from './CreateProjectDialog';
+import tokens from '../../theme/tokens';
 
 const ProjectOverview = () => {
     const statusColors = {
@@ -26,7 +28,7 @@ const ProjectOverview = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     return (
-        <div className="bg-white dark:bg-black border border-zinc-200 dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/20 transition-all duration-200 rounded-lg overflow-hidden">
+        <div className={tokens.cardBgClass + " overflow-hidden"}>
             <div className="border-b border-zinc-200 dark:border-white/10 p-4 flex items-center justify-between">
                 <h2 className="text-md text-zinc-800 dark:text-zinc-300">Project Overview</h2>
                 <Link to={'/projects'} className="text-sm text-zinc-600 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 flex items-center">
@@ -41,9 +43,9 @@ const ProjectOverview = () => {
                             <FolderOpen size={32} />
                         </div>
                         <p className="text-zinc-600 dark:text-zinc-400">No projects yet</p>
-                        <button onClick={() => setIsDialogOpen(true)} className="mt-4 px-4 py-2 text-sm bg-white text-black border border-zinc-200 dark:border-white/10 rounded hover:bg-zinc-100 transition">
+                        <Button onClick={() => setIsDialogOpen(true)} variant="contained" sx={{ mt: 2 }}>
                             Create your First Project
-                        </button>
+                        </Button>
                         <CreateProjectDialog isDialogOpen={isDialogOpen} setIsDialogOpen={setIsDialogOpen} />
                     </div>
                 ) : (
@@ -96,9 +98,10 @@ const ProjectOverview = () => {
                                         <span className="text-zinc-500 dark:text-zinc-500">Progress</span>
                                         <span className="text-zinc-600 dark:text-zinc-400">{project.progress || 0}%</span>
                                     </div>
-                                    <div className="w-full bg-zinc-200 dark:bg-white/5 rounded h-1.5">
-                                        <div className="h-1.5 bg-white rounded" style={{ width: `${project.progress || 0}%` }} />
-                                    </div>
+                                    <LinearProgressRounded
+                                        variant="determinate"
+                                        value={project.progress || 0}
+                                    />
                                 </div>
                                 </Link>
                             );

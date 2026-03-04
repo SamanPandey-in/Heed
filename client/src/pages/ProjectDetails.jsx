@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Button, Chip, IconButton } from '@mui/material';
 import {
     ArrowLeftIcon,
     BarChart3Icon,
@@ -12,27 +13,8 @@ import {
     ZapIcon,
 } from 'lucide-react';
 
-import {
-    Button,
-    CreateTaskDialog,
-    ProjectAnalytics,
-    ProjectCalendar,
-    ProjectSettings,
-    ProjectTasks,
-} from '../components';
+import { CreateTaskDialog, ProjectAnalytics, ProjectCalendar, ProjectSettings, ProjectTasks } from '../components';
 import { selectProjectById, selectTeamById } from '../store';
-
-const statusColors = {
-    active: 'bg-emerald-200 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-900',
-    completed: 'bg-blue-200 text-blue-900 dark:bg-blue-500 dark:text-blue-900',
-    deprecated: 'bg-red-200 text-red-900 dark:bg-red-500 dark:text-red-900',
-};
-
-const resultColors = {
-    success: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300',
-    failed: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-300',
-    ongoing: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300',
-};
 
 export default function ProjectDetail() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -63,18 +45,28 @@ export default function ProjectDetail() {
         <div className="space-y-5 max-w-6xl mx-auto text-zinc-900 dark:text-white">
             <div className="flex max-md:flex-col gap-4 flex-wrap items-start justify-between max-w-6xl">
                 <div className="flex items-center gap-4 flex-wrap">
-                    <button className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400" onClick={() => navigate('/projects')}>
+                    <IconButton size="small" onClick={() => navigate('/projects')}>
                         <ArrowLeftIcon className="w-4 h-4" />
-                    </button>
+                    </IconButton>
                     <div className="flex items-center gap-3 flex-wrap">
                         <h1 className="text-xl font-medium">{project.name}</h1>
-                        <span className={`px-2 py-1 rounded text-xs capitalize ${statusColors[project.status] || statusColors.active}`}>
-                            {(project.status || 'active').replace('_', ' ')}
-                        </span>
+                        <Chip
+                            size="small"
+                            label={(project.status || 'active').replace('_', ' ')}
+                            color={
+                                project.status === 'completed'
+                                    ? 'success'
+                                    : project.status === 'deprecated'
+                                        ? 'error'
+                                        : 'default'
+                            }
+                        />
                         {project.status === 'completed' && (
-                            <span className={`px-2 py-1 rounded text-xs capitalize ${resultColors[project.result] || 'bg-zinc-200 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-300'}`}>
-                                Result: {project.result || 'not set'}
-                            </span>
+                            <Chip
+                                size="small"
+                                label={`Result: ${project.result || 'not set'}`}
+                                color={project.result === 'success' ? 'success' : project.result === 'failed' ? 'error' : 'warning'}
+                            />
                         )}
                         <Link
                             to={project.teamId ? `/teams/${project.teamId}` : '/teams'}
@@ -134,20 +126,18 @@ export default function ProjectDetail() {
                         { key: 'analytics', label: 'Analytics', icon: BarChart3Icon },
                         { key: 'settings', label: 'Settings', icon: SettingsIcon },
                     ].map((tabItem) => (
-                        <button
+                        <Button
                             key={tabItem.key}
+                            size="small"
+                            variant={activeTab === tabItem.key ? 'contained' : 'text'}
                             onClick={() => {
                                 setSearchParams({ tab: tabItem.key });
                             }}
-                            className={`flex items-center gap-2 px-4 py-2 text-sm transition-all ${
-                                activeTab === tabItem.key
-                                    ? 'bg-zinc-100 dark:bg-zinc-800/80'
-                                    : 'hover:bg-zinc-50 dark:hover:bg-zinc-700'
-                            }`}
+                            className="flex items-center gap-2"
                         >
                             <tabItem.icon className="size-3.5" />
                             {tabItem.label}
-                        </button>
+                        </Button>
                     ))}
                 </div>
 

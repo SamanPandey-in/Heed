@@ -1,8 +1,21 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import {
+    Button,
+    Chip,
+    FormControl,
+    MenuItem,
+    Select,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+} from '@mui/material';
 import { Plus, Calendar, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 
-import { StatsGrid, ProjectOverview, RecentActivity, TasksSummary, CreateProjectDialog, Button } from '../components';
+import { StatsGrid, ProjectOverview, RecentActivity, TasksSummary, CreateProjectDialog } from '../components';
 import { selectUserTasksSortedByDueDate, selectUserTasksCountByStatus, selectCurrentUser } from '../store';
 
 const Dashboard = () => {
@@ -30,16 +43,6 @@ const Dashboard = () => {
         }
         return 0;
     });
-
-    const getStatusColor = (status) => {
-        const colors = {
-            TODO: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300',
-            IN_PROGRESS: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400',
-            IN_REVIEW: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400',
-            DONE: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',
-        };
-        return colors[status] || colors.TODO;
-    };
 
     const getStatusIcon = (status) => {
         switch (status) {
@@ -114,25 +117,27 @@ const Dashboard = () => {
                         </p>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                        <select 
-                            value={filterStatus}
-                            onChange={(e) => setFilterStatus(e.target.value)}
-                            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-700 text-gray-900 dark:text-white text-sm bg-white dark:bg-zinc-900"
-                        >
-                            <option value="ALL">All Status</option>
-                            <option value="TODO">Todo</option>
-                            <option value="IN_PROGRESS">In Progress</option>
-                            <option value="IN_REVIEW">In Review</option>
-                            <option value="DONE">Done</option>
-                        </select>
-                        <select 
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value)}
-                            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-700 text-gray-900 dark:text-white text-sm bg-white dark:bg-zinc-900"
-                        >
-                            <option value="dueDate">Sort by Due Date</option>
-                            <option value="status">Sort by Status</option>
-                        </select>
+                        <FormControl size="small" sx={{ minWidth: 150 }}>
+                            <Select
+                                value={filterStatus}
+                                onChange={(e) => setFilterStatus(e.target.value)}
+                            >
+                                <MenuItem value="ALL">All Status</MenuItem>
+                                <MenuItem value="TODO">Todo</MenuItem>
+                                <MenuItem value="IN_PROGRESS">In Progress</MenuItem>
+                                <MenuItem value="IN_REVIEW">In Review</MenuItem>
+                                <MenuItem value="DONE">Done</MenuItem>
+                            </Select>
+                        </FormControl>
+                        <FormControl size="small" sx={{ minWidth: 170 }}>
+                            <Select
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value)}
+                            >
+                                <MenuItem value="dueDate">Sort by Due Date</MenuItem>
+                                <MenuItem value="status">Sort by Status</MenuItem>
+                            </Select>
+                        </FormControl>
                     </div>
                 </div>
 
@@ -163,31 +168,20 @@ const Dashboard = () => {
                             </p>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-gray-50 dark:bg-zinc-900/50 border-b border-gray-200 dark:border-zinc-800">
-                                    <tr>
-                                        <th className="px-4 sm:px-6 py-3 text-left text-sm font-medium text-gray-600 dark:text-zinc-400">
-                                            Task
-                                        </th>
-                                        <th className="hidden sm:table-cell px-4 sm:px-6 py-3 text-left text-sm font-medium text-gray-600 dark:text-zinc-400">
-                                            Project
-                                        </th>
-                                        <th className="hidden md:table-cell px-4 sm:px-6 py-3 text-left text-sm font-medium text-gray-600 dark:text-zinc-400">
-                                            Status
-                                        </th>
-                                        <th className="px-4 sm:px-6 py-3 text-left text-sm font-medium text-gray-600 dark:text-zinc-400">
-                                            Due Date
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
+                        <TableContainer>
+                            <Table size="small">
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>Task</TableCell>
+                                        <TableCell className="hidden sm:table-cell">Project</TableCell>
+                                        <TableCell className="hidden md:table-cell">Status</TableCell>
+                                        <TableCell>Due Date</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
                                     {sortedTasks.map((task) => (
-                                        <tr 
-                                            key={task.id}
-                                            className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors"
-                                        >
-                                            <td className="px-4 sm:px-6 py-3 text-sm">
+                                        <TableRow key={task.id} hover>
+                                            <TableCell>
                                                 <div>
                                                     <p className="font-medium text-gray-900 dark:text-white line-clamp-2">
                                                         {task.title}
@@ -196,26 +190,30 @@ const Dashboard = () => {
                                                         {task.description || 'No description'}
                                                     </p>
                                                 </div>
-                                            </td>
-                                            <td className="hidden sm:table-cell px-4 sm:px-6 py-3 text-sm text-gray-600 dark:text-zinc-400 whitespace-nowrap">
-                                                {task.projectName}
-                                            </td>
-                                            <td className="hidden md:table-cell px-4 sm:px-6 py-3 text-sm">
-                                                <div className="flex items-center gap-2">
-                                                    <span className={`px-2 py-1 rounded text-xs font-medium flex items-center gap-1 ${getStatusColor(task.status)}`}>
-                                                        {getStatusIcon(task.status)}
-                                                        {task.status.replace('_', ' ')}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 sm:px-6 py-3 text-sm text-gray-600 dark:text-zinc-400 whitespace-nowrap">
-                                                {formatDate(task.dueDate)}
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                            <TableCell className="hidden sm:table-cell">{task.projectName}</TableCell>
+                                            <TableCell className="hidden md:table-cell">
+                                                <Chip
+                                                    size="small"
+                                                    icon={getStatusIcon(task.status)}
+                                                    label={task.status.replace('_', ' ')}
+                                                    color={
+                                                        task.status === 'DONE'
+                                                            ? 'success'
+                                                            : task.status === 'IN_PROGRESS'
+                                                                ? 'info'
+                                                                : task.status === 'IN_REVIEW'
+                                                                    ? 'warning'
+                                                                    : 'default'
+                                                    }
+                                                />
+                                            </TableCell>
+                                            <TableCell>{formatDate(task.dueDate)}</TableCell>
+                                        </TableRow>
                                     ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
                     )}
                 </div>
             </div>

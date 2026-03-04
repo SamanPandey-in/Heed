@@ -2,6 +2,28 @@ import { format } from 'date-fns';
 import { useSelector } from 'react-redux';
 import { GitCommit, MessageSquare, Clock, Bug, Zap, Square } from 'lucide-react';
 import { selectRecentTasks } from '../../store';
+import { Box } from '@mui/material';
+import { styled } from '@mui/material/styles';
+const StatusChip = styled('span')(({ theme }) => ({
+    marginLeft: theme.spacing(0.5),
+    padding: '2px 8px',
+    borderRadius: 6,
+    fontSize: 12,
+    backgroundColor: 'var(--color-surface-variant)',
+    color: 'var(--color-text)',
+    display: 'inline-block',
+    minWidth: 48,
+    textAlign: 'center',
+}));
+
+const IconBg = styled(Box)(({ theme }) => ({
+    padding: theme.spacing(1),
+    borderRadius: 12,
+    backgroundColor: 'var(--color-surface-variant)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+}));
 
 const typeIcons = {
     BUG: { icon: Bug, style: {} },
@@ -42,20 +64,17 @@ const RecentActivity = () => {
                             return (
                                 <div key={task.id} className="p-6 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
                                     <div className="flex items-start gap-4">
-                                        <div className="p-2 rounded-lg" style={{ backgroundColor: 'var(--color-surface-variant)' }}>
+                                        <IconBg>
                                             <TypeIcon className="w-4 h-4" style={{ color: 'var(--color-text-secondary)' }} />
-                                        </div>
+                                        </IconBg>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-start justify-between mb-2">
                                                 <h4 className="text-zinc-800 dark:text-zinc-200 truncate">
                                                     {task.title}
                                                 </h4>
-                                                <span className="ml-2 px-2 py-1 rounded text-xs" style={{
-                                                    backgroundColor: statusColors[task.status]?.bg || 'var(--color-surface-variant)',
-                                                    color: statusColors[task.status]?.text || 'var(--color-text)'
-                                                }}>
+                                                <StatusChip>
                                                     {task.status.replace("_", " ")}
-                                                </span>
+                                                </StatusChip>
                                             </div>
                                             <div className="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
                                                 <span className="capitalize">{task.type.toLowerCase()}</span>

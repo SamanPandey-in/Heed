@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Button, IconButton } from '@mui/material';
 import { format, isSameDay, isBefore, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths } from 'date-fns';
 import { CalendarIcon, Clock, User, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -50,13 +51,13 @@ const ProjectCalendar = ({ tasks }) => {
                             <CalendarIcon className="size-5" /> Task Calendar
                         </h2>
                         <div className="flex gap-2 items-center">
-                            <button onClick={() => handleMonthChange("prev")}>
+                            <IconButton size="small" onClick={() => handleMonthChange("prev")}>
                                 <ChevronLeft className="size-5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white" />
-                            </button>
+                            </IconButton>
                             <span className="text-zinc-900 dark:text-white">{format(currentMonth, "MMMM yyyy")}</span>
-                            <button onClick={() => handleMonthChange("next")}>
+                            <IconButton size="small" onClick={() => handleMonthChange("next")}>
                                 <ChevronRight className="size-5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white" />
-                            </button>
+                            </IconButton>
                         </div>
                     </div>
 
@@ -73,7 +74,7 @@ const ProjectCalendar = ({ tasks }) => {
                             const hasOverdue = dayTasks.some((t) => t.status !== "DONE" && isBefore(t.due_date, today));
 
                             return (
-                                <button
+                                <Button
                                     key={day}
                                     onClick={() => setSelectedDate(day)}
                                     className={`sm:h-14 rounded-md flex flex-col items-center justify-center text-sm
@@ -84,7 +85,7 @@ const ProjectCalendar = ({ tasks }) => {
                                     {dayTasks.length > 0 && (
                                         <span className="text-[10px] text-blue-700 dark:text-blue-400">{dayTasks.length} tasks</span>
                                     )}
-                                </button>
+                                </Button>
                             );
                         })}
                     </div>

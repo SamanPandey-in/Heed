@@ -32,6 +32,3 @@ export { default as ProjectSection } from './team/ProjectSection';
 // Theme Components
 export { default as ThemeProvider } from './theme/ThemeProvider';
 export { default as ThemeToggle } from './theme/ThemeToggle';
-
-// UI Components
-export { Button, Input, Select } from './ui';

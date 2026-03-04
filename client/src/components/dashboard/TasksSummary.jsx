@@ -1,4 +1,5 @@
 import { useSelector } from 'react-redux';
+import { Button } from '@mui/material';
 import { ArrowRight, Clock, AlertTriangle, User } from 'lucide-react';
 import { selectTaskSummaryCards } from '../../store';
 
@@ -64,9 +65,9 @@ export default function TasksSummary() {
                                     </div>
                                 ))}
                                 {card.count > 3 && (
-                                    <button className="flex items-center justify-center w-full text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-800 dark:hover:text-white mt-2">
+                                    <Button size="small" fullWidth variant="text" color="inherit" className="mt-2">
                                         View {card.count - 3} more <ArrowRight className="w-3 h-3 ml-2" />
-                                    </button>
+                                    </Button>
                                 )}
                             </div>
                         )}

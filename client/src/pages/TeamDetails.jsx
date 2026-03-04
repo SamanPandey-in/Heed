@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router-dom';
+import { Button, Chip } from '@mui/material';
 import { ArrowLeft, FolderOpen, ShieldAlert, UserPlus, UsersIcon } from 'lucide-react';
 
 import { InviteMemberDialog } from '../components';
@@ -12,12 +13,6 @@ import {
     selectTeamById,
     selectTeamMembers,
 } from '../store';
-
-const statusColors = {
-    active: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300',
-    completed: 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300',
-    deprecated: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-300',
-};
 
 const normalizeStatus = (status) => {
     const normalized = String(status || '').trim().toLowerCase();
@@ -79,14 +74,15 @@ const TeamDetails = () => {
                 </Link>
                 <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mt-1">{team.name}</h1>
                 <p className="text-gray-500 dark:text-zinc-400 text-sm">{team.description || 'No description'}</p>
-                <button
+                <Button
                     type="button"
                     onClick={() => setIsInviteDialogOpen(true)}
-                    className="mt-3 inline-flex items-center gap-2 px-3 py-2 rounded text-sm bg-gradient-to-br from-blue-500 to-blue-600 text-white"
+                    variant="contained"
+                    startIcon={<UserPlus className="size-4" />}
+                    sx={{ mt: 2 }}
                 >
-                    <UserPlus className="size-4" />
                     Add Member
-                </button>
+                </Button>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
@@ -121,18 +117,15 @@ const TeamDetails = () => {
 
                     <div className="flex flex-wrap gap-2 mb-4">
                         {['all', 'active', 'completed', 'deprecated'].map((filter) => (
-                            <button
+                            <Button
                                 key={filter}
                                 type="button"
+                                variant={statusFilter === filter ? 'contained' : 'outlined'}
+                                size="small"
                                 onClick={() => setStatusFilter(filter)}
-                                className={`px-3 py-1.5 text-xs rounded border ${
-                                    statusFilter === filter
-                                        ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-200 dark:text-zinc-900 dark:border-zinc-200'
-                                        : 'border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300'
-                                }`}
                             >
                                 {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                            </button>
+                            </Button>
                         ))}
                     </div>
 
@@ -159,9 +152,17 @@ const TeamDetails = () => {
                                                     {project.description || 'No description'}
                                                 </p>
                                             </div>
-                                            <span className={`text-xs px-2 py-0.5 rounded capitalize ${statusColors[normalizedStatus]}`}>
-                                                {normalizedStatus}
-                                            </span>
+                                            <Chip
+                                                size="small"
+                                                label={normalizedStatus}
+                                                color={
+                                                    normalizedStatus === 'completed'
+                                                        ? 'success'
+                                                        : normalizedStatus === 'deprecated'
+                                                            ? 'error'
+                                                            : 'default'
+                                                }
+                                            />
                                         </div>
                                     </Link>
                                 );

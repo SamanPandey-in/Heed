@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { Avatar, Button, IconButton, InputAdornment, TextField } from '@mui/material';
 import { SearchIcon, PanelLeft, LogOut, User } from 'lucide-react';
 
 import { useAuth } from '../../firebase/auth';
@@ -9,10 +9,8 @@ import ThemeToggle from '../theme/ThemeToggle';
 
 const Navbar = ({ setIsSidebarOpen }) => {
 
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const { theme } = useSelector(state => state.theme);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const profileMenuRef = useRef(null);
 
@@ -44,17 +42,22 @@ const Navbar = ({ setIsSidebarOpen }) => {
         {/* Left section */}
         <div className="flex items-center gap-4 min-w-0 flex-1">
           {/* Sidebar Trigger */}
-          <button onClick={() => setIsSidebarOpen((prev) => !prev)} className="sm:hidden p-2 rounded-lg transition-colors text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-zinc-800" >
+          <IconButton onClick={() => setIsSidebarOpen((prev) => !prev)} className="sm:hidden">
             <PanelLeft size={20} />
-          </button>
+          </IconButton>
 
           {/* Search Input */}
           <div className="relative flex-1 max-w-sm">
-            <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-400 size-3.5" />
-            <input
-              type="text"
+            <TextField
               placeholder="Search projects, tasks..."
-              className="pl-8 pr-4 py-2 w-full bg-white dark:bg-zinc-950 border border-gray-300 dark:border-zinc-800 rounded-md text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-white/20 transition"
+              size="small"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon className="size-3.5" />
+                  </InputAdornment>
+                ),
+              }}
             />
           </div>
         </div>
@@ -65,12 +68,12 @@ const Navbar = ({ setIsSidebarOpen }) => {
 
           {/* User Profile Dropdown */}
           <div className="relative" ref={profileMenuRef}>
-            <button
+            <IconButton
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+              className="p-1"
             >
-              <img src={assets.profile_img_a} alt="User Avatar" className="size-7 rounded-full cursor-pointer" />
-            </button>
+              <Avatar src={assets.profile_img_a} alt="User Avatar" sx={{ width: 28, height: 28 }} />
+            </IconButton>
 
             {/* Dropdown Menu */}
             {showProfileMenu && (
@@ -79,21 +82,25 @@ const Navbar = ({ setIsSidebarOpen }) => {
                   <p className="text-sm font-medium text-gray-900 dark:text-white">Account</p>
                 </div>
 
-                <button
+                <Button
                   onClick={handleProfileClick}
-                  className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors flex items-center gap-2"
+                  fullWidth
+                  color="inherit"
+                  sx={{ justifyContent: 'flex-start', borderRadius: 0, px: 2, py: 1.2 }}
+                  startIcon={<User className="w-4 h-4" />}
                 >
-                  <User className="w-4 h-4" />
                   Profile
-                </button>
+                </Button>
 
-                <button
+                <Button
                   onClick={handleLogout}
-                  className="w-full px-4 py-2.5 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2 border-t border-gray-200 dark:border-zinc-700"
+                  fullWidth
+                  color="error"
+                  sx={{ justifyContent: 'flex-start', borderRadius: 0, px: 2, py: 1.2 }}
+                  startIcon={<LogOut className="w-4 h-4" />}
                 >
-                  <LogOut className="w-4 h-4" />
                   Logout
-                </button>
+                </Button>
               </div>
             )}
           </div>
