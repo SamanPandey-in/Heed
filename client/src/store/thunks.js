@@ -5,6 +5,7 @@
 import {
   addTeamMember,
   addTeamProject,
+  createTeam,
   deleteTeam,
   joinTeam,
   removeTeamProject,
@@ -49,6 +50,65 @@ export const joinTeamAtomic = ({ teamId, userId }) => (dispatch, getState) => {
   dispatch(addTeamToUser(teamId));
   return true;
 };
+
+export const createTeamAtomic =
+  ({ id, name, description, createdBy, inviteCode, initialMemberIds = [] }) =>
+  (dispatch, getState) => {
+    const trimmedName = String(name || "").trim();
+    const ownerId = String(createdBy || "").trim();
+
+    if (!trimmedName) {
+      dispatch(setTeamsError("Team name is required"));
+      return { ok: false, error: "Team name is required" };
+    }
+
+    if (!ownerId) {
+      dispatch(setTeamsError("A valid user is required to create a team"));
+      return { ok: false, error: "A valid user is required to create a team" };
+    }
+
+    const teamId = id || `team_${Date.now()}`;
+
+    dispatch(
+      createTeam({
+        id: teamId,
+        name: trimmedName,
+        description: String(description || "").trim(),
+        createdBy: ownerId,
+        inviteCode,
+      })
+    );
+
+    const createError = getState().teams?.error;
+    if (createError) {
+      return { ok: false, error: createError };
+    }
+
+    // Keep user slice in sync: creator should be part of their new team.
+    dispatch(addTeamToUser(teamId));
+
+    const uniqueInitialMembers = [...new Set(initialMemberIds.map((memberId) => String(memberId).trim()))]
+      .filter(Boolean)
+      .filter((memberId) => memberId !== ownerId);
+
+    const failedMembers = [];
+    uniqueInitialMembers.forEach((memberId) => {
+      const success = dispatch(inviteMemberAtomic({ teamId, userId: memberId }));
+      if (!success) {
+        failedMembers.push(memberId);
+      }
+    });
+
+    if (failedMembers.length > 0) {
+      return {
+        ok: true,
+        teamId,
+        warning: `Some members could not be added: ${failedMembers.join(", ")}`,
+      };
+    }
+
+    return { ok: true, teamId };
+  };
 
 export const joinTeamByIdentifierAtomic = ({ identifier, userId }) => (dispatch, getState) => {
   const normalizedIdentifier = String(identifier || "").trim();

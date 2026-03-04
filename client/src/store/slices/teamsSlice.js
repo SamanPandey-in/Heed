@@ -1,38 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { dummyProjects } from "../../assets/assets";
+import { dummyProjects, dummyTeams } from "../../assets/assets";
 import { addProject, deleteProject, setProjects, updateProject } from "./projectsSlice";
 
 const generateInviteCode = (seed = "team") => `${String(seed).toUpperCase()}-${Date.now()}`;
-
-const dummyTeams = [
-  {
-    id: "team_1",
-    name: "Product Team",
-    description: "Main product development team",
-    members: ["user_1", "user_2", "user_3"],
-    projectIds: [],
-    inviteCode: "TEAM1-INVITE",
-    createdAt: new Date("2024-01-01").toISOString(),
-  },
-  {
-    id: "team_2",
-    name: "Design Team",
-    description: "UX/UI Design team",
-    members: ["user_1", "user_4", "user_5"],
-    projectIds: [],
-    inviteCode: "TEAM2-INVITE",
-    createdAt: new Date("2024-02-01").toISOString(),
-  },
-  {
-    id: "team_3",
-    name: "QA Team",
-    description: "Quality Assurance team",
-    members: ["user_2", "user_6"],
-    projectIds: [],
-    inviteCode: "TEAM3-INVITE",
-    createdAt: new Date("2024-03-01").toISOString(),
-  },
-];
 
 const normalizeTeam = (team = {}) => ({
   id: team.id,

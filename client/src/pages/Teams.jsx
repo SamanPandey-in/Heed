@@ -8,14 +8,14 @@ import {
     clearTeamsError,
     joinTeamByIdentifierAtomic,
     selectCurrentUserId,
+    selectTeamsByUser,
     selectTeamsError,
-    selectUserTeamObjects,
 } from '../store';
 
-const Team = () => {
+export const Teams = () => {
     const dispatch = useDispatch();
     const currentUserId = useSelector(selectCurrentUserId);
-    const userTeams = useSelector(selectUserTeamObjects);
+    const userTeams = useSelector((state) => selectTeamsByUser(state, currentUserId));
     const teamsError = useSelector(selectTeamsError);
 
     const [joinIdentifier, setJoinIdentifier] = useState('');
@@ -58,7 +58,7 @@ const Team = () => {
                         Teams where you are a member
                     </p>
                 </div>
-                <CreateTeamForm />
+                <CreateTeamForm userId={currentUserId} />
             </div>
 
             <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-4">
@@ -87,9 +87,12 @@ const Team = () => {
             </div>
 
             {teamsWithProjectCount.length === 0 ? (
-                <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-12 text-center">
+                <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-12 text-center space-y-3">
                     <UsersIcon className="size-10 mx-auto text-zinc-400 mb-3" />
                     <p className="text-zinc-600 dark:text-zinc-400">You are not part of any team yet.</p>
+                    <div className="flex justify-center">
+                        <CreateTeamForm userId={currentUserId} />
+                    </div>
                 </div>
             ) : (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -121,4 +124,4 @@ const Team = () => {
     );
 };
 
-export default Team;
+export default Teams;

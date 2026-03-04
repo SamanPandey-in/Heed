@@ -3,6 +3,7 @@ export { default as store } from "./store.js";
 
 // Thunks (for atomic multi-slice operations)
 export {
+  createTeamAtomic,
   createProjectAtomic,
   deleteProjectAtomic,
   deleteTeamAtomic,
@@ -88,6 +89,7 @@ export { default as settingsReducer } from "./slices/settingsSlice.js";
 export {
   selectCurrentUserId,
   selectUserTeams,
+  selectTeamsByUser,
   selectUserTeamObjects,
   selectCurrentTeamId,
   selectCurrentTeam,

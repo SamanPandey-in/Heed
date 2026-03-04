@@ -127,9 +127,17 @@ export const selectCurrentTeam = createSelector(
   (currentTeamId, teamEntities) => (currentTeamId ? teamEntities[currentTeamId] || null : null)
 );
 
+export const selectTeamsByUser = createSelector(
+  [selectAllTeams, (_, userId) => userId],
+  (allTeams, userId) => {
+    if (!userId) return [];
+    return allTeams.filter((team) => (team?.members || []).includes(userId));
+  }
+);
+
 export const selectUserTeamObjects = createSelector(
-  [selectAllTeams, selectCurrentUserId],
-  (allTeams, currentUserId) => {
+  [selectCurrentUserId, selectAllTeams],
+  (currentUserId, allTeams) => {
     if (!currentUserId) return [];
     return allTeams.filter((team) => (team?.members || []).includes(currentUserId));
   }

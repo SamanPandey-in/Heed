@@ -35,6 +35,36 @@ export const dummyUsers = [
     }
 ]
 
+export const dummyTeams = [
+    {
+        id: "team_1",
+        name: "Product Team",
+        description: "Main product development team",
+        members: ["user_1", "user_2", "user_3"],
+        projectIds: [],
+        inviteCode: "TEAM1-INVITE",
+        createdAt: new Date("2024-01-01").toISOString(),
+    },
+    {
+        id: "team_2",
+        name: "Design Team",
+        description: "UX/UI design team",
+        members: ["user_1", "user_4", "user_5"],
+        projectIds: [],
+        inviteCode: "TEAM2-INVITE",
+        createdAt: new Date("2024-02-01").toISOString(),
+    },
+    {
+        id: "team_3",
+        name: "QA Team",
+        description: "Quality assurance and validation",
+        members: ["user_2", "user_6"],
+        projectIds: [],
+        inviteCode: "TEAM3-INVITE",
+        createdAt: new Date("2024-03-01").toISOString(),
+    },
+]
+
 // Flat list of all projects
 export const dummyProjects = [
     {
