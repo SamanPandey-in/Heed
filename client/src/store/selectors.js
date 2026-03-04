@@ -3,6 +3,43 @@
  */
 
 import { createSelector } from 'reselect';
+import { dummyUsers } from '../assets/assets';
+
+const DUMMY_USER_BY_ID = dummyUsers.reduce((acc, user) => {
+  acc[user.id] = user;
+  return acc;
+}, {});
+
+const mapTeamMembersToProfiles = (memberIds = [], currentUser = null) => {
+  return memberIds.map((memberId) => {
+    if (currentUser?.id === memberId) {
+      return {
+        id: currentUser.id,
+        name: currentUser.name,
+        email: currentUser.email,
+        role: "ADMIN",
+      };
+    }
+
+    const knownUser = DUMMY_USER_BY_ID[memberId];
+    if (knownUser) {
+      return {
+        id: knownUser.id,
+        name: knownUser.name,
+        email: knownUser.email,
+        avatar: knownUser.image,
+        role: "MEMBER",
+      };
+    }
+
+    return {
+      id: memberId,
+      name: memberId,
+      email: `${memberId}@relayops.local`,
+      role: "MEMBER",
+    };
+  });
+};
 
 // ==================== USER SELECTORS ====================
 
@@ -48,38 +85,33 @@ export const selectAllTeams = (state) => state.teams.teams || [];
 /**
  * Select team by ID
  */
-export const selectTeamById = (state, teamId) => {
-  return (state.teams.teams || []).find((team) => team.id === teamId);
-};
+export const selectTeamById = createSelector(
+  [selectAllTeams, (state, teamId) => teamId],
+  (teams, teamId) => teams.find((team) => team.id === teamId)
+);
 
 /**
  * Select currently selected team object
  */
 export const selectCurrentTeam = (state) => {
   const currentTeamId = state.user.currentTeamId;
-  return (state.teams.teams || []).find((team) => team.id === currentTeamId);
+  return selectTeamById(state, currentTeamId);
 };
 
 /**
  * Select team members array for a specific team (memoized)
  */
 export const selectTeamMembers = createSelector(
-  [(state) => state.teams.teams || [], (state, teamId) => teamId],
-  (teams, teamId) => {
-    const team = teams.find((t) => t.id === teamId);
-    return team ? team.members : [];
-  }
+  [selectTeamById, (state) => state.user],
+  (team, currentUser) => mapTeamMembersToProfiles(team?.members || [], currentUser)
 );
 
 /**
  * Select current team members (memoized)
  */
 export const selectCurrentTeamMembers = createSelector(
-  [(state) => state.user.currentTeamId, (state) => state.teams.teams || []],
-  (currentTeamId, teams) => {
-    const team = teams.find((t) => t.id === currentTeamId);
-    return team ? team.members : [];
-  }
+  [selectCurrentTeam, (state) => state.user],
+  (team, currentUser) => mapTeamMembersToProfiles(team?.members || [], currentUser)
 );
 
 /**
@@ -298,16 +330,53 @@ export const selectUserTasksCountByStatus = createSelector(
  */
 const selectAllProjects = (state) => state.projects?.projects || [];
 
+const DEPRECATED_PROJECT_STATUSES = new Set(["DEPRECATED", "CANCELLED"]);
+
 /**
  * Memoized selector to get projects for a specific team
  */
-export const selectProjectsByTeam = createSelector(
+export const selectTeamProjects = createSelector(
   [selectAllProjects, (state, teamId) => teamId],
   (projects, teamId) => {
     if (!teamId) return [];
     return projects.filter((project) => project.teamId === teamId);
   }
 );
+
+/**
+ * Memoized selector to group team projects by status buckets
+ */
+export const selectTeamProjectsByStatus = createSelector(
+  [selectTeamProjects],
+  (teamProjects) => {
+    const groupedProjects = {
+      active: [],
+      completed: [],
+      deprecated: [],
+    };
+
+    teamProjects.forEach((project) => {
+      if (project.status === "COMPLETED") {
+        groupedProjects.completed.push(project);
+        return;
+      }
+
+      if (DEPRECATED_PROJECT_STATUSES.has(project.status)) {
+        groupedProjects.deprecated.push(project);
+        return;
+      }
+
+      groupedProjects.active.push(project);
+    });
+
+    return groupedProjects;
+  }
+);
+
+/**
+ * Memoized selector to get projects for a specific team
+ */
+export const selectProjectsByTeam = selectTeamProjects;
 
 /**
  * Memoized selector to get projects for user's teams

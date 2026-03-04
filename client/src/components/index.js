@@ -26,6 +26,8 @@ export { default as ProjectTasks } from './projects/ProjectTasks';
 
 // Team Components
 export { default as InviteMemberDialog } from './team/InviteMemberDialog';
+export { default as TeamMembersSection } from './team/TeamMembersSection';
+export { default as ProjectSection } from './team/ProjectSection';
 
 // Theme Components
 export { default as ThemeProvider } from './theme/ThemeProvider';

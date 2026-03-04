@@ -73,6 +73,8 @@ export {
   selectTeamMembers,
   selectAllTeams,
   selectTeamById,
+  selectTeamProjects,
+  selectTeamProjectsByStatus,
   selectUserInfo,
   selectCurrentUser,
   selectTeamCount,
