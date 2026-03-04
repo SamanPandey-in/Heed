@@ -35,7 +35,7 @@ export const dummyUsers = [
     }
 ]
 
-// Flat list of all projects (without workspaceId)
+// Flat list of all projects
 export const dummyProjects = [
     {
         "id": "4d0f6ef3-e798-4d65-a864-00d9f8085c51",

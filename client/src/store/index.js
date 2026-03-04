@@ -29,12 +29,22 @@ export {
   setCurrentProjectId,
   addProject,
   updateProject,
+  updateProjectStatus,
   deleteProject,
   addTask,
   updateTask,
   deleteTask,
 } from "./slices/projectsSlice.js";
 export { default as projectsReducer } from "./slices/projectsSlice.js";
+
+// Tasks Slice
+export {
+  setTasks,
+  setTasksLoading,
+  setTasksError,
+  clearTasksError,
+} from "./slices/tasksSlice.js";
+export { default as tasksReducer } from "./slices/tasksSlice.js";
 
 // Teams Slice
 export {
@@ -66,8 +76,10 @@ export { default as settingsReducer } from "./slices/settingsSlice.js";
 
 // Selectors
 export {
+  selectCurrentUserId,
   selectUserTeams,
   selectUserTeamObjects,
+  selectCurrentTeamId,
   selectCurrentTeam,
   selectCurrentTeamMembers,
   selectTeamMembers,
@@ -82,6 +94,14 @@ export {
   selectUserTasksSortedByDueDate,
   selectUserTasksByStatus,
   selectUserTasksCountByStatus,
+  selectAllTasks,
+  selectTasksByProjectId,
+  selectTaskById,
+  selectDashboardStats,
+  selectRecentTasks,
+  selectTaskSummaryCards,
+  selectAllProjects,
+  selectProjectsByStatus,
   selectProjectsByTeam,
   selectProjectsForUserTeams,
   selectProjectsForCurrentTeam,

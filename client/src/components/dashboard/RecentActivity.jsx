@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { useSelector } from 'react-redux';
 import { GitCommit, MessageSquare, Clock, Bug, Zap, Square } from 'lucide-react';
+import { selectRecentTasks } from '../../store';
 
 const typeIcons = {
     BUG: { icon: Bug, style: {} },
@@ -18,17 +18,7 @@ const statusColors = {
 };
 
 const RecentActivity = () => {
-    const [tasks, setTasks] = useState([]);
-    const projects = useSelector((state) => state?.projects?.projects || []);
-
-    const getTasksFromProjects = () => {
-        const tasks = projects.flatMap((project) => project.tasks?.map((task) => task) || []);
-        setTasks(tasks);
-    };
-
-    useEffect(() => {
-        getTasksFromProjects();
-    }, [projects]);
+    const tasks = useSelector(selectRecentTasks);
 
     return (
         <div className="bg-white dark:bg-black border border-zinc-200 dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/20 rounded-lg transition-all overflow-hidden">
@@ -48,7 +38,6 @@ const RecentActivity = () => {
                     <div className="divide-y divide-zinc-200 dark:divide-white/10">
                         {tasks.map((task) => {
                             const TypeIcon = typeIcons[task.type]?.icon || Square;
-                            const iconColor = typeIcons[task.type]?.color || "text-gray-500 dark:text-gray-400";
 
                             return (
                                 <div key={task.id} className="p-6 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">

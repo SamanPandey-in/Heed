@@ -1,23 +1,9 @@
-import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { ArrowRight, Clock, AlertTriangle, User } from 'lucide-react';
+import { selectTaskSummaryCards } from '../../store';
 
 export default function TasksSummary() {
-
-    const projects = useSelector((state) => state?.projects?.projects || []);
-    const user = { id: 'user_1' }
-    const [tasks, setTasks] = useState([]);
-
-    // Get all tasks from all projects
-    useEffect(() => {
-        if (projects && projects.length > 0) {
-            setTasks(projects.flatMap((project) => project.tasks || []));
-        }
-    }, [projects]);
-
-    const myTasks = tasks.filter(i => i.assigneeId === user.id);
-    const overdueTasks = tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'DONE');
-    const inProgressIssues = tasks.filter(i => i.status === 'IN_PROGRESS');
+    const { myTasks, overdueTasks, inProgressTasks } = useSelector(selectTaskSummaryCards);
 
     const summaryCards = [
         {
@@ -36,10 +22,10 @@ export default function TasksSummary() {
         },
         {
             title: "In Progress",
-            count: inProgressIssues.length,
+            count: inProgressTasks.length,
             icon: Clock,
             color: "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-200",
-            items: inProgressIssues.slice(0, 3)
+            items: inProgressTasks.slice(0, 3)
         }
     ];
 

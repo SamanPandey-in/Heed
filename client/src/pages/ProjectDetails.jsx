@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeftIcon, PlusIcon, SettingsIcon, BarChart3Icon, CalendarIcon, FileStackIcon, ZapIcon } from 'lucide-react';
 
 import { ProjectAnalytics, ProjectSettings, CreateTaskDialog, ProjectCalendar, ProjectTasks, Button } from '../components';
+import { selectAllProjects, selectAllTeams } from '../store';
 
 export default function ProjectDetail() {
 
@@ -12,8 +13,8 @@ export default function ProjectDetail() {
     const id = searchParams.get('id');
 
     const navigate = useNavigate();
-    const projects = useSelector((state) => state?.projects?.projects || []);
-    const teams = useSelector((state) => state?.teams?.teams || []);
+    const projects = useSelector(selectAllProjects);
+    const teams = useSelector(selectAllTeams);
 
     const [project, setProject] = useState(null);
     const [tasks, setTasks] = useState([]);
@@ -33,11 +34,9 @@ export default function ProjectDetail() {
     }, [id, projects]);
 
     const statusColors = {
-        PLANNING: "bg-zinc-200 text-zinc-900 dark:bg-zinc-600 dark:text-zinc-200",
-        ACTIVE: "bg-emerald-200 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-900",
-        ON_HOLD: "bg-amber-200 text-amber-900 dark:bg-amber-500 dark:text-amber-900",
-        COMPLETED: "bg-blue-200 text-blue-900 dark:bg-blue-500 dark:text-blue-900",
-        CANCELLED: "bg-red-200 text-red-900 dark:bg-red-500 dark:text-red-900",
+        active: "bg-emerald-200 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-900",
+        completed: "bg-blue-200 text-blue-900 dark:bg-blue-500 dark:text-blue-900",
+        deprecated: "bg-red-200 text-red-900 dark:bg-red-500 dark:text-red-900",
     };
 
     const teamName = teams.find((team) => team.id === project?.teamId)?.name || "Unknown team";
@@ -68,8 +67,8 @@ export default function ProjectDetail() {
                     </button>
                     <div className="flex items-center gap-3">
                         <h1 className="text-xl font-medium">{project.name}</h1>
-                        <span className={`px-2 py-1 rounded text-xs capitalize ${statusColors[project.status]}`} >
-                            {project.status.replace("_", " ")}
+                        <span className={`px-2 py-1 rounded text-xs capitalize ${statusColors[project.status] || statusColors.active}`} >
+                            {(project.status || "active").replace("_", " ")}
                         </span>
                         <span className="px-2 py-1 rounded text-xs bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                             Team: {teamName}

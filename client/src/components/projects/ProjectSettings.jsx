@@ -10,7 +10,7 @@ export default function ProjectSettings({ project }) {
     const [formData, setFormData] = useState({
         name: "New Website Launch",
         description: "Initial launch for new web platform.",
-        status: "PLANNING",
+        status: "active",
         priority: "MEDIUM",
         start_date: "2025-09-10",
         end_date: "2025-10-15",
@@ -70,11 +70,9 @@ export default function ProjectSettings({ project }) {
                         <div className="space-y-2">
                             <label className={labelClasses}>Status</label>
                             <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className={inputClasses} >
-                                <option value="PLANNING">Planning</option>
-                                <option value="ACTIVE">Active</option>
-                                <option value="ON_HOLD">On Hold</option>
-                                <option value="COMPLETED">Completed</option>
-                                <option value="CANCELLED">Cancelled</option>
+                                <option value="active">Active</option>
+                                <option value="completed">Completed</option>
+                                <option value="deprecated">Deprecated</option>
                             </select>
                         </div>
 

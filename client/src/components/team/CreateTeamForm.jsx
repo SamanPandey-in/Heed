@@ -1,10 +1,18 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { createTeam, setError, clearError } from '../../store';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  addTeamToUser,
+  clearTeamsError,
+  createTeam,
+  selectCurrentUserId,
+  setTeamsError,
+} from '../../store';
 import { Plus } from 'lucide-react';
 
 const CreateTeamForm = ({ onTeamCreated, userId }) => {
   const dispatch = useDispatch();
+  const currentUserId = useSelector(selectCurrentUserId);
+  const ownerId = userId || currentUserId;
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -21,7 +29,12 @@ const CreateTeamForm = ({ onTeamCreated, userId }) => {
     e.preventDefault();
     
     if (!formData.name.trim()) {
-      dispatch(setError('Team name is required'));
+      dispatch(setTeamsError('Team name is required'));
+      return;
+    }
+
+    if (!ownerId) {
+      dispatch(setTeamsError('A valid user is required to create a team'));
       return;
     }
 
@@ -35,19 +48,20 @@ const CreateTeamForm = ({ onTeamCreated, userId }) => {
         id: teamId,
         name: formData.name.trim(),
         description: formData.description.trim(),
-        createdBy: userId,
+        createdBy: ownerId,
       }));
+      dispatch(addTeamToUser(teamId));
 
       // Reset form
       setFormData({ name: '', description: '' });
       setIsOpen(false);
-      dispatch(clearError());
+      dispatch(clearTeamsError());
 
       if (onTeamCreated) {
         onTeamCreated(teamId);
       }
     } catch (error) {
-      dispatch(setError('Failed to create team'));
+      dispatch(setTeamsError('Failed to create team'));
     } finally {
       setIsSubmitting(false);
     }
@@ -126,7 +140,7 @@ const CreateTeamForm = ({ onTeamCreated, userId }) => {
                   onClick={() => {
                     setIsOpen(false);
                     setFormData({ name: '', description: '' });
-                    dispatch(clearError());
+                    dispatch(clearTeamsError());
                   }}
                   disabled={isSubmitting}
                   className="px-4 py-2 text-sm border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition disabled:opacity-50"

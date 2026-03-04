@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { XIcon } from 'lucide-react';
 import { dummyUsers } from '../../assets/assets';
-import { addProject, selectUserTeamObjects } from '../../store';
+import { addProject, selectCurrentTeamId, selectUserTeamObjects } from '../../store';
 
 const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 
@@ -10,21 +10,21 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 
     // Get user's teams
     const userTeams = useSelector(selectUserTeamObjects);
-    const currentTeamId = useSelector((state) => state.user.currentTeamId);
+    const currentTeamId = useSelector(selectCurrentTeamId);
     const projectsError = useSelector((state) => state.projects.error);
 
     const [formData, setFormData] = useState({
         name: "",
         description: "",
         teamId: currentTeamId || "",
-        status: "PLANNING",
+        status: "active",
         priority: "MEDIUM",
         start_date: "",
         end_date: "",
         team_members: [],
         team_lead: "",
         progress: 0,
-        result: null,
+        result: "",
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -82,7 +82,7 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                 team_lead: formData.team_lead || null,
                 memberIds,
                 progress: formData.progress || 0,
-                result: formData.result,
+                result: formData.status === "completed" ? formData.result : "",
                 tasks: [],
                 createdAt: now,
                 updatedAt: now,
@@ -96,14 +96,14 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
             name: "",
             description: "",
             teamId: currentTeamId || "",
-            status: "PLANNING",
+            status: "active",
             priority: "MEDIUM",
             start_date: "",
             end_date: "",
             team_members: [],
             team_lead: "",
             progress: 0,
-            result: null,
+            result: "",
         });
     };
 
@@ -122,7 +122,7 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 
                 <h2 className="text-xl font-medium mb-1">Create New Project</h2>
                 <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                    Add a new project to your workspace
+                    Add a new project to your team
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -172,12 +172,20 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm mb-1">Status</label>
-                            <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm" >
-                                <option value="PLANNING">Planning</option>
-                                <option value="ACTIVE">Active</option>
-                                <option value="COMPLETED">Completed</option>
-                                <option value="ON_HOLD">On Hold</option>
-                                <option value="CANCELLED">Cancelled</option>
+                            <select
+                                value={formData.status}
+                                onChange={(e) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        status: e.target.value,
+                                        result: e.target.value === "completed" ? prev.result : "",
+                                    }))
+                                }
+                                className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
+                            >
+                                <option value="active">Active</option>
+                                <option value="completed">Completed</option>
+                                <option value="deprecated">Deprecated</option>
                             </select>
                         </div>
 
@@ -190,6 +198,19 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                             </select>
                         </div>
                     </div>
+
+                    {formData.status === "completed" && (
+                        <div>
+                            <label className="block text-sm mb-1">Result</label>
+                            <input
+                                type="text"
+                                value={formData.result}
+                                onChange={(e) => setFormData({ ...formData, result: e.target.value })}
+                                placeholder="Final project outcome"
+                                className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
+                            />
+                        </div>
+                    )}
 
                     {/* Dates */}
                     <div className="grid grid-cols-2 gap-4">

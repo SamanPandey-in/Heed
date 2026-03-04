@@ -1,12 +1,9 @@
 import { Link } from 'react-router-dom';
 
 const statusColors = {
-    ACTIVE: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300",
-    PLANNING: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300",
-    ON_HOLD: "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300",
-    COMPLETED: "bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200",
-    CANCELLED: "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300",
-    DEPRECATED: "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300",
+    active: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300",
+    completed: "bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200",
+    deprecated: "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300",
 };
 
 const ProjectSection = ({ title, projects = [] }) => {
@@ -38,8 +35,8 @@ const ProjectSection = ({ title, projects = [] }) => {
                                         {project.description || "No description"}
                                     </p>
                                 </div>
-                                <span className={`text-xs px-2 py-1 rounded ${statusColors[project.status] || statusColors.PLANNING}`}>
-                                    {(project.status || "PLANNING").replace("_", " ")}
+                                <span className={`text-xs px-2 py-1 rounded ${statusColors[project.status] || statusColors.active}`}>
+                                    {(project.status || "active").replace("_", " ")}
                                 </span>
                             </div>
                         </Link>

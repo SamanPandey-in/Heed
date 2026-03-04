@@ -25,8 +25,27 @@ const dummyTeams = [
   },
 ];
 
+const normalizeTeams = (teams = []) => {
+  const entities = {};
+  const ids = [];
+
+  teams.forEach((team) => {
+    if (!team?.id) return;
+    entities[team.id] = {
+      ...team,
+      members: [...new Set(team.members || [])],
+    };
+    ids.push(team.id);
+  });
+
+  return { entities, ids };
+};
+
+const normalizedInitialTeams = normalizeTeams(dummyTeams);
+
 const initialState = {
-  teams: dummyTeams, // Array of team objects
+  teams: normalizedInitialTeams.entities, // Normalized team entities by ID
+  teamIds: normalizedInitialTeams.ids, // Ordered team IDs
   loading: false,
   error: null,
 };
@@ -45,7 +64,10 @@ const teamsSlice = createSlice({
         members: [createdBy], // Creator is automatically a member
         createdAt: new Date().toISOString(),
       };
-      state.teams.push(newTeam);
+      state.teams[id] = newTeam;
+      if (!state.teamIds.includes(id)) {
+        state.teamIds.push(id);
+      }
       state.error = null;
     },
 
@@ -55,7 +77,7 @@ const teamsSlice = createSlice({
     // Use joinTeamAtomic thunk from store/thunks.js to ensure consistency
     joinTeam: (state, action) => {
       const { teamId, userId } = action.payload;
-      const team = state.teams.find((t) => t.id === teamId);
+      const team = state.teams[teamId];
 
       if (!team) {
         state.error = `Team with id ${teamId} not found`;
@@ -75,7 +97,7 @@ const teamsSlice = createSlice({
     // Leave team (remove user from team members)
     leaveTeam: (state, action) => {
       const { teamId, userId } = action.payload;
-      const team = state.teams.find((t) => t.id === teamId);
+      const team = state.teams[teamId];
 
       if (!team) {
         state.error = `Team with id ${teamId} not found`;
@@ -95,7 +117,7 @@ const teamsSlice = createSlice({
     // Add team member (by admin/owner)
     addTeamMember: (state, action) => {
       const { teamId, userId } = action.payload;
-      const team = state.teams.find((t) => t.id === teamId);
+      const team = state.teams[teamId];
 
       if (!team) {
         state.error = `Team with id ${teamId} not found`;
@@ -114,7 +136,7 @@ const teamsSlice = createSlice({
     // Remove team member (by admin/owner)
     removeTeamMember: (state, action) => {
       const { teamId, userId } = action.payload;
-      const team = state.teams.find((t) => t.id === teamId);
+      const team = state.teams[teamId];
 
       if (!team) {
         state.error = `Team with id ${teamId} not found`;
@@ -134,7 +156,7 @@ const teamsSlice = createSlice({
     // Update team info
     updateTeam: (state, action) => {
       const { teamId, name, description } = action.payload;
-      const team = state.teams.find((t) => t.id === teamId);
+      const team = state.teams[teamId];
 
       if (!team) {
         state.error = `Team with id ${teamId} not found`;
@@ -153,20 +175,21 @@ const teamsSlice = createSlice({
     // See: store/thunks.js for proper implementation
     deleteTeam: (state, action) => {
       const teamId = action.payload;
-      const index = state.teams.findIndex((t) => t.id === teamId);
-
-      if (index === -1) {
+      if (!state.teams[teamId]) {
         state.error = `Team with id ${teamId} not found`;
         return;
       }
 
-      state.teams.splice(index, 1);
+      delete state.teams[teamId];
+      state.teamIds = state.teamIds.filter((id) => id !== teamId);
       state.error = null;
     },
 
     // Set all teams
     setTeams: (state, action) => {
-      state.teams = action.payload;
+      const normalized = normalizeTeams(action.payload || []);
+      state.teams = normalized.entities;
+      state.teamIds = normalized.ids;
       state.error = null;
     },
 

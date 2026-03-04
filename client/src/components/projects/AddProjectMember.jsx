@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Mail, UserPlus } from 'lucide-react';
 import { dummyUsers } from '../../assets/assets';
+import { selectAllProjects, selectAllTeams } from '../../store';
 
 const AddProjectMember = ({ isDialogOpen, setIsDialogOpen }) => {
 
@@ -10,8 +11,8 @@ const AddProjectMember = ({ isDialogOpen, setIsDialogOpen }) => {
 
     const id = searchParams.get('id');
 
-    const projects = useSelector((state) => state?.projects?.projects || []);
-    const teams = useSelector((state) => state?.teams?.teams || []);
+    const projects = useSelector(selectAllProjects);
+    const teams = useSelector(selectAllTeams);
 
     const project = projects.find((p) => p.id === id);
     const team = teams.find((entry) => entry.id === project?.teamId);

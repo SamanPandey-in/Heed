@@ -3,8 +3,8 @@
  * These handle atomic operations that need to update multiple slices consistently
  */
 
-import { deleteTeam } from './slices/teamsSlice';
-import { removeTeamFromUser } from './slices/userSlice';
+import { deleteTeam, joinTeam } from './slices/teamsSlice';
+import { addTeamToUser, removeTeamFromUser } from './slices/userSlice';
 
 /**
  * Atomic delete team operation
@@ -24,13 +24,15 @@ export const deleteTeamAtomic = (teamId) => (dispatch, getState) => {
   dispatch(deleteTeam(teamId));
   
   // 2. Check if current user has this team, remove it
-  const currentUser = state.user;
-  if (currentUser.teams.includes(teamId)) {
+  const currentUser = state.users?.users?.[state.users?.currentUserId];
+  const userTeamIds = currentUser?.teamIds || [];
+
+  if (userTeamIds.includes(teamId)) {
     dispatch(removeTeamFromUser(teamId));
     
     // 3. If this was the current team, reset to first remaining team
-    if (currentUser.currentTeamId === teamId) {
-      const remainingTeams = currentUser.teams.filter((id) => id !== teamId);
+    if (state.users.currentTeamId === teamId) {
+      const remainingTeams = userTeamIds.filter((id) => id !== teamId);
       if (remainingTeams.length > 0) {
         // Auto-switch to first remaining team
         // Note: This dispatch assumes setCurrentTeamId is imported
@@ -55,8 +57,6 @@ export const joinTeamAtomic = ({ teamId, userId }) => (dispatch, getState) => {
   const state = getState();
   
   // Get current state before changes
-  const teamsError = state.teams.error;
-  
   // 1. Add user to team.members
   dispatch(joinTeam({ teamId, userId }));
   

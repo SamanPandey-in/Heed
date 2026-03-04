@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { joinTeam, addTeamToUser, clearError } from '../../store';
+import { joinTeam, addTeamToUser, clearTeamsError, selectCurrentUserId } from '../../store';
 import { selectIsUserInTeam } from '../../store/selectors';
 import { UserPlus, Check } from 'lucide-react';
 
 const JoinTeamButton = ({ teamId, userId, onJoinSuccess }) => {
   const dispatch = useDispatch();
+  const currentUserId = useSelector(selectCurrentUserId);
+  const effectiveUserId = userId || currentUserId;
   const isUserInTeam = useSelector((state) => selectIsUserInTeam(state, teamId));
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleJoin = async () => {
     if (isUserInTeam) return;
+
+    if (!effectiveUserId) return;
 
     setIsSubmitting(true);
 
@@ -18,7 +22,7 @@ const JoinTeamButton = ({ teamId, userId, onJoinSuccess }) => {
       // ATOMIC JOIN: First add user to team members
       // If this succeeds, add team to user's teams
       // This prevents state inconsistency
-      const result = dispatch(joinTeam({ teamId, userId }));
+      dispatch(joinTeam({ teamId, userId: effectiveUserId }));
       
       // Check if join succeeded (no error in teams slice)
       // Using a simple check: if error exists, join failed
@@ -27,7 +31,7 @@ const JoinTeamButton = ({ teamId, userId, onJoinSuccess }) => {
         // Small delay to ensure state is updated
         // Then add team to user's teams (second part of atomic operation)
         dispatch(addTeamToUser(teamId));
-        dispatch(clearError());
+        dispatch(clearTeamsError());
 
         if (onJoinSuccess) {
           onJoinSuccess(teamId);
@@ -35,7 +39,7 @@ const JoinTeamButton = ({ teamId, userId, onJoinSuccess }) => {
       }, 0);
     } catch (error) {
       console.error('Failed to join team:', error);
-      dispatch(clearError());
+      dispatch(clearTeamsError());
     } finally {
       setIsSubmitting(false);
     }

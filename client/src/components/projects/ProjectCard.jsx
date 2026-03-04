@@ -3,11 +3,9 @@ import { useSelector } from 'react-redux';
 import { selectTeamById } from '../../store';
 
 const statusColors = {
-    PLANNING: "text-gray-900 dark:text-gray-100",
-    ACTIVE: "text-gray-900 dark:text-gray-100",
-    ON_HOLD: "text-gray-900 dark:text-gray-100",
-    COMPLETED: "text-gray-900 dark:text-gray-100",
-    CANCELLED: "text-gray-900 dark:text-gray-100",
+    active: "text-gray-900 dark:text-gray-100",
+    completed: "text-gray-900 dark:text-gray-100",
+    deprecated: "text-gray-900 dark:text-gray-100",
 };
 
 const ProjectCard = ({ project }) => {
@@ -28,8 +26,8 @@ const ProjectCard = ({ project }) => {
             </div>
 
             <div className="flex items-center justify-between mb-4">
-                <span className={`px-2 py-0.5 rounded text-xs ${statusColors[project.status]}`} style={{backgroundColor: 'var(--color-surface-variant)'}}>
-                    {project.status.replace("_", " ")}
+                <span className={`px-2 py-0.5 rounded text-xs ${statusColors[project.status] || statusColors.active}`} style={{backgroundColor: 'var(--color-surface-variant)'}}>
+                    {(project.status || "active").replace("_", " ")}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-zinc-500 capitalize">
                     {project.priority} priority

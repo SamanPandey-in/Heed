@@ -1,11 +1,17 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-// Default user state - in a real app, this would come from auth
+// Default users state - in a real app, this would come from auth
 const initialState = {
-  id: "user_1",
-  name: "John Doe",
-  email: "john@example.com",
-  teams: ["team_1", "team_2"], // Array of team IDs
+  users: {
+    user_1: {
+      id: "user_1",
+      name: "John Doe",
+      email: "john@example.com",
+      teamIds: ["team_1", "team_2"],
+    },
+  }, // Normalized user entities
+  userIds: ["user_1"],
+  currentUserId: "user_1",
   currentTeamId: "team_1", // Currently selected team
   loading: false,
   error: null,
@@ -18,19 +24,24 @@ const userSlice = createSlice({
     // Set user data (typically from auth)
     setUser: (state, action) => {
       const { id, name, email, teams } = action.payload;
-      state.id = id;
-      state.name = name;
-      state.email = email;
-      state.teams = teams || [];
-      if (state.teams.length > 0 && !state.currentTeamId) {
-        state.currentTeamId = state.teams[0];
+      state.currentUserId = id;
+      state.users[id] = { id, name, email, teamIds: teams || [] };
+      if (!state.userIds.includes(id)) {
+        state.userIds.push(id);
+      }
+
+      const userTeamIds = state.users[id].teamIds || [];
+      if (userTeamIds.length > 0 && !state.currentTeamId) {
+        state.currentTeamId = userTeamIds[0];
       }
     },
 
     // Set currently selected team
     setCurrentTeamId: (state, action) => {
       const teamId = action.payload;
-      if (state.teams.includes(teamId)) {
+      const currentUser = state.users[state.currentUserId];
+      const userTeamIds = currentUser?.teamIds || [];
+      if (userTeamIds.includes(teamId)) {
         state.currentTeamId = teamId;
       }
     },
@@ -41,10 +52,16 @@ const userSlice = createSlice({
     // Use joinTeamAtomic thunk from store/thunks.js to ensure consistency
     addTeamToUser: (state, action) => {
       const teamId = action.payload;
-      if (!state.teams.includes(teamId)) {
-        state.teams.push(teamId);
+      const currentUser = state.currentUserId ? state.users[state.currentUserId] : null;
+      if (!currentUser) return;
+
+      const userTeamIds = currentUser.teamIds || [];
+
+      if (!userTeamIds.includes(teamId)) {
+        currentUser.teamIds = [...userTeamIds, teamId];
+
         // If this is the first team, set it as current
-        if (state.teams.length === 1) {
+        if (currentUser.teamIds.length === 1) {
           state.currentTeamId = teamId;
         }
       }
@@ -56,11 +73,14 @@ const userSlice = createSlice({
     // When team is deleted, use deleteTeamAtomic thunk from store/thunks.js
     removeTeamFromUser: (state, action) => {
       const teamId = action.payload;
-      state.teams = state.teams.filter((id) => id !== teamId);
+      const currentUser = state.currentUserId ? state.users[state.currentUserId] : null;
+      if (!currentUser) return;
+
+      currentUser.teamIds = (currentUser.teamIds || []).filter((id) => id !== teamId);
       
       // If removed team was current, switch to first remaining team
       if (state.currentTeamId === teamId) {
-        state.currentTeamId = state.teams.length > 0 ? state.teams[0] : null;
+        state.currentTeamId = currentUser.teamIds.length > 0 ? currentUser.teamIds[0] : null;
       }
     },
 

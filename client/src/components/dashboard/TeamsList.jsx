@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import {
   selectUserTeamObjects,
   selectCurrentTeamId,
-  selectTeamMemberCount,
 } from '../../store/selectors';
 import { Users, Settings, ArrowRight } from 'lucide-react';
 import CreateTeamForm from './CreateTeamForm';

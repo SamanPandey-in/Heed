@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Mail, UserPlus } from 'lucide-react';
+import { selectAllProjects } from '../../store';
 
 const InviteMemberDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 
-    const projects = useSelector((state) => state?.projects?.projects || []);
+    const projects = useSelector(selectAllProjects);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         email: "",
@@ -27,7 +28,7 @@ const InviteMemberDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                         <UserPlus className="size-5 text-zinc-900 dark:text-zinc-200" /> Invite Team Member
                     </h2>
                     <p className="text-sm text-zinc-700 dark:text-zinc-400">
-                        Inviting a new team member to your workspace
+                        Invite a new member to your current team
                     </p>
                 </div>
 

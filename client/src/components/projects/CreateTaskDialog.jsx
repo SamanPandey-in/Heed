@@ -3,9 +3,10 @@ import { useSelector } from 'react-redux';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { dummyUsers } from '../../assets/assets';
+import { selectAllProjects } from '../../store';
 
 export default function CreateTaskDialog({ showCreateTask, setShowCreateTask, projectId }) {
-    const projects = useSelector((state) => state?.projects?.projects || []);
+    const projects = useSelector(selectAllProjects);
     const project = projects.find((p) => p.id === projectId);
     const teamMembers = Array.isArray(project?.members) && project.members.length > 0
         ? project.members.map((member) => ({

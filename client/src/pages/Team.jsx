@@ -4,9 +4,9 @@ import { Activity, FolderOpen, Shield, UserPlus, UsersIcon } from 'lucide-react'
 
 import { Button, InviteMemberDialog, ProjectSection, TeamMembersSection } from '../components';
 import {
+    selectCurrentTeamId,
     selectTeamById,
     selectTeamMembers,
-    selectTeamProjects,
     selectTeamProjectsByStatus,
 } from '../store';
 
@@ -14,11 +14,14 @@ const Team = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-    const currentTeamId = useSelector((state) => state.user.currentTeamId);
+    const currentTeamId = useSelector(selectCurrentTeamId);
     const currentTeam = useSelector((state) => selectTeamById(state, currentTeamId));
     const teamMembers = useSelector((state) => selectTeamMembers(state, currentTeamId));
-    const teamProjects = useSelector((state) => selectTeamProjects(state, currentTeamId));
     const teamProjectsByStatus = useSelector((state) => selectTeamProjectsByStatus(state, currentTeamId));
+    const teamProjectCount =
+        teamProjectsByStatus.active.length +
+        teamProjectsByStatus.completed.length +
+        teamProjectsByStatus.deprecated.length;
 
     const filteredMembers = useMemo(() => {
         const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -82,7 +85,7 @@ const Team = () => {
                     <div className="flex items-center justify-between gap-8 md:gap-22">
                         <div>
                             <p className="text-sm text-gray-500 dark:text-zinc-400">Team Projects</p>
-                            <p className="text-xl font-bold text-gray-900 dark:text-white">{teamProjects.length}</p>
+                            <p className="text-xl font-bold text-gray-900 dark:text-white">{teamProjectCount}</p>
                         </div>
                         <div className="p-3 rounded-xl bg-purple-100 dark:bg-purple-500/10">
                             <FolderOpen className="size-4 text-purple-500 dark:text-purple-200" />

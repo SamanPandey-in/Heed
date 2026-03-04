@@ -1,19 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useSelector } from 'react-redux';
 import { ArrowRight, Calendar, UsersIcon, FolderOpen } from 'lucide-react';
-import { selectProjectsForUserTeams } from '../../store';
+import { selectAllTeams, selectProjectsForUserTeams, selectUserTeams } from '../../store';
 
 import CreateProjectDialog from './CreateProjectDialog';
 
 const ProjectOverview = () => {
     const statusColors = {
-        PLANNING: "bg-zinc-100 text-zinc-800 dark:bg-white/5 dark:text-zinc-400",
-        ACTIVE: "bg-zinc-200 text-zinc-900 dark:bg-white/10 dark:text-white",
-        ON_HOLD: "bg-zinc-100 text-zinc-600 dark:bg-white/5 dark:text-zinc-500",
-        COMPLETED: "bg-zinc-900 text-white dark:bg-white dark:text-black",
-        CANCELLED: "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400"
+        active: "bg-zinc-200 text-zinc-900 dark:bg-white/10 dark:text-white",
+        completed: "bg-zinc-900 text-white dark:bg-white dark:text-black",
+        deprecated: "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400"
     };
 
     const priorityColors = {
@@ -22,15 +20,10 @@ const ProjectOverview = () => {
         HIGH: "border-zinc-900 text-zinc-900 dark:border-white dark:text-white",
     };
 
-    const userTeamIds = useSelector((state) => state.user?.teams || []);
+    const userTeamIds = useSelector(selectUserTeams);
     const projects = useSelector((state) => selectProjectsForUserTeams(state, userTeamIds));
-    const teams = useSelector((state) => state?.teams?.teams || []);
+    const teams = useSelector(selectAllTeams);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [displayProjects, setDisplayProjects] = useState([]);
-
-    useEffect(() => {
-        setDisplayProjects(projects || []);
-    }, [projects]);
 
     return (
         <div className="bg-white dark:bg-black border border-zinc-200 dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/20 transition-all duration-200 rounded-lg overflow-hidden">
@@ -42,7 +35,7 @@ const ProjectOverview = () => {
             </div>
 
             <div className="p-0">
-                {displayProjects.length === 0 ? (
+                {projects.length === 0 ? (
                     <div className="p-12 text-center">
                         <div className="w-16 h-16 mx-auto mb-4 bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-500 rounded-full flex items-center justify-center">
                             <FolderOpen size={32} />
@@ -55,7 +48,7 @@ const ProjectOverview = () => {
                     </div>
                 ) : (
                     <div className="divide-y divide-zinc-200 dark:divide-white/10">
-                        {displayProjects.slice(0, 5).map((project) => {
+                        {projects.slice(0, 5).map((project) => {
                             const teamName = teams.find((team) => team.id === project.teamId)?.name || 'Unknown team';
                             const memberCount = project?.memberIds?.length ?? project?.members?.length ?? 0;
 
@@ -71,8 +64,8 @@ const ProjectOverview = () => {
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-2 ml-4">
-                                        <span className={`text-xs px-2 py-1 rounded ${statusColors[project.status]}`}>
-                                            {project.status.replace('_', ' ').replaceAll(/\b\w/g, c => c.toUpperCase())}
+                                        <span className={`text-xs px-2 py-1 rounded ${statusColors[project.status] || statusColors.active}`}>
+                                            {(project.status || "active").replace('_', ' ').replaceAll(/\b\w/g, c => c.toUpperCase())}
                                         </span>
                                         <div className={`w-2 h-2 rounded-full border-2 ${priorityColors[project.priority]}`} />
                                     </div>

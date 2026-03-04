@@ -1,26 +1,16 @@
-import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { FolderOpen, CheckCircle, Users, AlertTriangle } from 'lucide-react';
+import { selectDashboardStats } from '../../store';
 
 export default function StatsGrid() {
-    const projects = useSelector(
-        (state) => state?.projects?.projects || []
-    );
-
-    const [stats, setStats] = useState({
-        totalProjects: 0,
-        activeProjects: 0,
-        completedProjects: 0,
-        myTasks: 0,
-        overdueIssues: 0,
-    });
+    const stats = useSelector(selectDashboardStats);
 
     const statCards = [
         {
             icon: FolderOpen,
             title: "Total Projects",
             value: stats.totalProjects,
-            subtitle: `projects in your workspace`,
+            subtitle: `projects in your teams`,
             bgStyle: { backgroundColor: 'rgba(255, 255, 255, 0.05)' },
             textStyle: { color: 'white' },
         },
@@ -49,34 +39,6 @@ export default function StatsGrid() {
             textStyle: { color: 'white' },
         },
     ];
-
-    useEffect(() => {
-        if (projects && projects.length > 0) {
-            const currentUser = { email: "alexsmith@example.com" }; // Default to first user
-            setStats({
-                totalProjects: projects.length,
-                activeProjects: projects.filter(
-                    (p) => p.status !== "CANCELLED" && p.status !== "COMPLETED"
-                ).length,
-                completedProjects: projects
-                    .filter((p) => p.status === "COMPLETED")
-                    .reduce((acc, project) => acc + (project.tasks?.length || 0), 0),
-                myTasks: projects.reduce(
-                    (acc, project) =>
-                        acc +
-                        (project.tasks?.filter(
-                            (t) => t.assignee?.email === currentUser.email
-                        ).length || 0),
-                    0
-                ),
-                overdueIssues: projects.reduce(
-                    (acc, project) =>
-                        acc + (project.tasks?.filter((t) => new Date(t.due_date) < new Date()).length || 0),
-                    0
-                ),
-            });
-        }
-    }, [projects]);
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 my-9">

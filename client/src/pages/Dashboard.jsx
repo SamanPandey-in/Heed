@@ -7,8 +7,7 @@ import { selectUserTasksSortedByDueDate, selectUserTasksCountByStatus, selectCur
 
 const Dashboard = () => {
     const currentUser = useSelector(selectCurrentUser);
-    const userId = useSelector((state) => state.user?.id);
-    const userTasks = useSelector((state) => selectUserTasksSortedByDueDate(state));
+    const userTasks = useSelector(selectUserTasksSortedByDueDate);
     const taskStats = useSelector(selectUserTasksCountByStatus);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [sortBy, setSortBy] = useState('dueDate'); // 'dueDate' or 'status'
