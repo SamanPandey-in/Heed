@@ -67,6 +67,7 @@ export { default as settingsReducer } from "./slices/settingsSlice.js";
 // Selectors
 export {
   selectUserTeams,
+  selectUserTeamObjects,
   selectCurrentTeam,
   selectCurrentTeamMembers,
   selectTeamMembers,
@@ -79,4 +80,7 @@ export {
   selectUserTasksSortedByDueDate,
   selectUserTasksByStatus,
   selectUserTasksCountByStatus,
+  selectProjectsByTeam,
+  selectProjectsForUserTeams,
+  selectProjectsForCurrentTeam,
 } from "./selectors.js";

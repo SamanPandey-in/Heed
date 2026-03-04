@@ -1,17 +1,22 @@
-import { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { XIcon } from 'lucide-react';
 import { dummyUsers } from '../../assets/assets';
+import { addProject, selectUserTeamObjects } from '../../store';
 
 const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 
-    // Get all team members from all projects
-    const projects = useSelector((state) => state?.projects?.projects || []);
-    const allTeamMembers = projects.flatMap((p) => p.members || []);
+    const dispatch = useDispatch();
+
+    // Get user's teams
+    const userTeams = useSelector(selectUserTeamObjects);
+    const currentTeamId = useSelector((state) => state.user.currentTeamId);
+    const projectsError = useSelector((state) => state.projects.error);
 
     const [formData, setFormData] = useState({
         name: "",
         description: "",
+        teamId: currentTeamId || "",
         status: "PLANNING",
         priority: "MEDIUM",
         start_date: "",
@@ -19,13 +24,87 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
         team_members: [],
         team_lead: "",
         progress: 0,
+        result: null,
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState("");
+
+    const selectedTeam = useMemo(
+        () => userTeams.find((team) => team.id === formData.teamId),
+        [formData.teamId, userTeams]
+    );
+
+    const teamUserOptions = useMemo(() => {
+        const teamMemberIds = selectedTeam?.members || [];
+        return teamMemberIds.map((id) => {
+            const profile = dummyUsers.find((user) => user.id === id);
+            return {
+                id,
+                name: profile?.name || id,
+            };
+        });
+    }, [selectedTeam]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+        setSubmitError("");
+
+        if (userTeams.length === 0) {
+            setSubmitError("You must join a team before creating a project");
+            return;
+        }
+
+        const validTeamIds = userTeams.map((team) => team.id);
+        if (!validTeamIds.includes(formData.teamId)) {
+            setSubmitError("Please select a valid team");
+            return;
+        }
+
+        setIsSubmitting(true);
+        const now = new Date().toISOString();
+        const memberIds = [...new Set(
+            formData.team_lead
+                ? [...formData.team_members, formData.team_lead]
+                : formData.team_members
+        )];
+
+        dispatch(
+            addProject({
+                id: `project_${Date.now()}`,
+                name: formData.name,
+                description: formData.description,
+                teamId: formData.teamId,
+                status: formData.status,
+                priority: formData.priority,
+                start_date: formData.start_date || null,
+                end_date: formData.end_date || null,
+                team_lead: formData.team_lead || null,
+                memberIds,
+                progress: formData.progress || 0,
+                result: formData.result,
+                tasks: [],
+                createdAt: now,
+                updatedAt: now,
+                validTeamIds,
+            })
+        );
+
+        setIsSubmitting(false);
+        setIsDialogOpen(false);
+        setFormData({
+            name: "",
+            description: "",
+            teamId: currentTeamId || "",
+            status: "PLANNING",
+            priority: "MEDIUM",
+            start_date: "",
+            end_date: "",
+            team_members: [],
+            team_lead: "",
+            progress: 0,
+            result: null,
+        });
     };
 
     const removeTeamMember = (email) => {
@@ -47,6 +126,36 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* Team Selection */}
+                    <div>
+                        <label className="block text-sm mb-1">Team *</label>
+                        <select 
+                            value={formData.teamId} 
+                            onChange={(e) =>
+                                setFormData({
+                                    ...formData,
+                                    teamId: e.target.value,
+                                    team_members: [],
+                                    team_lead: "",
+                                })
+                            } 
+                            className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
+                            required
+                        >
+                            <option value="">Select a team</option>
+                            {userTeams.map((team) => (
+                                <option key={team.id} value={team.id}>
+                                    {team.name}
+                                </option>
+                            ))}
+                        </select>
+                        {userTeams.length === 0 && (
+                            <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                                You must be a member of a team to create a project
+                            </p>
+                        )}
+                    </div>
+
                     {/* Project Name */}
                     <div>
                         <label className="block text-sm mb-1">Project Name</label>
@@ -99,7 +208,7 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                         <label className="block text-sm mb-1">Project Lead</label>
                         <select value={formData.team_lead} onChange={(e) => setFormData({ ...formData, team_lead: e.target.value, team_members: e.target.value ? [...new Set([...formData.team_members, e.target.value])] : formData.team_members, })} className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm" >
                             <option value="">No lead</option>
-                            {dummyUsers.map((user) => (
+                            {teamUserOptions.map((user) => (
                                 <option key={user.id} value={user.id}>
                                     {user.name}
                                 </option>
@@ -118,7 +227,7 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                             }}
                         >
                             <option value="">Add team members</option>
-                            {dummyUsers
+                            {teamUserOptions
                                 ?.filter((user) => !formData.team_members.includes(user.id))
                                 .map((user) => (
                                     <option key={user.id} value={user.id}>
@@ -142,11 +251,14 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                     </div>
 
                     {/* Footer */}
+                    {(submitError || projectsError) && (
+                        <p className="text-sm text-red-600 dark:text-red-400">{submitError || projectsError}</p>
+                    )}
                     <div className="flex justify-end gap-3 pt-2 text-sm">
                         <button type="button" onClick={() => setIsDialogOpen(false)} className="px-4 py-2 rounded border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-800" >
                             Cancel
                         </button>
-                        <button disabled={isSubmitting} className="px-4 py-2 rounded bg-gradient-to-br from-blue-500 to-blue-600 text-white dark:text-zinc-200" >
+                        <button disabled={isSubmitting || userTeams.length === 0} className="px-4 py-2 rounded bg-gradient-to-br from-blue-500 to-blue-600 text-white dark:text-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed" >
                             {isSubmitting ? "Creating..." : "Create Project"}
                         </button>
                     </div>

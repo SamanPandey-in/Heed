@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { selectTeamById } from '../../store';
 
 const statusColors = {
     PLANNING: "text-gray-900 dark:text-gray-100",
@@ -9,6 +11,8 @@ const statusColors = {
 };
 
 const ProjectCard = ({ project }) => {
+    const team = useSelector((state) => selectTeamById(state, project.teamId));
+
     return (
         <Link to={`/projectsDetail?id=${project.id}&tab=tasks`} className="bg-white dark:bg-zinc-950 dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-gray-200 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700 rounded-lg p-5 transition-all duration-200 group">
             {/* Header */}
@@ -31,6 +35,10 @@ const ProjectCard = ({ project }) => {
                     {project.priority} priority
                 </span>
             </div>
+
+            <p className="text-xs text-gray-500 dark:text-zinc-500 mb-3">
+                Team: {team?.name || "Unknown team"}
+            </p>
 
             {/* Progress */}
             <div className="space-y-2">

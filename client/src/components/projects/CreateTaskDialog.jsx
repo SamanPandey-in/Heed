@@ -2,11 +2,23 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
+import { dummyUsers } from '../../assets/assets';
 
 export default function CreateTaskDialog({ showCreateTask, setShowCreateTask, projectId }) {
     const projects = useSelector((state) => state?.projects?.projects || []);
     const project = projects.find((p) => p.id === projectId);
-    const teamMembers = project?.members || [];
+    const teamMembers = Array.isArray(project?.members) && project.members.length > 0
+        ? project.members.map((member) => ({
+            id: member?.user?.id || member?.userId,
+            label: member?.user?.email || member?.user?.name || member?.userId || "Unknown",
+        }))
+        : (project?.memberIds || []).map((memberId) => {
+            const profile = dummyUsers.find((user) => user.id === memberId);
+            return {
+                id: memberId,
+                label: profile?.email || profile?.name || memberId,
+            };
+        });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
@@ -73,8 +85,8 @@ export default function CreateTaskDialog({ showCreateTask, setShowCreateTask, pr
                             <select value={formData.assigneeId} onChange={(e) => setFormData({ ...formData, assigneeId: e.target.value })} className="w-full rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-3 py-2 text-zinc-900 dark:text-zinc-200 text-sm mt-1" >
                                 <option value="">Unassigned</option>
                                 {teamMembers.map((member) => (
-                                    <option key={member?.user.id} value={member?.user.id}>
-                                        {member?.user.email}
+                                    <option key={member.id} value={member.id}>
+                                        {member.label}
                                     </option>
                                 ))}
                             </select>

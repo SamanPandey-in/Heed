@@ -290,3 +290,48 @@ export const selectUserTasksCountByStatus = createSelector(
     ),
   })
 );
+
+// ==================== PROJECT SELECTORS ====================
+
+/**
+ * Base selector for all projects
+ */
+const selectAllProjects = (state) => state.projects?.projects || [];
+
+/**
+ * Memoized selector to get projects for a specific team
+ */
+export const selectProjectsByTeam = createSelector(
+  [selectAllProjects, (state, teamId) => teamId],
+  (projects, teamId) => {
+    if (!teamId) return [];
+    return projects.filter((project) => project.teamId === teamId);
+  }
+);
+
+/**
+ * Memoized selector to get projects for user's teams
+ * Returns only projects that belong to teams the user is a member of
+ */
+export const selectProjectsForUserTeams = createSelector(
+  [selectAllProjects, (state, userTeams) => userTeams ?? state.user?.teams ?? []],
+  (projects, userTeams) => {
+    const userTeamIds = userTeams
+      .map((team) => (typeof team === "string" ? team : team?.id))
+      .filter(Boolean);
+
+    if (!userTeamIds.length) return [];
+    return projects.filter((project) => userTeamIds.includes(project.teamId));
+  }
+);
+
+/**
+ * Memoized selector to get projects for current user's current team
+ */
+export const selectProjectsForCurrentTeam = createSelector(
+  [selectAllProjects, (state) => state.user?.currentTeamId],
+  (projects, currentTeamId) => {
+    if (!currentTeamId) return [];
+    return projects.filter((project) => project.teamId === currentTeamId);
+  }
+);

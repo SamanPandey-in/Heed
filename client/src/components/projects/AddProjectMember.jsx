@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Mail, UserPlus } from 'lucide-react';
+import { dummyUsers } from '../../assets/assets';
 
 const AddProjectMember = ({ isDialogOpen, setIsDialogOpen }) => {
 
@@ -10,11 +11,24 @@ const AddProjectMember = ({ isDialogOpen, setIsDialogOpen }) => {
     const id = searchParams.get('id');
 
     const projects = useSelector((state) => state?.projects?.projects || []);
+    const teams = useSelector((state) => state?.teams?.teams || []);
 
     const project = projects.find((p) => p.id === id);
-    const projectMembersEmails = project?.members.map((member) => member.user.email);
+    const team = teams.find((entry) => entry.id === project?.teamId);
+    const projectMemberIds = Array.isArray(project?.members)
+        ? project.members.map((member) => member?.user?.id || member?.userId).filter(Boolean)
+        : (project?.memberIds || []);
+    const availableMembers = (team?.members || [])
+        .filter((memberId) => !projectMemberIds.includes(memberId))
+        .map((memberId) => {
+            const profile = dummyUsers.find((user) => user.id === memberId);
+            return {
+                id: memberId,
+                label: profile?.email || profile?.name || memberId,
+            };
+        });
 
-    const [email, setEmail] = useState('');
+    const [memberId, setMemberId] = useState('');
     const [isAdding, setIsAdding] = useState(false);
 
     const handleSubmit = async (e) => {
@@ -49,12 +63,11 @@ const AddProjectMember = ({ isDialogOpen, setIsDialogOpen }) => {
                         <div className="relative">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 dark:text-zinc-400 w-4 h-4" />
                             {/* List All non project members */}
-                            <select value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 mt-1 w-full rounded border border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-200 text-sm placeholder-zinc-400 dark:placeholder-zinc-500 py-2 focus:outline-none focus:border-blue-500" required >
+                            <select value={memberId} onChange={(e) => setMemberId(e.target.value)} className="pl-10 mt-1 w-full rounded border border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-200 text-sm placeholder-zinc-400 dark:placeholder-zinc-500 py-2 focus:outline-none focus:border-blue-500" required >
                                 <option value="">Select a member</option>
-                                {project?.members
-                                    .filter((member) => !projectMembersEmails.includes(member.user.email))
+                                {availableMembers
                                     .map((member) => (
-                                        <option key={member.user.id} value={member.user.email}> {member.user.email} </option>
+                                        <option key={member.id} value={member.id}> {member.label} </option>
                                     ))}
                             </select>
                         </div>

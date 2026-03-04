@@ -3,12 +3,12 @@ import { useSelector } from 'react-redux';
 import { Plus, Search, FolderOpen } from 'lucide-react';
 
 import { ProjectCard, CreateProjectDialog, Button } from '../components';
+import { selectProjectsForUserTeams } from '../store';
 
 export default function Projects() {
     
-    const projects = useSelector(
-        (state) => state?.projects?.projects || []
-    );
+    const userTeamIds = useSelector((state) => state.user?.teams || []);
+    const projects = useSelector((state) => selectProjectsForUserTeams(state, userTeamIds));
 
     const [filteredProjects, setFilteredProjects] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");

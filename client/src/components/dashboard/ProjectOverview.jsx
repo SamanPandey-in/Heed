@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useSelector } from 'react-redux';
 import { ArrowRight, Calendar, UsersIcon, FolderOpen } from 'lucide-react';
+import { selectProjectsForUserTeams } from '../../store';
 
 import CreateProjectDialog from './CreateProjectDialog';
 
@@ -21,7 +22,9 @@ const ProjectOverview = () => {
         HIGH: "border-zinc-900 text-zinc-900 dark:border-white dark:text-white",
     };
 
-    const projects = useSelector((state) => state?.projects?.projects || []);
+    const userTeamIds = useSelector((state) => state.user?.teams || []);
+    const projects = useSelector((state) => selectProjectsForUserTeams(state, userTeamIds));
+    const teams = useSelector((state) => state?.teams?.teams || []);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [displayProjects, setDisplayProjects] = useState([]);
 
@@ -52,8 +55,12 @@ const ProjectOverview = () => {
                     </div>
                 ) : (
                     <div className="divide-y divide-zinc-200 dark:divide-white/10">
-                        {displayProjects.slice(0, 5).map((project) => (
-                            <Link key={project.id} to={`/projectsDetail?id=${project.id}&tab=tasks`} className="block p-6 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
+                        {displayProjects.slice(0, 5).map((project) => {
+                            const teamName = teams.find((team) => team.id === project.teamId)?.name || 'Unknown team';
+                            const memberCount = project?.memberIds?.length ?? project?.members?.length ?? 0;
+
+                            return (
+                                <Link key={project.id} to={`/projectsDetail?id=${project.id}&tab=tasks`} className="block p-6 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
                                 <div className="flex items-start justify-between mb-3">
                                     <div className="flex-1">
                                         <h3 className="font-semibold text-zinc-800 dark:text-zinc-300 mb-1">
@@ -73,12 +80,15 @@ const ProjectOverview = () => {
 
                                 <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-500 mb-3">
                                     <div className="flex items-center gap-4">
-                                        {project.members?.length > 0 && (
+                                        {memberCount > 0 && (
                                             <div className="flex items-center gap-1">
                                                 <UsersIcon className="w-3 h-3" />
-                                                {project.members.length} members
+                                                {memberCount} members
                                             </div>
                                         )}
+                                        <div className="flex items-center gap-1">
+                                            Team: {teamName}
+                                        </div>
                                         {project.end_date && (
                                             <div className="flex items-center gap-1">
                                                 <Calendar className="w-3 h-3" />
@@ -97,8 +107,9 @@ const ProjectOverview = () => {
                                         <div className="h-1.5 bg-white rounded" style={{ width: `${project.progress || 0}%` }} />
                                     </div>
                                 </div>
-                            </Link>
-                        ))}
+                                </Link>
+                            );
+                        })}
                     </div>
                 )}
             </div>
