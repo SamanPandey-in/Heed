@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Button, Chip, IconButton } from '@mui/material';
@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 import { CreateTaskDialog, ProjectAnalytics, ProjectCalendar, ProjectSettings, ProjectTasks } from '../components';
-import { selectProjectById, selectTeamById } from '../store';
+import { selectProjectById, selectTasksByProjectId, selectTeamById } from '../store';
 
 export default function ProjectDetail() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -27,7 +27,7 @@ export default function ProjectDetail() {
     const [showCreateTask, setShowCreateTask] = useState(false);
     const activeTab = searchParams.get('tab') || 'tasks';
 
-    const tasks = useMemo(() => project?.tasks || [], [project]);
+    const tasks = useSelector((state) => selectTasksByProjectId(state, projectId));
     const memberCount = project?.memberIds?.length ?? project?.members?.length ?? 0;
 
     if (!project) {

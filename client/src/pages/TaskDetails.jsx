@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Button, Chip, TextField, Typography } from '@mui/material';
@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import { CalendarIcon, MessageCircle, PenIcon } from 'lucide-react';
 
 import { assets } from '../assets/assets';
-import { selectAllProjects } from '../store';
+import { selectProjectById, selectTaskById } from '../store';
 
 const TaskDetails = () => {
 
@@ -16,32 +16,12 @@ const TaskDetails = () => {
     const taskId = searchParams.get("taskId");
 
     const user = { id : 'user_1'}
-    const [task, setTask] = useState(null);
-    const [project, setProject] = useState(null);
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState("");
-    const [loading, setLoading] = useState(true);
 
-    const projects = useSelector(selectAllProjects);
-
-    const fetchComments = async () => {
-
-    };
-
-    const fetchTaskDetails = async () => {
-        setLoading(true);
-        if (!projectId || !taskId) return;
-
-        const proj = projects.find((p) => p.id === projectId);
-        if (!proj) return;
-
-        const tsk = proj.tasks.find((t) => t.id === taskId);
-        if (!tsk) return;
-
-        setTask(tsk);
-        setProject(proj);
-        setLoading(false);
-    };
+    const project = useSelector((state) => selectProjectById(state, projectId));
+    const task = useSelector((state) => selectTaskById(state, taskId));
+    const loading = !task;
 
     const handleAddComment = async () => {
         if (!newComment.trim()) return;
@@ -66,15 +46,9 @@ const TaskDetails = () => {
         }
     };
 
-    useEffect(() => { fetchTaskDetails(); }, [taskId]);
+    // Removed fetchTaskDetails effect - data comes directly from selectors
 
-    useEffect(() => {
-        if (taskId && task) {
-            fetchComments();
-            const interval = setInterval(() => { fetchComments(); }, 10000);
-            return () => clearInterval(interval);
-        }
-    }, [taskId, task]);
+    // Comments polling removed - can be re-added when backend supports it
 
     if (loading) return <div className="text-gray-500 dark:text-zinc-400 px-4 py-6">Loading task details...</div>;
     if (!task) return <Typography color="error" sx={{ px: 2, py: 3 }}>Task not found.</Typography>;
