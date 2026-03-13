@@ -260,7 +260,7 @@ const ProjectTasks = ({ tasks }) => {
                                         <TableCell>
                                             <Stack direction="row" spacing={0.5} alignItems="center">
                                                 <CalendarIcon className="size-4" />
-                                                <Typography variant="body2">{format(new Date(task.due_date), 'dd MMMM')}</Typography>
+                                                <Typography variant="body2">{task.due_date ? format(new Date(task.due_date), 'dd MMMM') : '—'}</Typography>
                                             </Stack>
                                         </TableCell>
                                     </TableRow>
