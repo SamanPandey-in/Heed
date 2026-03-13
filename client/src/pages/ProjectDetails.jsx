@@ -96,8 +96,13 @@ export default function ProjectDetail() {
                     },
                     {
                         label: 'In Progress',
-                        value: tasks.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'TODO').length,
+                        value: tasks.filter((t) => t.status === 'IN_PROGRESS').length,
                         color: 'text-amber-700 dark:text-amber-400',
+                    },
+                    {
+                        label: 'To Do',
+                        value: tasks.filter((t) => t.status === 'TODO').length,
+                        color: 'text-slate-700 dark:text-slate-400',
                     },
                     { label: 'Team Members', value: memberCount, color: 'text-blue-700 dark:text-blue-400' },
                 ].map((card, idx) => (
