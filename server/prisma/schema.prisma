@@ -1,0 +1,336 @@
+// HEED / SYNERGYSPHERE — PRISMA SCHEMA (no roles)
+// Database: Neon PostgreSQL (serverless)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ENUMS
+
+enum ProjectStatus {
+  ACTIVE
+  COMPLETED
+  DEPRECATED
+  ARCHIVED
+}
+
+enum ProjectResult {
+  SUCCESS
+  FAILED
+  ONGOING
+}
+
+enum TaskStatus {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskType {
+  TASK
+  BUG
+  FEATURE
+  IMPROVEMENT
+  EPIC
+  STORY
+  SUB_TASK
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+enum NotifType {
+  TASK_ASSIGNED
+  TASK_UPDATED
+  COMMENT_ADDED
+  MENTION
+  INVITE
+  PROJECT_UPDATED
+}
+
+// USER
+
+model User {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email           String    @unique @db.VarChar(255)
+  username        String    @unique @db.VarChar(100)
+  fullName        String    @map("full_name") @db.VarChar(255)
+  passwordHash    String    @map("password_hash")
+  avatarUrl       String?   @map("avatar_url")
+  bio             String?
+  isEmailVerified Boolean   @default(false) @map("is_email_verified")
+  refreshToken    String?   @map("refresh_token")
+  resetToken      String?   @map("reset_token")
+  resetTokenExp   DateTime? @map("reset_token_exp") @db.Timestamptz
+  lastLoginAt     DateTime? @map("last_login_at") @db.Timestamptz
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  ownedTeams         Team[]          @relation("TeamOwner")
+  teamMemberships    TeamMember[]
+  projectMemberships ProjectMember[]
+  createdProjects    Project[]       @relation("ProjectCreator")
+  createdTasks       Task[]          @relation("TaskCreator")
+  assignedTasks      Task[]          @relation("TaskAssignee")
+  comments           Comment[]
+  activityLogs       ActivityLog[]
+  notifications      Notification[]
+  sentInvites        TeamInvite[]    @relation("InviteSender")
+
+  @@map("users")
+  @@index([email])
+  @@index([username])
+}
+
+// TEAM
+
+model Team {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @db.VarChar(255)
+  description String?
+  inviteCode  String   @unique @map("invite_code") @db.VarChar(32)
+  avatarUrl   String?  @map("avatar_url")
+  ownerId     String   @map("owner_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  owner    User         @relation("TeamOwner", fields: [ownerId], references: [id])
+  members  TeamMember[]
+  projects Project[]
+  invites  TeamInvite[]
+
+  @@map("teams")
+  @@index([ownerId])
+  @@index([inviteCode])
+}
+
+// TEAM MEMBER
+
+model TeamMember {
+  id       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teamId   String   @map("team_id") @db.Uuid
+  userId   String   @map("user_id") @db.Uuid
+  joinedAt DateTime @default(now()) @map("joined_at") @db.Timestamptz
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("team_members")
+  @@index([teamId])
+  @@index([userId])
+}
+
+// PROJECT
+
+model Project {
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teamId      String        @map("team_id") @db.Uuid
+  createdBy   String        @map("created_by") @db.Uuid
+  name        String        @db.VarChar(255)
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  result      ProjectResult?
+  priority    TaskPriority  @default(MEDIUM)
+  progress    Int           @default(0)
+  startDate   DateTime?     @map("start_date") @db.Date
+  endDate     DateTime?     @map("end_date") @db.Date
+  key         String        @db.VarChar(10)
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  team         Team            @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  creator      User            @relation("ProjectCreator", fields: [createdBy], references: [id])
+  members      ProjectMember[]
+  tasks        Task[]
+  labels       Label[]
+  activityLogs ActivityLog[]
+
+  @@unique([teamId, key])
+  @@map("projects")
+  @@index([teamId])
+  @@index([createdBy])
+  @@index([status])
+}
+
+// PROJECT MEMBER
+
+model ProjectMember {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId String   @map("project_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  joinedAt  DateTime @default(now()) @map("joined_at") @db.Timestamptz
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@map("project_members")
+  @@index([projectId])
+  @@index([userId])
+}
+
+// TASK
+
+model Task {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId   String       @map("project_id") @db.Uuid
+  parentId    String?      @map("parent_id") @db.Uuid
+  createdBy   String       @map("created_by") @db.Uuid
+  assigneeId  String?      @map("assignee_id") @db.Uuid
+  title       String       @db.VarChar(500)
+  description String?
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  type        TaskType     @default(TASK)
+  issueKey    String?      @map("issue_key") @db.VarChar(20)
+  storyPoints Int?         @map("story_points")
+  dueDate     DateTime?    @map("due_date") @db.Timestamptz
+  order       Int          @default(0)
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+
+  parent   Task?  @relation("SubTasks", fields: [parentId], references: [id])
+  subTasks Task[] @relation("SubTasks")
+
+  project  Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  creator  User       @relation("TaskCreator", fields: [createdBy], references: [id])
+  assignee User?      @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  comments Comment[]
+  labels   TaskLabel[]
+
+  @@map("tasks")
+  @@index([projectId])
+  @@index([assigneeId])
+  @@index([parentId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+// LABELS
+
+model Label {
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId String  @map("project_id") @db.Uuid
+  name      String  @db.VarChar(100)
+  color     String  @default("#6B7280") @db.VarChar(7)
+
+  project Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks   TaskLabel[]
+
+  @@unique([projectId, name])
+  @@map("labels")
+}
+
+model TaskLabel {
+  taskId  String @map("task_id") @db.Uuid
+  labelId String @map("label_id") @db.Uuid
+
+  task  Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  label Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, labelId])
+  @@map("task_labels")
+}
+
+// COMMENTS
+
+model Comment {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  taskId    String   @map("task_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  parentId  String?  @map("parent_id") @db.Uuid
+  content   String
+  isEdited  Boolean  @default(false) @map("is_edited")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  task    Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent  Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies Comment[] @relation("CommentReplies")
+
+  @@map("comments")
+  @@index([taskId])
+  @@index([userId])
+  @@index([parentId])
+}
+
+// ACTIVITY LOG
+
+model ActivityLog {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  entityType String   @map("entity_type") @db.VarChar(50)
+  entityId   String   @map("entity_id") @db.Uuid
+  projectId  String?  @map("project_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  action     String   @db.VarChar(100)
+  oldValue   Json?    @map("old_value")
+  newValue   Json?    @map("new_value")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("activity_logs")
+  @@index([entityType, entityId])
+  @@index([projectId])
+  @@index([userId])
+}
+
+// NOTIFICATIONS
+
+model Notification {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  type       NotifType
+  title      String    @db.VarChar(255)
+  message    String
+  entityType String?   @map("entity_type") @db.VarChar(50)
+  entityId   String?   @map("entity_id") @db.Uuid
+  isRead     Boolean   @default(false) @map("is_read")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+  @@index([userId])
+}
+
+// TEAM INVITES
+
+model TeamInvite {
+  id        String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teamId    String       @map("team_id") @db.Uuid
+  invitedBy String       @map("invited_by") @db.Uuid
+  email     String       @db.VarChar(255)
+  token     String       @unique @db.VarChar(64)
+  status    InviteStatus @default(PENDING)
+  expiresAt DateTime     @map("expires_at") @db.Timestamptz
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz
+
+  team   Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  sender User @relation("InviteSender", fields: [invitedBy], references: [id], onDelete: Cascade)
+
+  @@map("team_invites")
+  @@index([teamId])
+  @@index([email])
+  @@index([token])
+}
