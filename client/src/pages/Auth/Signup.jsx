@@ -33,8 +33,8 @@ export default function Signup() {
     if (formData.password !== formData.confirmPassword) {
       return setError("Passwords do not match");
     }
-    if (formData.password.length < 6) {
-      return setError("Password must be at least 6 characters");
+    if (formData.password.length < 8) {
+      return setError("Password must be at least 8 characters");
     }
 
     setLoading(true);

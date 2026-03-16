@@ -7,10 +7,10 @@ import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 
 import authRoutes from "./src/routes/auth.route.js";
-import userRoutes from "./src/routes/user.route.js";
-import teamRoutes from "./src/routes/team.route.js";
-import projectRoutes from "./src/routes/project.route.js";
-import taskRoutes from "./src/routes/task.route.js";
+// import userRoutes from "./src/routes/user.route.js";
+// import teamRoutes from "./src/routes/team.route.js";
+// import projectRoutes from "./src/routes/project.route.js";
+// import taskRoutes from "./src/routes/task.route.js";
 
 const app = express();
 
@@ -55,10 +55,10 @@ const authLimiter = rateLimit({
 
 // Routes
 app.use("/api/auth", authLimiter, authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/teams", teamRoutes);
-app.use("/api/projects", projectRoutes);
-app.use("/api/tasks", taskRoutes);
+// app.use("/api/users", userRoutes);
+// app.use("/api/teams", teamRoutes);
+// app.use("/api/projects", projectRoutes);
+// app.use("/api/tasks", taskRoutes);
 
 app.get("/api/health", (_, res) =>
   res.json({ status: "ok", ts: new Date().toISOString() }),

@@ -1,5 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { dummyProjects } from "../../assets/assets";
 import {
   addProject,
   addTask,
@@ -73,11 +72,9 @@ const normalizeTasksFromProjects = (projects = []) => {
   };
 };
 
-const normalizedInitialState = normalizeTasksFromProjects(dummyProjects || []);
-
 const initialState = {
-  tasks: normalizedInitialState.tasks,
-  taskIds: normalizedInitialState.taskIds,
+  tasks: {},
+  taskIds: [],
   loading: false,
   error: null,
 };

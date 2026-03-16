@@ -1,6 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
-import { dummyProjects } from "../../assets/assets";
 
 const FALLBACK_TEAM_ID = "team_1";
 const VALID_PROJECT_RESULTS = ["success", "failed", "ongoing"];
@@ -111,11 +110,9 @@ const normalizeProjectsPayload = (projects = []) => {
   };
 };
 
-const normalizedInitialState = normalizeProjectsPayload(dummyProjects || []);
-
 const initialState = {
-  projects: normalizedInitialState.projects, // Normalized project entities
-  projectIds: normalizedInitialState.projectIds, // Ordered project IDs
+  projects: {}, // Normalized project entities
+  projectIds: [], // Ordered project IDs
   currentProjectId: null,
   loading: false,
   error: null,

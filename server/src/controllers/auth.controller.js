@@ -3,7 +3,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import { prisma } from "../lib/prisma.js";
+import { prisma } from "../prisma/client.js";
 
 const SALT_ROUNDS = 12;
 const ACCESS_TOKEN_TTL = "15m";
