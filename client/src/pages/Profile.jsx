@@ -1,35 +1,50 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, TextField } from '@mui/material';
-import { User, Mail, Calendar, LogOut } from 'lucide-react';
+import { Mail, Calendar, LogOut } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 import { useAuth } from '../context/AuthContext';
-import { dummyUsers } from '../assets/assets';
+
+const DEFAULT_ABOUT = 'Hey there! This is your space to manage your profile and stay on top of your tasks. Keep growing, stay focused, and make the most of every opportunity.';
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const [profile, setProfile] = useState(dummyUsers[0]);
+  const { logout } = useAuth();
+  const currentUser = useSelector((state) => {
+    const userId = state?.users?.currentUserId;
+    return userId ? state?.users?.users?.[userId] : null;
+  });
+
+  const [profile, setProfile] = useState(null);
   const [editingName, setEditingName] = useState(false);
   const [editingUsername, setEditingUsername] = useState(false);
   const [editingAbout, setEditingAbout] = useState(false);
-  const [fullName, setFullName] = useState(dummyUsers[0].name);
-  const [username, setUsername] = useState(dummyUsers[0].name.split(' ')[0].toLowerCase());
-  const [about, setAbout] = useState('Hey there! This is your space to manage your profile and stay on top of your tasks. Keep growing, stay focused, and make the most of every opportunity.');
+  const [fullName, setFullName] = useState('');
+  const [username, setUsername] = useState('');
+  const [about, setAbout] = useState(DEFAULT_ABOUT);
 
   useEffect(() => {
-    // Load user data from auth context or use dummy data
-    if (user) {
-      const currentUser = dummyUsers.find(u => u.email === user.email) || dummyUsers[0];
-      setProfile(currentUser);
-      setFullName(currentUser.name);
-      setUsername(currentUser.name.split(' ')[0].toLowerCase());
-    } else {
-      setProfile(dummyUsers[0]);
-      setFullName(dummyUsers[0].name);
-      setUsername(dummyUsers[0].name.split(' ')[0].toLowerCase());
+    if (!currentUser) {
+      setProfile(null);
+      return;
     }
-  }, [user]);
+
+    const normalizedProfile = {
+      id: currentUser.id || '',
+      name: currentUser.fullName || currentUser.name || '',
+      username: currentUser.username || '',
+      email: currentUser.email || '',
+      about: currentUser.bio || currentUser.about || DEFAULT_ABOUT,
+      image: currentUser.avatarUrl || currentUser.image || '',
+      createdAt: currentUser.createdAt || null,
+    };
+
+    setProfile(normalizedProfile);
+    setFullName(normalizedProfile.name);
+    setUsername(normalizedProfile.username);
+    setAbout(normalizedProfile.about);
+  }, [currentUser]);
 
   const handleSaveName = () => {
     setProfile(prev => ({ ...prev, name: fullName }));
@@ -51,7 +66,22 @@ const Profile = () => {
     navigate('/');
   };
 
-  const joinedDate = new Date(profile.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+  const joinedDate = useMemo(() => {
+    if (!profile?.createdAt) return 'Unknown';
+    const date = new Date(profile.createdAt);
+    if (Number.isNaN(date.getTime())) return 'Unknown';
+    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+  }, [profile?.createdAt]);
+
+  if (!profile) {
+    return (
+      <div className="space-y-5 max-w-6xl mx-auto text-gray-900 dark:text-white">
+        <div className="bg-white dark:bg-black border border-gray-200 dark:border-white/10 rounded p-8">
+          <p className="text-sm text-gray-500 dark:text-zinc-400">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5 max-w-6xl mx-auto text-gray-900 dark:text-white">
@@ -67,11 +97,17 @@ const Profile = () => {
       <div className="bg-white dark:bg-black border border-gray-200 dark:border-white/10 rounded p-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
           <div className="flex-shrink-0">
-            <img
-              src={profile.image}
-              alt={profile.name}
-              className="w-24 h-24 rounded-full object-cover"
-            />
+            {profile.image ? (
+              <img
+                src={profile.image}
+                alt={profile.name}
+                className="w-24 h-24 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-gray-200 dark:bg-zinc-700 flex items-center justify-center text-2xl font-bold text-gray-600 dark:text-gray-200">
+                {(profile.name || '?').slice(0, 1).toUpperCase()}
+              </div>
+            )}
           </div>
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{profile.name}</h2>
@@ -115,7 +151,7 @@ const Profile = () => {
                 color='primary'
                 size='small'
                 onClick={() => {
-                  setAbout('Hey there! This is your space to manage your profile and stay on top of your tasks. Keep growing, stay focused, and make the most of every opportunity.');
+                      setAbout(profile.about || DEFAULT_ABOUT);
                   setEditingAbout(false);
                 }}
               >
@@ -214,7 +250,7 @@ const Profile = () => {
                     color='primary'
                     size='small'
                     onClick={() => {
-                      setUsername(profile.name.split(' ')[0].toLowerCase());
+                      setUsername(profile.username || '');
                       setEditingUsername(false);
                     }}
                   >

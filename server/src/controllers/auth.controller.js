@@ -44,6 +44,12 @@ const safeUser = (u) => ({
   avatarUrl: u.avatarUrl || null,
   bio: u.bio || null,
   isEmailVerified: u.isEmailVerified,
+  createdAt: u.createdAt,
+  updatedAt: u.updatedAt,
+  lastLoginAt: u.lastLoginAt || null,
+  teamIds: Array.isArray(u.teamMemberships)
+    ? u.teamMemberships.map((membership) => membership.teamId)
+    : [],
 });
 
 // REGISTER
@@ -176,6 +182,11 @@ export const refresh = async (req, res, next) => {
 
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
+      include: {
+        teamMemberships: {
+          select: { teamId: true },
+        },
+      },
     });
     if (!user?.refreshToken)
       return res.status(401).json({ message: "Session revoked" });

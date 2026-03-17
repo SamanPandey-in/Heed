@@ -14,11 +14,42 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     // Called after successful login / signup / session restore
-    // Payload: { id, email, username, fullName, avatarUrl, bio, isEmailVerified }
+    // Payload: { id, email, username, fullName, avatarUrl, bio, isEmailVerified, createdAt, updatedAt, lastLoginAt, teamIds }
     setUser: (state, action) => {
-      const { id, email, username, fullName, avatarUrl, bio, isEmailVerified, teamIds = [] } = action.payload;
+      const {
+        id,
+        email,
+        username,
+        fullName,
+        avatarUrl,
+        bio,
+        isEmailVerified,
+        createdAt,
+        updatedAt,
+        lastLoginAt,
+        teamIds = [],
+      } = action.payload;
+
+      if (!id) return;
+
       state.currentUserId = id;
-      state.users[id] = { id, email, username, fullName, avatarUrl, bio, isEmailVerified, teamIds };
+      state.users[id] = {
+        id,
+        email,
+        username,
+        fullName,
+        name: fullName,
+        avatarUrl: avatarUrl || null,
+        image: avatarUrl || null,
+        bio: bio || '',
+        about: bio || '',
+        isEmailVerified: Boolean(isEmailVerified),
+        createdAt: createdAt || null,
+        updatedAt: updatedAt || null,
+        lastLoginAt: lastLoginAt || null,
+        teamIds,
+      };
+
       if (!state.userIds.includes(id)) state.userIds.push(id);
       if (teamIds.length > 0 && !state.currentTeamId) state.currentTeamId = teamIds[0];
     },
