@@ -159,6 +159,38 @@ export const apiSlice = createApi({
       transformResponse: (response) => response.data,
     }),
 
+    joinTeamByInviteCode: builder.mutation({
+      query: (inviteCode) => ({
+        url: '/teams/join',
+        method: 'POST',
+        body: { inviteCode },
+      }),
+      invalidatesTags: [{ type: 'Team', id: 'LIST' }],
+    }),
+
+    addTeamMember: builder.mutation({
+      query: ({ teamId, userId, email }) => ({
+        url: `/teams/${teamId}/members`,
+        method: 'POST',
+        body: { userId, email },
+      }),
+      invalidatesTags: (result, error, { teamId }) => [
+        { type: 'Team', id: teamId },
+        { type: 'Team', id: 'LIST' },
+      ],
+    }),
+
+    removeTeamMember: builder.mutation({
+      query: ({ teamId, userId }) => ({
+        url: `/teams/${teamId}/members/${userId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, { teamId }) => [
+        { type: 'Team', id: teamId },
+        { type: 'Team', id: 'LIST' },
+      ],
+    }),
+
     // REQUEST ENDPOINTS
     getRequests: builder.query({
       query: (params) => ({
@@ -259,6 +291,9 @@ export const {
   useDeleteTeamMutation,
   useAddTechnicianToTeamMutation,
   useRemoveTechnicianFromTeamMutation,
+  useJoinTeamByInviteCodeMutation,
+  useAddTeamMemberMutation,
+  useRemoveTeamMemberMutation,
   
   // Requests
   useGetRequestsQuery,

@@ -1,5 +1,4 @@
-import { useMemo, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useState } from 'react';
 import {
     Box,
     Button,
@@ -12,61 +11,40 @@ import {
     Typography,
 } from '@mui/material';
 import { Mail, UserPlus } from 'lucide-react';
+import { useAddTeamMemberMutation } from '../../store/slices/apiSlice';
 
-import { dummyUsers } from '../../assets/assets';
-import {
-    clearTeamsError,
-    inviteMemberAtomic,
-    selectTeamById,
-    selectTeamsError,
-} from '../../store';
-
-const InviteMemberDialog = ({ isDialogOpen, setIsDialogOpen, teamId, onInviteSuccess }) => {
-    const dispatch = useDispatch();
-    const team = useSelector((state) => selectTeamById(state, teamId));
-    const teamsError = useSelector(selectTeamsError);
-
+const InviteMemberDialog = ({ isDialogOpen, setIsDialogOpen, teamId, teamName, onInviteSuccess }) => {
+    const [addTeamMember] = useAddTeamMemberMutation();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [userIdentifier, setUserIdentifier] = useState('');
+    const [error, setError] = useState('');
 
-    const suggestedUsers = useMemo(() => {
-        const memberSet = new Set(team?.members || []);
-        return dummyUsers.filter((user) => !memberSet.has(user.id));
-    }, [team?.members]);
-
-    const resolveUserId = (value) => {
-        const normalized = String(value || '').trim();
-        if (!normalized) return '';
-
-        const knownUser = dummyUsers.find(
-            (user) =>
-                user.id.toLowerCase() === normalized.toLowerCase() ||
-                user.email.toLowerCase() === normalized.toLowerCase()
-        );
-
-        return knownUser?.id || normalized;
-    };
-
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const resolvedUserId = resolveUserId(userIdentifier);
-        if (!resolvedUserId || !teamId) return;
+        const normalized = userIdentifier.trim();
+        if (!normalized || !teamId) return;
 
+        const isEmail = normalized.includes('@');
         setIsSubmitting(true);
+        setError('');
 
-        const success = dispatch(inviteMemberAtomic({ teamId, userId: resolvedUserId }));
+        try {
+            await addTeamMember({
+                teamId,
+                ...(isEmail ? { email: normalized } : { userId: normalized }),
+            }).unwrap();
 
-        setIsSubmitting(false);
-
-        if (success) {
             setUserIdentifier('');
-            dispatch(clearTeamsError());
             setIsDialogOpen(false);
 
             if (onInviteSuccess) {
-                onInviteSuccess(resolvedUserId);
+                onInviteSuccess();
             }
+        } catch (err) {
+            setError(err?.data?.message || 'Failed to add member');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -87,18 +65,21 @@ const InviteMemberDialog = ({ isDialogOpen, setIsDialogOpen, teamId, onInviteSuc
             </DialogTitle>
             <DialogContent>
                 <Typography variant="body2" sx={{ mb: 2 }}>
-                    Add a member to <strong>{team?.name || 'this team'}</strong>
+                    Add a member to <strong>{teamName || 'this team'}</strong>
                 </Typography>
 
                 <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
                     <TextField
                         id="member-id"
-                        list="team-invite-suggestions"
                         label="User ID or Email"
                         value={userIdentifier}
-                        onChange={(e) => setUserIdentifier(e.target.value)}
+                        onChange={(e) => {
+                            setUserIdentifier(e.target.value);
+                            setError('');
+                        }}
                         placeholder="e.g. user_2 or john@example.com"
                         required
+                        fullWidth
                         InputProps={{
                             startAdornment: (
                                 <InputAdornment position="start">
@@ -107,15 +88,10 @@ const InviteMemberDialog = ({ isDialogOpen, setIsDialogOpen, teamId, onInviteSuc
                             ),
                         }}
                     />
-                    <datalist id="team-invite-suggestions">
-                        {suggestedUsers.map((user) => (
-                            <option key={user.id} value={user.id} label={`${user.name} (${user.email})`} />
-                        ))}
-                    </datalist>
 
-                    {teamsError && (
+                    {error && (
                         <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-                            {teamsError}
+                            {error}
                         </Typography>
                     )}
 
@@ -126,7 +102,7 @@ const InviteMemberDialog = ({ isDialogOpen, setIsDialogOpen, teamId, onInviteSuc
                             onClick={() => {
                                 setIsDialogOpen(false);
                                 setUserIdentifier('');
-                                dispatch(clearTeamsError());
+                                setError('');
                             }}
                         >
                             Cancel

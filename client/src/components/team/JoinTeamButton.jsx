@@ -1,58 +1,38 @@
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { Button } from '@mui/material';
-import { clearTeamsError, joinTeamAtomic, selectCurrentUserId } from '../../store';
 import { selectIsUserInTeam } from '../../store/selectors';
+import { useJoinTeamByInviteCodeMutation } from '../../store/slices/apiSlice';
 import { UserPlus, Check } from 'lucide-react';
 
-const JoinTeamButton = ({ teamId, userId, onJoinSuccess }) => {
-  const dispatch = useDispatch();
-  const currentUserId = useSelector(selectCurrentUserId);
-  const effectiveUserId = userId || currentUserId;
-  const isUserInTeam = useSelector((state) => selectIsUserInTeam(state, teamId));
+const JoinTeamButton = ({ inviteCode, onJoinSuccess }) => {
+  const [joinTeamByInviteCode] = useJoinTeamByInviteCodeMutation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const handleJoin = async () => {
-    if (isUserInTeam) return;
-
-    if (!effectiveUserId) return;
+    if (!inviteCode) return;
 
     setIsSubmitting(true);
+    setError('');
 
     try {
-      const success = dispatch(joinTeamAtomic({ teamId, userId: effectiveUserId }));
-      if (success) {
-        dispatch(clearTeamsError());
+      const result = await joinTeamByInviteCode(inviteCode).unwrap();
 
-        if (onJoinSuccess) {
-          onJoinSuccess(teamId);
-        }
+      if (onJoinSuccess) {
+        onJoinSuccess(result.team);
       }
-    } catch (error) {
-      console.error('Failed to join team:', error);
-      dispatch(clearTeamsError());
+    } catch (err) {
+      setError(err?.data?.message || 'Failed to join team');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (isUserInTeam) {
-    return (
-      <Button
-        disabled
-        variant="outlined"
-        color="success"
-        startIcon={<Check className="w-4 h-4" />}
-      >
-        Member
-      </Button>
-    );
-  }
-
   return (
     <Button
       onClick={handleJoin}
-      disabled={isSubmitting}
+      disabled={isSubmitting || !inviteCode}
       variant="contained"
       startIcon={<UserPlus className="w-4 h-4" />}
     >

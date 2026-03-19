@@ -1,152 +1,65 @@
-import { useMemo, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useState } from 'react';
 import {
   Box,
   Button,
-  Chip,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  InputAdornment,
   TextField,
 } from '@mui/material';
-import { Plus, UserPlus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import { useCreateTeamMutation } from '../../store/slices/apiSlice';
 
-import { dummyUsers } from '../../assets/assets';
-import {
-  clearTeamsError,
-  createTeamAtomic,
-  selectCurrentUserId,
-  selectTeamsError,
-  setTeamsError,
-} from '../../store';
-
-const CreateTeamForm = ({ onTeamCreated, userId }) => {
-  const dispatch = useDispatch();
-  const currentUserId = useSelector(selectCurrentUserId);
-  const teamsError = useSelector(selectTeamsError);
-  const ownerId = userId || currentUserId;
-
+const CreateTeamForm = ({ onTeamCreated }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [warningMessage, setWarningMessage] = useState('');
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    memberInput: '',
-    memberIds: [],
   });
 
-  const memberSuggestions = useMemo(
-    () =>
-      dummyUsers
-        .filter((user) => user.id !== ownerId)
-        .map((user) => ({ id: user.id, label: `${user.name} (${user.id})` })),
-    [ownerId]
-  );
+  const [createTeam] = useCreateTeamMutation();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const normalizeMemberId = (value) => {
-    const normalized = String(value || '').trim();
-    if (!normalized) return '';
-
-    const knownUser = dummyUsers.find(
-      (user) =>
-        user.id.toLowerCase() === normalized.toLowerCase() ||
-        user.email.toLowerCase() === normalized.toLowerCase()
-    );
-
-    return knownUser?.id || normalized;
-  };
-
-  const handleAddMember = () => {
-    const normalizedMemberId = normalizeMemberId(formData.memberInput);
-
-    if (!normalizedMemberId) return;
-
-    if (!ownerId) {
-      dispatch(setTeamsError('A valid user is required to create a team'));
-      return;
-    }
-
-    if (normalizedMemberId === ownerId) {
-      dispatch(setTeamsError('Team creator is already included as a member'));
-      return;
-    }
-
-    if (formData.memberIds.includes(normalizedMemberId)) {
-      dispatch(setTeamsError(`${normalizedMemberId} is already added`));
-      return;
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      memberIds: [...prev.memberIds, normalizedMemberId],
-      memberInput: '',
-    }));
-    dispatch(clearTeamsError());
-  };
-
-  const handleRemoveMember = (memberId) => {
-    setFormData((prev) => ({
-      ...prev,
-      memberIds: prev.memberIds.filter((id) => id !== memberId),
-    }));
+    setError('');
   };
 
   const resetForm = () => {
-    setFormData({ name: '', description: '', memberInput: '', memberIds: [] });
-    setWarningMessage('');
+    setFormData({ name: '', description: '' });
+    setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      dispatch(setTeamsError('Team name is required'));
-      return;
-    }
-
-    if (!ownerId) {
-      dispatch(setTeamsError('A valid user is required to create a team'));
+      setError('Team name is required');
       return;
     }
 
     setIsSubmitting(true);
+    setError('');
 
-    const result = dispatch(
-      createTeamAtomic({
-        id: `team_${Date.now()}`,
+    try {
+      const result = await createTeam({
         name: formData.name.trim(),
         description: formData.description.trim(),
-        createdBy: ownerId,
-        initialMemberIds: formData.memberIds,
-      })
-    );
+      }).unwrap();
 
-    setIsSubmitting(false);
+      resetForm();
+      setIsOpen(false);
 
-    if (!result?.ok) {
-      return;
-    }
-
-    if (result.warning) {
-      setWarningMessage(result.warning);
-    } else {
-      setWarningMessage('');
-    }
-
-    resetForm();
-    setIsOpen(false);
-    dispatch(clearTeamsError());
-
-    if (onTeamCreated) {
-      onTeamCreated(result.teamId);
+      if (onTeamCreated) {
+        onTeamCreated(result.team);
+      }
+    } catch (err) {
+      setError(err?.data?.message || 'Failed to create team');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -202,62 +115,8 @@ const CreateTeamForm = ({ onTeamCreated, userId }) => {
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">{formData.description.length}/200</p>
               </div>
 
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                  Add Members (optional)
-                </label>
-                <div className="flex gap-2">
-                  <TextField
-                    list="team-member-suggestions"
-                    name="memberInput"
-                    value={formData.memberInput}
-                    onChange={handleInputChange}
-                    placeholder="Enter user ID or email"
-                    className="flex-1"
-                    disabled={isSubmitting}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <UserPlus className="size-4" />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    onClick={handleAddMember}
-                    disabled={isSubmitting || !formData.memberInput.trim()}
-                    variant="contained"
-                    startIcon={<UserPlus className="size-4" />}
-                  >
-                    Add
-                  </Button>
-                </div>
-                <datalist id="team-member-suggestions">
-                  {memberSuggestions.map((member) => (
-                    <option key={member.id} value={member.id} label={member.label} />
-                  ))}
-                </datalist>
-
-                {formData.memberIds.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    {formData.memberIds.map((memberId) => (
-                      <Chip
-                        key={memberId}
-                        label={memberId}
-                        size="small"
-                        onDelete={() => handleRemoveMember(memberId)}
-                        deleteIcon={<X className="size-3" />}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {(teamsError || warningMessage) && (
-                <p className={`text-sm ${teamsError ? 'text-red-500' : 'text-amber-600 dark:text-amber-400'}`}>
-                  {teamsError || warningMessage}
-                </p>
+              {error && (
+                <p className="text-sm text-red-500">{error}</p>
               )}
 
               <DialogActions sx={{ px: 0, pt: 2 }}>
@@ -266,7 +125,6 @@ const CreateTeamForm = ({ onTeamCreated, userId }) => {
                   onClick={() => {
                     setIsOpen(false);
                     resetForm();
-                    dispatch(clearTeamsError());
                   }}
                   disabled={isSubmitting}
                   variant="outlined"
