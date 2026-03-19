@@ -6,6 +6,10 @@ import {
   getTeams,
   getTeamById,
   createTeam,
+  updateTeam,
+  addTeamMember,
+  removeTeamMember,
+  joinByInviteCode,
   deleteTeam,
 } from "../controllers/teams.controller.js";
 
@@ -17,6 +21,10 @@ router.use(authenticate);
 router.get("/", getTeams);
 router.get("/:teamId", getTeamById);
 router.post("/", createTeam);
+router.patch('/:teamId', updateTeam);
+router.post('/join', joinByInviteCode);
+router.post('/:teamId/members', addTeamMember);
+router.delete('/:teamId/members/:userId', removeTeamMember);
 router.delete("/:teamId", deleteTeam);
 
 export default router;
