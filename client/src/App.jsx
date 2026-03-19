@@ -4,7 +4,7 @@ import { store } from './store/store';
 
 // NEW: import from context instead of firebase/auth
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { ThemeProvider, Layout } from './components';
+import { ThemeProvider, Layout, ErrorBoundary } from './components';
 import { useInitializeAppData } from './hooks';
 
 import {
@@ -76,7 +76,9 @@ function App() {
       <Router>
         <AuthProvider>
           <ThemeProvider>
-            <AppInitializer />
+            <ErrorBoundary>
+              <AppInitializer />
+            </ErrorBoundary>
           </ThemeProvider>
         </AuthProvider>
       </Router>

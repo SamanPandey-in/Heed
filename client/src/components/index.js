@@ -28,7 +28,9 @@ export { default as ProjectSettings } from './projects/ProjectSettings';
 export { default as ProjectTasks } from './projects/ProjectTasks';
 
 // Team Components
+export { default as CreateTeamForm } from './team/CreateTeamForm';
 export { default as InviteMemberDialog } from './team/InviteMemberDialog';
+export { default as JoinTeamButton } from './team/JoinTeamButton';
 export { default as TeamMembersSection } from './team/TeamMembersSection';
 export { default as ProjectSection } from './team/ProjectSection';
 
