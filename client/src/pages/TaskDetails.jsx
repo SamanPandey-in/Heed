@@ -30,13 +30,12 @@ const TaskDetails = () => {
         if (!newComment.trim() || !taskId) return;
 
         try {
-            toast.loading("Adding comment...");
+            const loadingToast = toast.loading("Adding comment...");
             await createComment({ taskId, content: newComment }).unwrap();
             setNewComment("");
-            toast.dismiss();
+            toast.dismiss(loadingToast);
             toast.success("Comment added.");
         } catch (error) {
-            toast.dismiss();
             toast.error(error?.data?.message || 'Failed to add comment');
         }
     };

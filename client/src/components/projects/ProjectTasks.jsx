@@ -110,17 +110,16 @@ const ProjectTasks = ({ tasks }) => {
 
     const handleStatusChange = async (taskId, newStatus) => {
         try {
-            toast.loading('Updating status...');
+            const loadingToast = toast.loading('Updating status...');
             await updateTask({ id: taskId, status: newStatus }).unwrap();
 
             const updatedTask = structuredClone(tasks.find((t) => t.id === taskId));
             updatedTask.status = newStatus;
             dispatch(updateTaskAction(updatedTask));
 
-            toast.dismiss();
+            toast.dismiss(loadingToast);
             toast.success('Task status updated successfully');
         } catch (error) {
-            toast.dismiss();
             toast.error(error?.response?.data?.message || error.message);
         }
     };
@@ -130,16 +129,15 @@ const ProjectTasks = ({ tasks }) => {
             const confirm = window.confirm('Are you sure you want to delete the selected tasks?');
             if (!confirm) return;
 
-            toast.loading('Deleting tasks...');
+            const loadingToast = toast.loading('Deleting tasks...');
             await Promise.all(selectedTasks.map((taskId) => deleteTask(taskId).unwrap()));
 
             dispatch(deleteTaskAction(selectedTasks));
             setSelectedTasks([]);
 
-            toast.dismiss();
+            toast.dismiss(loadingToast);
             toast.success('Tasks deleted successfully');
         } catch (error) {
-            toast.dismiss();
             toast.error(error?.response?.data?.message || error.message);
         }
     };

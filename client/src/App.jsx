@@ -13,6 +13,15 @@ import {
   Teams, TeamDetails, TaskDetails, Settings, Profile
 } from './pages/index';
 
+const LoadingScreen = () => (
+  <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4" />
+      <p className="text-zinc-500 dark:text-zinc-400">Loading...</p>
+    </div>
+  </div>
+);
+
 // ─── Route guards (identical API, no Firebase dependency) ─────────────────
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -37,7 +46,11 @@ const PublicRoute = ({ children }) => {
 // ─── App Initializer: Fetches all data after authentication ────────────────
 function AppInitializer() {
   // Initialize all app data when user authenticates
-  useInitializeAppData();
+  const isAppLoading = useInitializeAppData();
+
+  if (isAppLoading) {
+    return <LoadingScreen />;
+  }
 
   return <AppRoutes />;
 }
