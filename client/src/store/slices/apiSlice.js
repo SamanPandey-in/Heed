@@ -410,6 +410,35 @@ export const apiSlice = createApi({
       invalidatesTags: ['User'],
       transformResponse: (response) => response,
     }),
+
+    // COMMENT ENDPOINTS
+    getComments: builder.query({
+      query: (taskId) => `/tasks/${taskId}/comments`,
+      providesTags: (result, error, taskId) => [
+        { type: 'Comment', id: `task-${taskId}` },
+      ],
+      transformResponse: (response) => response,
+    }),
+
+    createComment: builder.mutation({
+      query: ({ taskId, content, parentId }) => ({
+        url: `/tasks/${taskId}/comments`,
+        method: 'POST',
+        body: { content, parentId },
+      }),
+      invalidatesTags: (result, error, { taskId }) => [
+        { type: 'Comment', id: `task-${taskId}` },
+      ],
+      transformResponse: (response) => response,
+    }),
+
+    deleteComment: builder.mutation({
+      query: (commentId) => ({
+        url: `/tasks/comments/${commentId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: [{ type: 'Comment' }],
+    }),
   }),
 });
 
@@ -463,4 +492,9 @@ export const {
   // User
   useGetCurrentUserQuery,
   useUpdateCurrentUserMutation,
+
+  // Comments
+  useGetCommentsQuery,
+  useCreateCommentMutation,
+  useDeleteCommentMutation,
 } = apiSlice;

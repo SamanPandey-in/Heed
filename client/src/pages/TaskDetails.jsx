@@ -3,9 +3,9 @@ import { useSearchParams } from 'react-router-dom';
 import { Button, Chip, TextField, Typography } from '@mui/material';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
-import { CalendarIcon, MessageCircle, PenIcon } from 'lucide-react';
+import { CalendarIcon, MessageCircle, PenIcon, Trash2 } from 'lucide-react';
 
-import { useGetTaskByIdQuery, useGetProjectByIdQuery } from '../store/slices/apiSlice';
+import { useGetTaskByIdQuery, useGetProjectByIdQuery, useGetCommentsQuery, useCreateCommentMutation, useDeleteCommentMutation } from '../store/slices/apiSlice';
 
 const TaskDetails = () => {
     const [searchParams] = useSearchParams();
@@ -14,32 +14,38 @@ const TaskDetails = () => {
 
     const { data: taskData, isLoading: taskLoading } = useGetTaskByIdQuery(taskId, { skip: !taskId });
     const { data: projectData } = useGetProjectByIdQuery(projectId, { skip: !projectId });
+    const { data: commentsData } = useGetCommentsQuery(taskId, { skip: !taskId });
 
     const task = taskData?.task;
     const project = projectData?.project;
+    const comments = commentsData?.comments || [];
 
     const user = { id: 'user_1' };
-    const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState("");
+    const [createComment] = useCreateCommentMutation();
+    const [deleteComment] = useDeleteCommentMutation();
 
     const handleAddComment = async () => {
-        if (!newComment.trim()) return;
+        if (!newComment.trim() || !taskId) return;
 
         try {
             toast.loading("Adding comment...");
-
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-
-            const dummyComment = { id: Date.now(), user: { id: 1, name: "User" }, content: newComment, createdAt: new Date() };
-
-            setComments((prev) => [...prev, dummyComment]);
+            await createComment({ taskId, content: newComment }).unwrap();
             setNewComment("");
             toast.dismiss();
             toast.success("Comment added.");
         } catch (error) {
             toast.dismiss();
-            toast.error(error?.response?.data?.message || error.message);
-            console.error(error);
+            toast.error(error?.data?.message || 'Failed to add comment');
+        }
+    };
+
+    const handleDeleteComment = async (commentId) => {
+        try {
+            await deleteComment(commentId).unwrap();
+            toast.success("Comment deleted.");
+        } catch (error) {
+            toast.error(error?.data?.message || 'Failed to delete comment');
         }
     };
 
@@ -59,12 +65,22 @@ const TaskDetails = () => {
                         {comments.length > 0 ? (
                             <div className="flex flex-col gap-4 mb-6 mr-2">
                                 {comments.map((comment) => (
-                                    <div key={comment.id} className={`sm:max-w-4/5 dark:bg-gradient-to-br dark:from-zinc-800 dark:to-zinc-900 border border-gray-300 dark:border-zinc-700 p-3 rounded-md ${comment.user.id === user?.id ? "ml-auto" : "mr-auto"}`} >
-                                        <div className="flex items-center gap-2 mb-1 text-sm text-gray-500 dark:text-zinc-400">
-                                            <span className="font-medium text-gray-900 dark:text-white">{comment.user.name}</span>
-                                            <span className="text-xs text-gray-400 dark:text-zinc-600">
-                                                • {format(new Date(comment.createdAt), "dd MMM yyyy, HH:mm")}
-                                            </span>
+                                    <div key={comment.id} className={`sm:max-w-4/5 dark:bg-gradient-to-br dark:from-zinc-800 dark:to-zinc-900 border border-gray-300 dark:border-zinc-700 p-3 rounded-md ${comment.user?.id === user?.id ? "ml-auto" : "mr-auto"}`} >
+                                        <div className="flex items-center justify-between gap-2 mb-1 text-sm text-gray-500 dark:text-zinc-400">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-medium text-gray-900 dark:text-white">{comment.user?.fullName || comment.user?.username}</span>
+                                                <span className="text-xs text-gray-400 dark:text-zinc-600">
+                                                    • {format(new Date(comment.createdAt), "dd MMM yyyy, HH:mm")}
+                                                </span>
+                                            </div>
+                                            {comment.user?.id === user?.id && (
+                                                <button
+                                                    onClick={() => handleDeleteComment(comment.id)}
+                                                    className="text-gray-400 hover:text-red-500 transition-colors"
+                                                >
+                                                    <Trash2 className="size-4" />
+                                                </button>
+                                            )}
                                         </div>
                                         <p className="text-sm text-gray-900 dark:text-zinc-200">{comment.content}</p>
                                     </div>
