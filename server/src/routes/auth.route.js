@@ -8,7 +8,9 @@ import {
   getMe,
   forgotPassword,
   resetPassword,
+  changePassword,
 } from "../controllers/auth.controller.js";
+import { authenticate } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -19,5 +21,6 @@ router.post("/refresh", refresh);
 router.get("/me", getMe);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
+router.post("/change-password", authenticate, changePassword);
 
 export default router;

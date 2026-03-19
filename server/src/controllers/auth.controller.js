@@ -310,3 +310,66 @@ export const resetPassword = async (req, res, next) => {
     next(err);
   }
 };
+
+// CHANGE PASSWORD (authenticated)
+
+export const changePassword = async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const { currentPassword, newPassword } = req.body || {};
+
+    if (!currentPassword || !newPassword) {
+      return res
+        .status(400)
+        .json({ message: "Current password and new password are required" });
+    }
+
+    if (newPassword.length < 8) {
+      return res
+        .status(400)
+        .json({ message: "New password must be at least 8 characters" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, passwordHash: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const matchesCurrent = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!matchesCurrent) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    const isSamePassword = await bcrypt.compare(newPassword, user.passwordHash);
+    if (isSamePassword) {
+      return res
+        .status(400)
+        .json({ message: "New password must be different from current password" });
+    }
+
+    const nextPasswordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        passwordHash: nextPasswordHash,
+        refreshToken: null,
+      },
+    });
+
+    clearRefreshCookie(res);
+    return res.json({
+      message: "Password changed successfully. Please log in again.",
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
