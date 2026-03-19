@@ -31,7 +31,7 @@ const mapTeamMembersToProfiles = (members = [], currentUser = null) =>
         return {
           id: memberId,
           name: memberUser.fullName || memberUser.name || memberUser.username || memberId,
-          email: memberUser.email || `${memberId}@relayops.local`,
+          email: memberUser.email || `${memberId}@Heed.local`,
           avatar: memberUser.avatarUrl || memberUser.image || null,
           role: member.role || "MEMBER",
         };
@@ -49,7 +49,7 @@ const mapTeamMembersToProfiles = (members = [], currentUser = null) =>
     return {
       id: memberId,
       name: memberId,
-      email: `${memberId}@relayops.local`,
+      email: `${memberId}@Heed.local`,
       role: "MEMBER",
     };
     })

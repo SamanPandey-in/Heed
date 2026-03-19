@@ -33,7 +33,7 @@ export const sendPasswordResetEmail = async (toEmail, resetToken, clientOrigin) 
   const mailOptions = {
     from: process.env.SMTP_FROM || process.env.SMTP_USER,
     to: toEmail,
-    subject: 'Password Reset Request - RelayOps',
+    subject: 'Password Reset Request - Heed',
     html: `
       <!DOCTYPE html>
       <html>
@@ -56,7 +56,7 @@ export const sendPasswordResetEmail = async (toEmail, resetToken, clientOrigin) 
             </div>
             <div class="content">
               <p>Hi,</p>
-              <p>We received a request to reset your RelayOps password. Click the button below to create a new password:</p>
+              <p>We received a request to reset your Heed password. Click the button below to create a new password:</p>
               
               <a href="${resetLink}" class="button">Reset Password</a>
               
@@ -69,7 +69,7 @@ export const sendPasswordResetEmail = async (toEmail, resetToken, clientOrigin) 
                 <strong>Security note:</strong> This link will expire in 1 hour. If you didn't request a password reset, you can safely ignore this email.
               </div>
               
-              <p style="margin-top: 30px; color: #666;">Best regards,<br/>The RelayOps Team</p>
+              <p style="margin-top: 30px; color: #666;">Best regards,<br/>The Heed Team</p>
             </div>
             <div class="footer">
               <p>This is an automated email. Please do not reply to this address.</p>
@@ -100,7 +100,7 @@ export const sendWelcomeEmail = async (toEmail, fullName, clientOrigin) => {
   const mailOptions = {
     from: process.env.SMTP_FROM || process.env.SMTP_USER,
     to: toEmail,
-    subject: 'Welcome to RelayOps!',
+    subject: 'Welcome to Heed!',
     html: `
       <!DOCTYPE html>
       <html>
@@ -117,13 +117,13 @@ export const sendWelcomeEmail = async (toEmail, fullName, clientOrigin) => {
         <body>
           <div class="container">
             <div class="header">
-              <h2 style="margin: 0;">Welcome to RelayOps, ${fullName}! 🎉</h2>
+              <h2 style="margin: 0;">Welcome to Heed, ${fullName}! 🎉</h2>
             </div>
             <div class="content">
-              <p>Thank you for joining RelayOps. We're excited to have you on board!</p>
+              <p>Thank you for joining Heed. We're excited to have you on board!</p>
               <p>You can now start collaborating with your team on projects and tasks. Explore the dashboard and create your first team to get started.</p>
               <p style="margin-top: 30px; color: #666;">If you have any questions, feel free to reach out to our support team.</p>
-              <p style="margin-top: 30px; color: #666;">Best regards,<br/>The RelayOps Team</p>
+              <p style="margin-top: 30px; color: #666;">Best regards,<br/>The Heed Team</p>
             </div>
             <div class="footer">
               <p>This is an automated email. Please do not reply to this address.</p>
