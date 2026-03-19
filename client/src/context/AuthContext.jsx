@@ -36,6 +36,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const { data } = await api.post('/auth/login', { email, password });
       setUser(data.user);
+      localStorage.setItem('accessToken', data.accessToken);
       api.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
       return { success: true, user: data.user };
     } catch (err) {
@@ -47,6 +48,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const { data } = await api.post('/auth/register', { fullName, username, email, password });
       setUser(data.user);
+      localStorage.setItem('accessToken', data.accessToken);
       api.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
       return { success: true, user: data.user };
     } catch (err) {

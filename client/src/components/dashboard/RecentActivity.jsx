@@ -42,6 +42,12 @@ const statusColors = {
 const RecentActivity = () => {
     const tasks = useSelector(selectRecentTasks);
 
+    const toSafeDate = (value) => {
+        if (!value) return null;
+        const parsedDate = new Date(value);
+        return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+    };
+
     return (
         <div className="bg-white dark:bg-black border border-zinc-200 dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/20 rounded-lg transition-all overflow-hidden">
             <div className="border-b border-zinc-200 dark:border-white/10 p-4">
@@ -81,13 +87,13 @@ const RecentActivity = () => {
                                                 {task.assignee && (
                                                     <div className="flex items-center gap-1">
                                                         <div className="w-4 h-4 bg-zinc-300 dark:bg-zinc-700 rounded-full flex items-center justify-center text-[10px] text-zinc-800 dark:text-zinc-200">
-                                                            {task.assignee.name[0].toUpperCase()}
+                                                            {(task.assignee.name || task.assignee.fullName || task.assignee.username || '?')[0].toUpperCase()}
                                                         </div>
-                                                        {task.assignee.name}
+                                                        {task.assignee.name || task.assignee.fullName || task.assignee.username}
                                                     </div>
                                                 )}
                                                 <span>
-                                                    {format(new Date(task.updatedAt), "MMM d, h:mm a")}
+                                                    {toSafeDate(task.updatedAt) ? format(toSafeDate(task.updatedAt), "MMM d, h:mm a") : 'Unknown time'}
                                                 </span>
                                             </div>
                                         </div>

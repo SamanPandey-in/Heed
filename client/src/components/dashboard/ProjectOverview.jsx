@@ -27,6 +27,12 @@ const ProjectOverview = () => {
     const teams = useSelector(selectAllTeams);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+    const toSafeDate = (value) => {
+        if (!value) return null;
+        const parsedDate = new Date(value);
+        return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+    };
+
     return (
         <div className={tokens.cardBgClass + " overflow-hidden"}>
             <div className="border-b border-zinc-200 dark:border-white/10 p-4 flex items-center justify-between">
@@ -84,10 +90,10 @@ const ProjectOverview = () => {
                                         <div className="flex items-center gap-1">
                                             Team: {teamName}
                                         </div>
-                                        {project.end_date && (
+                                        {toSafeDate(project.endDate || project.end_date) && (
                                             <div className="flex items-center gap-1">
                                                 <Calendar className="w-3 h-3" />
-                                                {format(new Date(project.end_date), "MMM d, yyyy")}
+                                                {format(toSafeDate(project.endDate || project.end_date), "MMM d, yyyy")}
                                             </div>
                                         )}
                                     </div>

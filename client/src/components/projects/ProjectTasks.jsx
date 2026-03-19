@@ -86,8 +86,23 @@ const ProjectTasks = ({ tasks }) => {
         assignee: '',
     });
 
+    const getSafeDate = (value) => {
+        if (!value) return null;
+        const parsedDate = new Date(value);
+        return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+    };
+
+    const getTaskDueDate = (task) => task?.dueDate || task?.due_date || null;
+
     const assigneeList = useMemo(
-        () => Array.from(new Set(tasks.map((t) => t.assignee?.name).filter(Boolean))),
+        () =>
+            Array.from(
+                new Set(
+                    tasks
+                        .map((task) => task.assignee?.name || task.assignee?.fullName || task.assignee?.username)
+                        .filter(Boolean)
+                )
+            ),
         [tasks]
     );
 
@@ -103,42 +118,52 @@ const ProjectTasks = ({ tasks }) => {
                 (!status || task.status === status) &&
                 (!type || task.type === type) &&
                 (!priority || task.priority === priority) &&
-                (!assignee || task.assignee?.name === assignee)
+                (!assignee || (task.assignee?.name || task.assignee?.fullName || task.assignee?.username) === assignee)
             );
         });
     }, [filters, tasks]);
 
     const handleStatusChange = async (taskId, newStatus) => {
+        let loadingToast;
+
         try {
-            const loadingToast = toast.loading('Updating status...');
+            loadingToast = toast.loading('Updating status...');
             await updateTask({ id: taskId, status: newStatus }).unwrap();
 
             const updatedTask = structuredClone(tasks.find((t) => t.id === taskId));
             updatedTask.status = newStatus;
             dispatch(updateTaskAction(updatedTask));
 
-            toast.dismiss(loadingToast);
             toast.success('Task status updated successfully');
         } catch (error) {
-            toast.error(error?.response?.data?.message || error.message);
+            toast.error(error?.data?.message || error?.response?.data?.message || error.message);
+        } finally {
+            if (loadingToast) {
+                toast.dismiss(loadingToast);
+            }
         }
     };
 
     const handleDelete = async () => {
+        let loadingToast;
+
         try {
             const confirm = window.confirm('Are you sure you want to delete the selected tasks?');
             if (!confirm) return;
 
-            const loadingToast = toast.loading('Deleting tasks...');
+            loadingToast = toast.loading('Deleting tasks...');
             await Promise.all(selectedTasks.map((taskId) => deleteTask(taskId).unwrap()));
 
             dispatch(deleteTaskAction(selectedTasks));
             setSelectedTasks([]);
 
-            toast.dismiss(loadingToast);
             toast.success('Tasks deleted successfully');
         } catch (error) {
-            toast.error(error?.response?.data?.message || error.message);
+            toast.error(error?.data?.message || error?.response?.data?.message || error.message);
+        } finally {
+            if (loadingToast) {
+                toast.dismiss(loadingToast);
+            }
         }
     };
 
@@ -256,13 +281,13 @@ const ProjectTasks = ({ tasks }) => {
                                         <TableCell>
                                             <Stack direction="row" spacing={1} alignItems="center">
                                                 <MediumAvatar src={task.assignee?.image} />
-                                                <Typography variant="body2">{task.assignee?.name || '-'}</Typography>
+                                                <Typography variant="body2">{task.assignee?.name || task.assignee?.fullName || task.assignee?.username || '-'}</Typography>
                                             </Stack>
                                         </TableCell>
                                         <TableCell>
                                             <Stack direction="row" spacing={0.5} alignItems="center">
                                                 <CalendarIcon className="size-4" />
-                                                <Typography variant="body2">{task.due_date ? format(new Date(task.due_date), 'dd MMMM') : '—'}</Typography>
+                                                <Typography variant="body2">{getSafeDate(getTaskDueDate(task)) ? format(getSafeDate(getTaskDueDate(task)), 'dd MMMM') : '—'}</Typography>
                                             </Stack>
                                         </TableCell>
                                     </TableRow>

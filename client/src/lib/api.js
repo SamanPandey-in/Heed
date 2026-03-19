@@ -3,12 +3,19 @@
 import axios from 'axios';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const TOKEN_KEY = 'accessToken';
 
 const api = axios.create({
   baseURL: BASE_URL,
   withCredentials: true,   // IMPORTANT: sends HttpOnly refresh token cookie
   headers: { 'Content-Type': 'application/json' },
 });
+
+// Restore token from localStorage on init
+const storedToken = localStorage.getItem(TOKEN_KEY);
+if (storedToken) {
+  api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+}
 
 // Response interceptor: auto-refresh on 401
 let isRefreshing = false;
@@ -46,6 +53,7 @@ api.interceptors.response.use(
       try {
         const { data } = await api.post('/auth/refresh');
         const { accessToken } = data;
+        localStorage.setItem(TOKEN_KEY, accessToken);
         api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
         originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
         processQueue(null, accessToken);
@@ -54,6 +62,7 @@ api.interceptors.response.use(
         processQueue(refreshError, null);
         // Refresh failed → user session expired, clear state
         delete api.defaults.headers.common['Authorization'];
+        localStorage.removeItem(TOKEN_KEY);
         window.location.href = '/login';
         return Promise.reject(refreshError);
       } finally {

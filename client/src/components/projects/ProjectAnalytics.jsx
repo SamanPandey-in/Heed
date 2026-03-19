@@ -15,6 +15,13 @@ const ProjectAnalytics = ({ project, tasks }) => {
         const now = new Date();
         const total = tasks.length;
 
+        const getTaskDueDate = (task) => {
+            const value = task?.dueDate || task?.due_date;
+            if (!value) return null;
+            const parsedDate = new Date(value);
+            return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+        };
+
         const stats = {
             total,
             completed: 0,
@@ -31,7 +38,8 @@ const ProjectAnalytics = ({ project, tasks }) => {
             if (t.status === "DONE") stats.completed++;
             if (t.status === "IN_PROGRESS") stats.inProgress++;
             if (t.status === "TODO") stats.todo++;
-            if (new Date(t.due_date) < now && t.status !== "DONE") stats.overdue++;
+            const dueDate = getTaskDueDate(t);
+            if (dueDate && dueDate < now && t.status !== "DONE") stats.overdue++;
 
             if (statusMap[t.status] !== undefined) statusMap[t.status]++;
             if (typeMap[t.type] !== undefined) typeMap[t.type]++;
@@ -90,7 +98,7 @@ const ProjectAnalytics = ({ project, tasks }) => {
                 {metrics.map((m, i) => (
                     <div
                         key={i}
-                        className="not-dark:bg-white dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-300 dark:border-zinc-800 rounded-lg p-6"
+                        className="not-dark:bg-white dark:bg-linear-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-300 dark:border-zinc-800 rounded-lg p-6"
                     >
                         <div className="flex items-center justify-between">
                             <div>
@@ -106,7 +114,7 @@ const ProjectAnalytics = ({ project, tasks }) => {
             {/* Charts */}
             <div className="grid lg:grid-cols-2 gap-6">
                 {/* Tasks by Status */}
-                <div className="not-dark:bg-white dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-300 dark:border-zinc-800 rounded-lg p-6">
+                <div className="not-dark:bg-white dark:bg-linear-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-300 dark:border-zinc-800 rounded-lg p-6">
                     <h2 className="text-zinc-900 dark:text-white mb-4 font-medium">Tasks by Status</h2>
                     <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={statusData}>
@@ -123,7 +131,7 @@ const ProjectAnalytics = ({ project, tasks }) => {
                 </div>
 
                 {/* Tasks by Type */}
-                <div className="not-dark:bg-white dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-300 dark:border-zinc-800 rounded-lg p-6">
+                <div className="not-dark:bg-white dark:bg-linear-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-300 dark:border-zinc-800 rounded-lg p-6">
                     <h2 className="text-zinc-900 dark:text-white mb-4 font-medium">Tasks by Type</h2>
                     <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
@@ -146,7 +154,7 @@ const ProjectAnalytics = ({ project, tasks }) => {
             </div>
 
             {/* Priority Breakdown */}
-            <div className="not-dark:bg-white dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-300 dark:border-zinc-800 rounded-lg p-6">
+            <div className="not-dark:bg-white dark:bg-linear-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-300 dark:border-zinc-800 rounded-lg p-6">
                 <h2 className="text-zinc-900 dark:text-white mb-4 font-medium">Tasks by Priority</h2>
                 <div className="space-y-4">
                     {priorityData.map((p) => (

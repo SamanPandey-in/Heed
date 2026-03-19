@@ -26,6 +26,12 @@ const Dashboard = () => {
     const [sortBy, setSortBy] = useState('dueDate'); // 'dueDate' or 'status'
     const [filterStatus, setFilterStatus] = useState('ALL');
 
+    const toSafeDate = (value) => {
+        if (!value) return null;
+        const parsedDate = new Date(value);
+        return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+    };
+
     // Filter tasks by status if not ALL
     const filteredTasks = filterStatus === 'ALL' 
         ? userTasks 
@@ -34,9 +40,12 @@ const Dashboard = () => {
     // Sort tasks
     const sortedTasks = [...filteredTasks].sort((a, b) => {
         if (sortBy === 'dueDate') {
-            if (!a.dueDate) return 1;
-            if (!b.dueDate) return -1;
-            return new Date(a.dueDate) - new Date(b.dueDate);
+            const dueDateA = toSafeDate(a.dueDate);
+            const dueDateB = toSafeDate(b.dueDate);
+
+            if (!dueDateA) return 1;
+            if (!dueDateB) return -1;
+            return dueDateA - dueDateB;
         } else if (sortBy === 'status') {
             const statusOrder = { TODO: 0, IN_PROGRESS: 1, IN_REVIEW: 2, DONE: 3 };
             return (statusOrder[a.status] || 0) - (statusOrder[b.status] || 0);
@@ -58,8 +67,8 @@ const Dashboard = () => {
     };
 
     const formatDate = (dateString) => {
-        if (!dateString) return 'No due date';
-        const date = new Date(dateString);
+        const date = toSafeDate(dateString);
+        if (!date) return 'No due date';
         const today = new Date();
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);

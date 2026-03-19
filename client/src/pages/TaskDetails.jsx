@@ -15,7 +15,7 @@ const TaskDetails = () => {
 
     const { data: taskData, isLoading: taskLoading } = useGetTaskByIdQuery(taskId, { skip: !taskId });
     const { data: projectData } = useGetProjectByIdQuery(projectId, { skip: !projectId });
-    const { data: commentsData } = useGetCommentsQuery(taskId, { skip: !taskId });
+    const { data: commentsData, isLoading: commentsLoading } = useGetCommentsQuery(taskId, { skip: !taskId });
 
     const task = taskData?.task;
     const project = projectData?.project;
@@ -23,29 +23,53 @@ const TaskDetails = () => {
 
     const { user } = useAuth();
     const [newComment, setNewComment] = useState("");
+    const [isPostingComment, setIsPostingComment] = useState(false);
+    const [deletingCommentId, setDeletingCommentId] = useState('');
     const [createComment] = useCreateCommentMutation();
     const [deleteComment] = useDeleteCommentMutation();
+
+    const toSafeDate = (value) => {
+        if (!value) return null;
+        const parsedDate = new Date(value);
+        return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+    };
 
     const handleAddComment = async () => {
         if (!newComment.trim() || !taskId) return;
 
+        let loadingToast;
+
         try {
-            const loadingToast = toast.loading("Adding comment...");
+            setIsPostingComment(true);
+            loadingToast = toast.loading("Adding comment...");
             await createComment({ taskId, content: newComment }).unwrap();
             setNewComment("");
-            toast.dismiss(loadingToast);
             toast.success("Comment added.");
         } catch (error) {
             toast.error(error?.data?.message || 'Failed to add comment');
+        } finally {
+            if (loadingToast) {
+                toast.dismiss(loadingToast);
+            }
+            setIsPostingComment(false);
         }
     };
 
     const handleDeleteComment = async (commentId) => {
+        let loadingToast;
+
         try {
+            setDeletingCommentId(commentId);
+            loadingToast = toast.loading('Deleting comment...');
             await deleteComment({ commentId, taskId }).unwrap();
             toast.success("Comment deleted.");
         } catch (error) {
             toast.error(error?.data?.message || 'Failed to delete comment');
+        } finally {
+            if (loadingToast) {
+                toast.dismiss(loadingToast);
+            }
+            setDeletingCommentId('');
         }
     };
 
@@ -64,18 +88,22 @@ const TaskDetails = () => {
                     <div className="flex-1 md:overflow-y-scroll no-scrollbar">
                         {comments.length > 0 ? (
                             <div className="flex flex-col gap-4 mb-6 mr-2">
-                                {comments.map((comment) => (
-                                    <div key={comment.id} className={`sm:max-w-4/5 dark:bg-gradient-to-br dark:from-zinc-800 dark:to-zinc-900 border border-gray-300 dark:border-zinc-700 p-3 rounded-md ${comment.user?.id === user?.id ? "ml-auto" : "mr-auto"}`} >
+                                {comments.map((comment) => {
+                                    const createdAtDate = toSafeDate(comment.createdAt);
+
+                                    return (
+                                    <div key={comment.id} className={`sm:max-w-4/5 dark:bg-linear-to-br dark:from-zinc-800 dark:to-zinc-900 border border-gray-300 dark:border-zinc-700 p-3 rounded-md ${comment.user?.id === user?.id ? "ml-auto" : "mr-auto"}`} >
                                         <div className="flex items-center justify-between gap-2 mb-1 text-sm text-gray-500 dark:text-zinc-400">
                                             <div className="flex items-center gap-2">
                                                 <span className="font-medium text-gray-900 dark:text-white">{comment.user?.fullName || comment.user?.username}</span>
                                                 <span className="text-xs text-gray-400 dark:text-zinc-600">
-                                                    • {format(new Date(comment.createdAt), "dd MMM yyyy, HH:mm")}
+                                                    • {createdAtDate ? format(createdAtDate, "dd MMM yyyy, HH:mm") : 'Unknown time'}
                                                 </span>
                                             </div>
                                             {comment.user?.id === user?.id && (
                                                 <button
                                                     onClick={() => handleDeleteComment(comment.id)}
+                                                    disabled={deletingCommentId === comment.id}
                                                     className="text-gray-400 hover:text-red-500 transition-colors"
                                                 >
                                                     <Trash2 className="size-4" />
@@ -84,8 +112,11 @@ const TaskDetails = () => {
                                         </div>
                                         <p className="text-sm text-gray-900 dark:text-zinc-200">{comment.content}</p>
                                     </div>
-                                ))}
+                                    );
+                                })}
                             </div>
+                        ) : commentsLoading ? (
+                            <p className="text-gray-600 dark:text-zinc-500 mb-4 text-sm">Loading comments...</p>
                         ) : (
                             <p className="text-gray-600 dark:text-zinc-500 mb-4 text-sm">No comments yet. Be the first!</p>
                         )}
@@ -105,8 +136,9 @@ const TaskDetails = () => {
                           variant='contained'
                           color='primary'
                           onClick={handleAddComment}
+                                                    disabled={isPostingComment || !newComment.trim()}
                         >
-                            Post
+                                                        {isPostingComment ? 'Posting...' : 'Post'}
                         </Button>
                     </div>
                 </div>
@@ -137,7 +169,7 @@ const TaskDetails = () => {
                         </div>
                         <div className="flex items-center gap-2">
                             <CalendarIcon className="size-4 text-gray-500 dark:text-zinc-500" />
-                            Due : {task.dueDate ? format(new Date(task.dueDate), "dd MMM yyyy") : "No date set"}
+                            Due : {toSafeDate(task.dueDate || task.due_date) ? format(toSafeDate(task.dueDate || task.due_date), "dd MMM yyyy") : "No date set"}
                         </div>
                     </div>
                 </div>

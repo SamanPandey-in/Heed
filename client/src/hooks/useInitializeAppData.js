@@ -24,12 +24,24 @@ export const useAppLoading = () => useContext(AppLoadingContext);
 export const useInitializeAppData = () => {
   const dispatch = useDispatch();
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const [isAppLoading, setIsAppLoading] = useState(true);
+  const [isAppLoading, setIsAppLoading] = useState(authLoading);
   const initializeRef = useRef(false);
 
   useEffect(() => {
+    if (authLoading) {
+      setIsAppLoading(true);
+      return;
+    }
+
+    if (!isAuthenticated) {
+      initializeRef.current = false;
+      setIsAppLoading(false);
+      return;
+    }
+
     // Only initialize once when authenticated and not already initializing
-    if (!isAuthenticated || authLoading || initializeRef.current) {
+    if (initializeRef.current) {
+      setIsAppLoading(false);
       return;
     }
 
