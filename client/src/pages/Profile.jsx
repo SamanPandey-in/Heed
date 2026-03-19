@@ -2,11 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, TextField } from '@mui/material';
 import { Mail, Calendar, LogOut } from 'lucide-react';
-import { useDispatch, useSelector } from 'react-redux';
 
 import { useAuth } from '../context/AuthContext';
-import api from '../lib/api';
-import { updateCurrentUser } from '../store/slices/userSlice';
+import { useGetCurrentUserQuery, useUpdateCurrentUserMutation } from '../store/slices/apiSlice';
 
 const DEFAULT_ABOUT = 'Hey there! This is your space to manage your profile and stay on top of your tasks. Keep growing, stay focused, and make the most of every opportunity.';
 const MAX_AVATAR_FILE_SIZE_BYTES = 2 * 1024 * 1024;
@@ -22,11 +20,10 @@ const readFileAsDataUrl = (file) =>
 const Profile = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const dispatch = useDispatch();
-  const currentUser = useSelector((state) => {
-    const userId = state?.users?.currentUserId;
-    return userId ? state?.users?.users?.[userId] : null;
-  });
+  const { data, isLoading: userLoading } = useGetCurrentUserQuery();
+  const [updateCurrentUser] = useUpdateCurrentUserMutation();
+
+  const currentUser = data?.user;
 
   const [profile, setProfile] = useState(null);
   const [editingName, setEditingName] = useState(false);
@@ -52,15 +49,6 @@ const Profile = () => {
     createdAt: sourceUser?.createdAt || null,
   });
 
-  const syncProfileFromUser = (sourceUser) => {
-    const normalizedProfile = toProfileState(sourceUser);
-    setProfile(normalizedProfile);
-    setFullName(normalizedProfile.name);
-    setUsername(normalizedProfile.username);
-    setAbout(normalizedProfile.about);
-    dispatch(updateCurrentUser(sourceUser));
-  };
-
   useEffect(() => {
     if (!currentUser) {
       setProfile(null);
@@ -79,13 +67,18 @@ const Profile = () => {
     setSaveError('');
     setSavingField(fieldKey);
     try {
-      const { data } = await api.patch('/users/me', payload);
-      if (data?.user) {
-        syncProfileFromUser(data.user);
+      const result = await updateCurrentUser(payload).unwrap();
+      if (result?.user) {
+        const normalizedProfile = toProfileState(result.user);
+        setProfile(normalizedProfile);
+        setFullName(normalizedProfile.name);
+        setUsername(normalizedProfile.username);
+        setAbout(normalizedProfile.about);
+        setAvatarUrl(normalizedProfile.image);
       }
       onSuccess();
     } catch (error) {
-      setSaveError(error.response?.data?.message || 'Failed to save profile changes');
+      setSaveError(error?.data?.message || 'Failed to save profile changes');
     } finally {
       setSavingField('');
     }
@@ -175,7 +168,7 @@ const Profile = () => {
     return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
   }, [profile?.createdAt]);
 
-  if (!profile) {
+  if (userLoading || !profile) {
     return (
       <div className="space-y-5 max-w-6xl mx-auto text-gray-900 dark:text-white">
         <div className="bg-white dark:bg-black border border-gray-200 dark:border-white/10 rounded p-8">

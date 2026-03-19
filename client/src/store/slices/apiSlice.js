@@ -16,7 +16,7 @@ export const apiSlice = createApi({
       return headers;
     },
   }),
-  tagTypes: ['Equipment', 'Team', 'Project', 'Task', 'Request'],
+  tagTypes: ['Equipment', 'Team', 'Project', 'Task', 'User', 'Request'],
   endpoints: (builder) => ({
     // EQUIPMENT ENDPOINTS
     getEquipment: builder.query({
@@ -393,6 +393,23 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: [{ type: 'Task', id: 'LIST' }],
     }),
+
+    // USER ENDPOINTS
+    getCurrentUser: builder.query({
+      query: () => '/users/me',
+      providesTags: ['User'],
+      transformResponse: (response) => response,
+    }),
+
+    updateCurrentUser: builder.mutation({
+      query: (data) => ({
+        url: '/users/me',
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: ['User'],
+      transformResponse: (response) => response,
+    }),
   }),
 });
 
@@ -442,4 +459,8 @@ export const {
   useCreateTaskMutation,
   useUpdateTaskMutation,
   useDeleteTaskMutation,
+
+  // User
+  useGetCurrentUserQuery,
+  useUpdateCurrentUserMutation,
 } = apiSlice;
