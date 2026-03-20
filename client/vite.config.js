@@ -11,4 +11,15 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    proxy: {
+      // Forward every /api/* request to the Express backend.
+      // Both api.js (axios) and apiSlice.js (RTK Query) use '/api' as their
+      // base URL — no VITE_API_BASE_URL env var needed in dev.
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+    },
+  },
 })

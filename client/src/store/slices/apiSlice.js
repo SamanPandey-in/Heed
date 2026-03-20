@@ -1,12 +1,13 @@
 // slice to manage API interactions using RTK Query
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+// In dev, Vite proxies /api/* to http://localhost:5000. In prod set VITE_API_BASE_URL.
+const API_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
-    baseURL: API_URL,
+    baseUrl: API_URL,
     credentials: 'include',
     prepareHeaders: (headers) => {
       const token = localStorage.getItem('accessToken');
