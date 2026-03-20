@@ -105,7 +105,9 @@ export default function CreateTaskDialog({ showCreateTask, setShowCreateTask, pr
                             <MenuItem value="FEATURE">Feature</MenuItem>
                             <MenuItem value="TASK">Task</MenuItem>
                             <MenuItem value="IMPROVEMENT">Improvement</MenuItem>
-                            <MenuItem value="OTHER">Other</MenuItem>
+                            <MenuItem value="EPIC">Epic</MenuItem>
+                            <MenuItem value="STORY">Story</MenuItem>
+                            <MenuItem value="SUB_TASK">Sub-task</MenuItem>
                         </TextField>
                         <TextField
                             select

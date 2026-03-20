@@ -36,7 +36,9 @@ const typeIcons = {
     FEATURE: { icon: Zap, color: 'info' },
     TASK: { icon: Square, color: 'success' },
     IMPROVEMENT: { icon: GitCommit, color: 'secondary' },
-    OTHER: { icon: MessageSquare, color: 'warning' },
+    EPIC: { icon: MessageSquare, color: 'warning' },
+    STORY: { icon: MessageSquare, color: 'info' },
+    SUB_TASK: { icon: GitCommit, color: 'default' },
 };
 
 const statusOptions = [
@@ -56,7 +58,8 @@ const filterOptionMap = {
         { label: 'Bug', value: 'BUG' },
         { label: 'Feature', value: 'FEATURE' },
         { label: 'Improvement', value: 'IMPROVEMENT' },
-        { label: 'Other', value: 'OTHER' },
+        { label: 'Epic', value: 'EPIC' },
+        { label: 'Story', value: 'STORY' },
     ],
     priority: [
         { label: 'All Priorities', value: '' },

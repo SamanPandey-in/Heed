@@ -1,12 +1,10 @@
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { Button, IconButton, MenuItem, Slider, TextField } from '@mui/material';
 import { format } from 'date-fns';
 import { Plus, Save, Trash2 } from 'lucide-react';
-import { useRemoveProjectMemberMutation, useUpdateProjectMutation } from '../../store/slices/apiSlice';
-
-import { deleteProjectAtomic } from '../../store';
+import { useDeleteProjectMutation, useRemoveProjectMemberMutation, useUpdateProjectMutation } from '../../store/slices/apiSlice';
 import AddProjectMember from './AddProjectMember';
 
 const toDateInputValue = (value) => {
@@ -44,11 +42,11 @@ const buildFormData = (project) => ({
 });
 
 export default function ProjectSettings({ project }) {
-    const dispatch = useDispatch();
     const currentUserId = useSelector((state) => state.users?.currentUserId);
     const navigate = useNavigate();
     const [updateProject] = useUpdateProjectMutation();
     const [removeProjectMember] = useRemoveProjectMemberMutation();
+    const [deleteProjectMutation] = useDeleteProjectMutation();
 
     const [formData, setFormData] = useState(() => buildFormData(project));
 
@@ -96,7 +94,7 @@ export default function ProjectSettings({ project }) {
         }
     };
 
-    const handleDeleteProject = () => {
+    const handleDeleteProject = async () => {
         if (!formData.id) return;
 
         const shouldDelete = window.confirm("Delete this project? This action cannot be undone.");
@@ -105,16 +103,14 @@ export default function ProjectSettings({ project }) {
         setIsDeleting(true);
         setError("");
 
-        const actionResult = dispatch(deleteProjectAtomic(formData.id));
-
-        setIsDeleting(false);
-
-        if (!actionResult?.ok) {
-            setError(actionResult?.error || "Failed to delete project");
-            return;
+        try {
+            await deleteProjectMutation(formData.id).unwrap();
+            navigate("/projects");
+        } catch (apiError) {
+            setError(apiError?.data?.message || "Failed to delete project");
+        } finally {
+            setIsDeleting(false);
         }
-
-        navigate("/projects");
     };
 
     const cardClasses = "rounded-lg border p-6 not-dark:bg-white dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border-zinc-300 dark:border-zinc-800";

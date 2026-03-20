@@ -13,19 +13,24 @@ import {
     Typography,
 } from '@mui/material';
 import { Mail, UserPlus } from 'lucide-react';
-import { useAddProjectMemberMutation, useGetProjectByIdQuery } from '../../store/slices/apiSlice';
+import { useAddProjectMemberMutation, useGetProjectByIdQuery, useGetTeamByIdQuery } from '../../store/slices/apiSlice';
 
 const AddProjectMember = ({ isDialogOpen, setIsDialogOpen, projectId: projectIdProp }) => {
     const [searchParams] = useSearchParams();
     const { projectId: projectIdFromParams } = useParams();
 
     const id = projectIdProp || projectIdFromParams || searchParams.get('id');
-    const { data } = useGetProjectByIdQuery(id, { skip: !id });
-    const project = data?.project;
+    const { data: projectData } = useGetProjectByIdQuery(id, { skip: !id });
+    const project = projectData?.project;
+
+    // Fetch the team so we know all possible members to add
+    const { data: teamData } = useGetTeamByIdQuery(project?.teamId, { skip: !project?.teamId });
+
     const [addProjectMember] = useAddProjectMemberMutation();
 
-    const teamMembers = project?.members || [];
+    // Team members minus people already in the project
     const projectMemberIds = project?.memberIds || [];
+    const teamMembers = teamData?.team?.members || [];
     const availableMembers = teamMembers
         .filter((member) => !projectMemberIds.includes(member.id))
         .map((member) => ({

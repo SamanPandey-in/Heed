@@ -115,7 +115,7 @@ export const apiSlice = createApi({
     updateTeam: builder.mutation({
       query: ({ id, ...data }) => ({
         url: `/teams/${id}`,
-        method: 'PUT',
+        method: 'PATCH',
         body: data,
       }),
       invalidatesTags: (result, error, { id }) => [
