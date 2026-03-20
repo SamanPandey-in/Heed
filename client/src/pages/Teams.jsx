@@ -1,23 +1,26 @@
 import { useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Button, InputAdornment, TextField } from '@mui/material';
 import { KeyRound, PlusCircle, UsersIcon } from 'lucide-react';
 import tokens from '../theme/tokens';
-
+import { TeamsPageSkeleton } from '../components/ui';
 import CreateTeamForm from '../components/team/CreateTeamForm';
-import {
-    selectCurrentUserId,
+import { 
+    selectAllTeams, 
+    selectTeamsLoading, 
+    selectTeamsError,
+    joinTeamByInviteCode,
+    fetchTeams,
+    selectCurrentUserId 
 } from '../store';
-import { useGetTeamsQuery, useJoinTeamByInviteCodeMutation } from '../store/slices/apiSlice';
 
 export const Teams = () => {
+    const dispatch = useDispatch();
     const currentUserId = useSelector(selectCurrentUserId);
-    const { data: teamsData, isLoading: teamsLoading, refetch } = useGetTeamsQuery(undefined, {
-        skip: !currentUserId,
-    });
-    const [joinTeamByInviteCode] = useJoinTeamByInviteCodeMutation();
-    const userTeams = teamsData?.teams || [];
+    const userTeams = useSelector(selectAllTeams);
+    const teamsLoading = useSelector(selectTeamsLoading);
+    const serverError = useSelector(selectTeamsError);
 
     const [joinIdentifier, setJoinIdentifier] = useState('');
     const [isJoining, setIsJoining] = useState(false);
@@ -42,15 +45,22 @@ export const Teams = () => {
         setJoinError('');
 
         try {
-            await joinTeamByInviteCode(joinIdentifier.trim()).unwrap();
+            await dispatch(joinTeamByInviteCode(joinIdentifier.trim())).unwrap();
             setJoinIdentifier('');
-            await refetch();
         } catch (error) {
-            setJoinError(error?.data?.message || 'Failed to join team');
+            setJoinError(error || 'Failed to join team');
         } finally {
             setIsJoining(false);
         }
     };
+
+    const handleRefresh = () => {
+        dispatch(fetchTeams());
+    };
+
+    if (teamsLoading) {
+        return <TeamsPageSkeleton />;
+    }
 
     return (
         <div className="space-y-6 max-w-6xl mx-auto">
@@ -61,7 +71,7 @@ export const Teams = () => {
                         Teams where you are a member
                     </p>
                 </div>
-                <CreateTeamForm onTeamCreated={refetch} />
+                <CreateTeamForm onTeamCreated={handleRefresh} />
             </div>
 
             <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-4">
@@ -93,17 +103,13 @@ export const Teams = () => {
                 {joinError && <p className="text-sm text-red-500 mt-2">{joinError}</p>}
             </div>
 
-            {!teamsLoading && teamsWithProjectCount.length === 0 ? (
+            {teamsWithProjectCount.length === 0 ? (
                 <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-12 text-center space-y-3">
                     <UsersIcon className="size-10 mx-auto text-zinc-400 mb-3" />
                     <p className="text-zinc-600 dark:text-zinc-400">You are not part of any team yet.</p>
                     <div className="flex justify-center">
-                        <CreateTeamForm onTeamCreated={refetch} />
+                        <CreateTeamForm onTeamCreated={handleRefresh} />
                     </div>
-                </div>
-            ) : teamsLoading ? (
-                <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-12 text-center">
-                    <p className="text-zinc-600 dark:text-zinc-400">Loading teams...</p>
                 </div>
             ) : (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

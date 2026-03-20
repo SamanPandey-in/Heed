@@ -5,6 +5,7 @@ import { Mail, Calendar, LogOut } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
 import { useGetCurrentUserQuery, useUpdateCurrentUserMutation } from '../store/slices/apiSlice';
+import { ProfileSkeleton } from '../components/ui';
 
 const DEFAULT_ABOUT = 'Hey there! This is your space to manage your profile and stay on top of your tasks. Keep growing, stay focused, and make the most of every opportunity.';
 const MAX_AVATAR_FILE_SIZE_BYTES = 2 * 1024 * 1024;
@@ -169,13 +170,7 @@ const Profile = () => {
   }, [profile?.createdAt]);
 
   if (userLoading || !profile) {
-    return (
-      <div className="space-y-5 max-w-6xl mx-auto text-gray-900 dark:text-white">
-        <div className="bg-white dark:bg-black border border-gray-200 dark:border-white/10 rounded p-8">
-          <p className="text-sm text-gray-500 dark:text-zinc-400">Loading profile...</p>
-        </div>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   return (

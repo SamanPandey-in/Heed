@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { CalendarIcon, MessageCircle, PenIcon, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { CommentsSkeleton, TaskDetailsSkeleton } from '../components/ui';
 
 import { useGetTaskByIdQuery, useGetProjectByIdQuery, useGetCommentsQuery, useCreateCommentMutation, useDeleteCommentMutation } from '../store/slices/apiSlice';
 
@@ -73,7 +74,7 @@ const TaskDetails = () => {
         }
     };
 
-    if (taskLoading) return <div className="text-gray-500 dark:text-zinc-400 px-4 py-6">Loading task details...</div>;
+    if (taskLoading) return <TaskDetailsSkeleton />;
     if (!task) return <Typography color="error" sx={{ px: 2, py: 3 }}>Task not found.</Typography>;
 
     return (
@@ -116,7 +117,7 @@ const TaskDetails = () => {
                                 })}
                             </div>
                         ) : commentsLoading ? (
-                            <p className="text-gray-600 dark:text-zinc-500 mb-4 text-sm">Loading comments...</p>
+                            <CommentsSkeleton />
                         ) : (
                             <p className="text-gray-600 dark:text-zinc-500 mb-4 text-sm">No comments yet. Be the first!</p>
                         )}

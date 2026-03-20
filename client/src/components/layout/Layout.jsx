@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Loader2Icon } from 'lucide-react';
+import { AppShellSkeleton } from '../ui';
 
 import { loadTheme } from '../../store';
 import Navbar from './Navbar';
@@ -17,11 +17,7 @@ const Layout = () => {
         dispatch(loadTheme())
     }, [])
 
-    if (loading) return (
-        <div className='flex items-center justify-center h-screen bg-white dark:bg-black'>
-            <Loader2Icon className="size-7 text-white animate-spin" />
-        </div>
-    )
+    if (loading) return <AppShellSkeleton />
 
     return (
         <div className="flex bg-white dark:bg-black text-gray-900 dark:text-slate-100">

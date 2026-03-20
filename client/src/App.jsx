@@ -6,6 +6,7 @@ import { store } from './store/store';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider, Layout, ErrorBoundary } from './components';
 import { useInitializeAppData } from './hooks';
+import { AppShellSkeleton, AuthScreenSkeleton } from './components/ui';
 
 import {
   Landing, Login, Signup, ForgotPassword, ResetPassword,
@@ -14,32 +15,19 @@ import {
 } from './pages/index';
 
 const LoadingScreen = () => (
-  <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4" />
-      <p className="text-zinc-500 dark:text-zinc-400">Loading...</p>
-    </div>
-  </div>
+  <AppShellSkeleton />
 );
 
 // ─── Route guards (identical API, no Firebase dependency) ─────────────────
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600" />
-    </div>
-  );
+  if (loading) return <AuthScreenSkeleton />;
   return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600" />
-    </div>
-  );
+  if (loading) return <AuthScreenSkeleton />;
   return !isAuthenticated ? children : <Navigate to="/dashboard" />;
 };
 
