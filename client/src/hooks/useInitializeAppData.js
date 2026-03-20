@@ -4,10 +4,14 @@ import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
 
 // Import Redux actions
-import { setTeams } from '../store/slices/teamsSlice';
-import { setProjects } from '../store/slices/projectsSlice';
-import { setTasks, setTasksLoading, setTasksError } from '../store/slices/tasksSlice';
-import { setUser, setLoading as setUserLoading, setError as setUserError } from '../store/slices/userSlice';
+import { 
+  fetchTeams, 
+  fetchProjects, 
+  fetchTasks,
+  setUser, 
+  setUserLoading, 
+  setUserError 
+} from '../store';
 
 export const AppLoadingContext = createContext({
   isLoading: false,
@@ -18,7 +22,7 @@ export const useAppLoading = () => useContext(AppLoadingContext);
 
 /**
  * Custom hook to initialize all app data after authentication
- * Fetches user profile, teams, projects, and tasks in parallel
+ * Fetches user profile, teams, projects, and tasks using Redux Async Thunks
  * Automatically runs when user authenticates
  */
 export const useInitializeAppData = () => {
@@ -50,52 +54,33 @@ export const useInitializeAppData = () => {
     const initializeAppData = async () => {
       setIsAppLoading(true);
       try {
-        dispatch(setTasksLoading(true));
-        dispatch(setTasksError(null));
         dispatch(setUserLoading(true));
         dispatch(setUserError(null));
 
-        // Fetch all data in parallel for better performance
-        const [profileResult, teamsResult, projectsResult, tasksResult] = await Promise.allSettled([
-          api.get('/auth/me'),
-          api.get('/teams'),
-          api.get('/projects'),
-          api.get('/tasks'),
-        ]);
-
-        // Dispatch user profile first (used by Profile page and selectors)
-        if (profileResult.status === 'fulfilled' && profileResult.value.data?.user) {
-          const backendUser = profileResult.value.data.user;
+        // Fetch user profile and trigger other thunks
+        const profileResult = await api.get('/auth/me');
+        
+        if (profileResult.data?.user) {
+          const backendUser = profileResult.data.user;
           dispatch(setUser({
             ...backendUser,
             teamIds: backendUser.teamIds || [],
           }));
-        } else if (profileResult.status === 'rejected') {
-          dispatch(setUserError(profileResult.reason?.response?.data?.message || 'Failed to load user profile'));
         }
 
-        // Dispatch teams/projects/tasks if available
-        if (teamsResult.status === 'fulfilled' && teamsResult.value.data?.teams) {
-          dispatch(setTeams(teamsResult.value.data.teams));
-        }
+        // Trigger all data fetches
+        // These thunks handle their own loading/error state in Redux
+        await Promise.allSettled([
+          dispatch(fetchTeams()).unwrap(),
+          dispatch(fetchProjects()).unwrap(),
+          dispatch(fetchTasks()).unwrap(),
+        ]);
 
-        if (projectsResult.status === 'fulfilled' && projectsResult.value.data?.projects) {
-          dispatch(setProjects(projectsResult.value.data.projects));
-        }
-
-        if (tasksResult.status === 'fulfilled' && tasksResult.value.data?.tasks) {
-          dispatch(setTasks(tasksResult.value.data.tasks));
-        }
-
-        console.log('[App] Initialized user profile, teams, projects, and tasks');
+        console.log('[App] Initialized user profile, teams, projects, and tasks via thunks');
       } catch (error) {
         console.error('[App] Failed to initialize app data:', error);
-        dispatch(setTasksError(error.response?.data?.message || 'Failed to load app data'));
         dispatch(setUserError(error.response?.data?.message || 'Failed to load user profile'));
-        
-        // Continue anyway - app should still be functional with fallback data
       } finally {
-        dispatch(setTasksLoading(false));
         dispatch(setUserLoading(false));
         setIsAppLoading(false);
       }

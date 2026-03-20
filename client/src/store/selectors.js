@@ -65,14 +65,14 @@ const selectUserEntities = (state) => selectUsersState(state).users || {};
 const selectCurrentUserIdValue = (state) => selectUsersState(state).currentUserId || null;
 const selectCurrentTeamIdValue = (state) => selectUsersState(state).currentTeamId || null;
 
-const selectTeamEntities = (state) => selectTeamsState(state).teams || {};
-const selectTeamIds = (state) => selectTeamsState(state).teamIds || [];
+const selectTeamEntities = (state) => selectTeamsState(state).entities || {};
+const selectTeamIds = (state) => selectTeamsState(state).ids || [];
 
-const selectProjectEntities = (state) => selectProjectsState(state).projects || {};
-const selectProjectIds = (state) => selectProjectsState(state).projectIds || [];
+const selectProjectEntities = (state) => selectProjectsState(state).entities || {};
+const selectProjectIds = (state) => selectProjectsState(state).ids || [];
 
-const selectTaskEntities = (state) => selectTasksState(state).tasks || {};
-const selectTaskIds = (state) => selectTasksState(state).taskIds || [];
+const selectTaskEntities = (state) => selectTasksState(state).entities || {};
+const selectTaskIds = (state) => selectTasksState(state).ids || [];
 
 // Users
 export const selectCurrentUser = createSelector(

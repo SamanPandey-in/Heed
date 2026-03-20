@@ -12,12 +12,14 @@ import {
     Typography,
 } from '@mui/material';
 import { XIcon } from 'lucide-react';
-import { useCreateProjectMutation, useGetTeamsQuery } from '../../store/slices/apiSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { createProject, selectAllTeams, selectProjectsLoading, selectProjectsError } from '../../store';
 
 const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
-    const [createProject] = useCreateProjectMutation();
-    const { data: teamsData } = useGetTeamsQuery();
-    const userTeams = teamsData?.teams || [];
+    const dispatch = useDispatch();
+    const userTeams = useSelector(selectAllTeams);
+    const isSubmitting = useSelector(selectProjectsLoading);
+    const serverError = useSelector(selectProjectsError);
 
     const [formData, setFormData] = useState({
         name: "",
@@ -26,32 +28,29 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
         status: "ACTIVE",
     });
 
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [submitError, setSubmitError] = useState("");
+    const [localError, setLocalError] = useState("");
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setSubmitError("");
+        setLocalError("");
 
         if (userTeams.length === 0) {
-            setSubmitError("You must join a team before creating a project");
+            setLocalError("You must join a team before creating a project");
             return;
         }
 
         if (!formData.teamId) {
-            setSubmitError("Please select a valid team");
+            setLocalError("Please select a valid team");
             return;
         }
 
-        setIsSubmitting(true);
-
         try {
-            await createProject({
+            await dispatch(createProject({
                 name: formData.name,
                 description: formData.description,
                 teamId: formData.teamId,
                 status: formData.status,
-            }).unwrap();
+            })).unwrap();
 
             setIsDialogOpen(false);
             setFormData({
@@ -61,9 +60,7 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                 status: "ACTIVE",
             });
         } catch (err) {
-            setSubmitError(err?.data?.message || "Failed to create project");
-        } finally {
-            setIsSubmitting(false);
+            // Error handled by Redux state
         }
     };
 
@@ -143,9 +140,14 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                     </TextField>
                     </Box>
 
-                    {submitError && (
+                    {localError && (
                         <Typography variant="body2" color="error">
-                            {submitError}
+                            {localError}
+                        </Typography>
+                    )}
+                    {serverError && (
+                        <Typography variant="body2" color="error">
+                            {serverError}
                         </Typography>
                     )}
                     <DialogActions sx={{ px: 0 }}>

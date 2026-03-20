@@ -1,298 +1,139 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, createEntityAdapter } from "@reduxjs/toolkit";
+import api from "../../lib/api";
 
-const generateInviteCode = (seed = "team") => `${String(seed).toUpperCase()}-${Date.now()}`;
-
-const normalizeTeam = (team = {}) => ({
-  id: team.id,
-  name: String(team.name || "").trim(),
-  description: team.description || "",
-  members: [...new Set((team.members || []).filter(Boolean))],
-  projectIds: [...new Set((team.projectIds || []).filter(Boolean))],
-  inviteCode: String(team.inviteCode || generateInviteCode(team.id || "team")).trim(),
-  createdAt: team.createdAt || new Date().toISOString(),
+// Entity adapter for teams
+const teamsAdapter = createEntityAdapter({
+  selectId: (team) => team.id,
+  sortComparer: (a, b) => b.createdAt.localeCompare(a.createdAt),
 });
 
-const normalizeTeams = (teams = []) => {
-  const entities = {};
-  const ids = [];
-
-  teams.forEach((team) => {
-    if (!team?.id) return;
-
-    entities[team.id] = normalizeTeam(team);
-    ids.push(team.id);
-  });
-
-  return { entities, ids };
-};
-
-const linkProjectsToTeams = (teamsById = {}, teamIds = [], projects = []) => {
-  const nextTeams = Object.fromEntries(
-    Object.entries(teamsById).map(([teamId, team]) => [teamId, { ...team, projectIds: [] }])
-  );
-
-  projects.forEach((project, index) => {
-    if (!project?.id) return;
-
-    const fallbackTeamId = teamIds.length > 0 ? teamIds[index % teamIds.length] : null;
-    const projectTeamId = project.teamId && nextTeams[project.teamId] ? project.teamId : fallbackTeamId;
-
-    if (!projectTeamId || !nextTeams[projectTeamId]) return;
-
-    if (!nextTeams[projectTeamId].projectIds.includes(project.id)) {
-      nextTeams[projectTeamId].projectIds.push(project.id);
+// Async thunks
+export const fetchTeams = createAsyncThunk(
+  "teams/fetchTeams",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get("/teams");
+      // The backend returns { success: true, teams: [...] }
+      return response.data.teams || [];
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Failed to fetch teams");
     }
-  });
+  }
+);
 
-  return nextTeams;
-};
+export const createTeam = createAsyncThunk(
+  "teams/createTeam",
+  async (teamData, { dispatch, rejectWithValue }) => {
+    try {
+      const response = await api.post("/teams", teamData);
+      // Hybrid pattern: re-fetch after successful creation for consistency
+      dispatch(fetchTeams());
+      return response.data.team;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Failed to create team");
+    }
+  }
+);
 
-const initialState = {
-  teams: {},
-  teamIds: [],
+export const joinTeamByInviteCode = createAsyncThunk(
+  "teams/joinTeamByInviteCode",
+  async (inviteCode, { dispatch, rejectWithValue }) => {
+    try {
+      const response = await api.post("/teams/join", { inviteCode });
+      dispatch(fetchTeams());
+      return response.data.team;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Failed to join team");
+    }
+  }
+);
+
+const initialState = teamsAdapter.getInitialState({
   loading: false,
   error: null,
-};
-
-const removeProjectFromAllTeams = (state, projectId) => {
-  state.teamIds.forEach((teamId) => {
-    const team = state.teams[teamId];
-    if (!team) return;
-    team.projectIds = team.projectIds.filter((id) => id !== projectId);
-  });
-};
+  currentTeamId: null,
+});
 
 const teamsSlice = createSlice({
   name: "teams",
   initialState,
   reducers: {
-    createTeam: (state, action) => {
-      const { id, name, description, createdBy, inviteCode } = action.payload || {};
-
-      if (!id) {
-        state.error = "Team id is required";
-        return;
-      }
-
-      if (!name?.trim()) {
-        state.error = "Team name is required";
-        return;
-      }
-
-      if (!createdBy) {
-        state.error = "Team creator is required";
-        return;
-      }
-
-      if (state.teams[id]) {
-        state.error = `Team with id ${id} already exists`;
-        return;
-      }
-
-      state.teams[id] = normalizeTeam({
-        id,
-        name: name.trim(),
-        description: description || "",
-        members: [createdBy],
-        projectIds: [],
-        inviteCode: inviteCode || generateInviteCode(id),
-        createdAt: new Date().toISOString(),
-      });
-
-      state.teamIds.push(id);
+    setCurrentTeamId: (state, action) => {
+      state.currentTeamId = action.payload;
+    },
+    clearTeamsError: (state) => {
       state.error = null;
     },
-
-    joinTeam: (state, action) => {
-      const { teamId, userId } = action.payload || {};
-      const team = state.teams[teamId];
-
-      if (!team) {
-        state.error = `Team with id ${teamId} not found`;
-        return;
-      }
-
-      if (!userId) {
-        state.error = "User id is required";
-        return;
-      }
-
-      if (team.members.includes(userId)) {
-        state.error = `User ${userId} is already a member of this team`;
-        return;
-      }
-
-      team.members.push(userId);
-      state.error = null;
-    },
-
-    leaveTeam: (state, action) => {
-      const { teamId, userId } = action.payload || {};
-      const team = state.teams[teamId];
-
-      if (!team) {
-        state.error = `Team with id ${teamId} not found`;
-        return;
-      }
-
-      if (team.members.length === 1 && team.members[0] === userId) {
-        state.error = "Cannot leave team as the last member. Delete team instead.";
-        return;
-      }
-
-      team.members = team.members.filter((id) => id !== userId);
-      state.error = null;
-    },
-
-    addTeamMember: (state, action) => {
-      const { teamId, userId } = action.payload || {};
-      const team = state.teams[teamId];
-
-      if (!team) {
-        state.error = `Team with id ${teamId} not found`;
-        return;
-      }
-
-      if (!userId) {
-        state.error = "User id is required";
-        return;
-      }
-
-      if (team.members.includes(userId)) {
-        state.error = `User ${userId} is already a member`;
-        return;
-      }
-
-      team.members.push(userId);
-      state.error = null;
-    },
-
-    removeTeamMember: (state, action) => {
-      const { teamId, userId } = action.payload || {};
-      const team = state.teams[teamId];
-
-      if (!team) {
-        state.error = `Team with id ${teamId} not found`;
-        return;
-      }
-
-      if (team.members.length === 1 && team.members[0] === userId) {
-        state.error = "Cannot remove the last member from team";
-        return;
-      }
-
-      team.members = team.members.filter((id) => id !== userId);
-      state.error = null;
-    },
-
-    addTeamProject: (state, action) => {
-      const { teamId, projectId } = action.payload || {};
-      const team = state.teams[teamId];
-
-      if (!team) {
-        state.error = `Team with id ${teamId} not found`;
-        return;
-      }
-
-      if (!projectId) {
-        state.error = "Project id is required";
-        return;
-      }
-
-      removeProjectFromAllTeams(state, projectId);
-      if (!team.projectIds.includes(projectId)) {
-        team.projectIds.push(projectId);
-      }
-
-      state.error = null;
-    },
-
-    removeTeamProject: (state, action) => {
-      const { teamId, projectId } = action.payload || {};
-
-      if (!projectId) {
-        state.error = "Project id is required";
-        return;
-      }
-
-      if (teamId && state.teams[teamId]) {
-        state.teams[teamId].projectIds = state.teams[teamId].projectIds.filter(
-          (id) => id !== projectId
-        );
-      } else {
-        removeProjectFromAllTeams(state, projectId);
-      }
-
-      state.error = null;
-    },
-
-    updateTeam: (state, action) => {
-      const { teamId, name, description, inviteCode } = action.payload || {};
-      const team = state.teams[teamId];
-
-      if (!team) {
-        state.error = `Team with id ${teamId} not found`;
-        return;
-      }
-
-      if (name !== undefined) team.name = String(name).trim();
-      if (description !== undefined) team.description = description;
-      if (inviteCode !== undefined) team.inviteCode = String(inviteCode).trim();
-      state.error = null;
-    },
-
-    deleteTeam: (state, action) => {
-      const teamId = action.payload;
-
-      if (!state.teams[teamId]) {
-        state.error = `Team with id ${teamId} not found`;
-        return;
-      }
-
-      delete state.teams[teamId];
-      state.teamIds = state.teamIds.filter((id) => id !== teamId);
-      state.error = null;
-    },
-
-    setTeams: (state, action) => {
-      const normalized = normalizeTeams(action.payload || []);
-      state.teams = normalized.entities;
-      state.teamIds = normalized.ids;
-      state.error = null;
-    },
-
-    setLoading: (state, action) => {
-      state.loading = Boolean(action.payload);
-    },
-
-    setError: (state, action) => {
-      state.error = action.payload || null;
-    },
-
-    clearError: (state) => {
-      state.error = null;
-    },
-
-    resetState: () => initialState,
+    resetTeamsState: () => initialState,
   },
-
+  extraReducers: (builder) => {
+    builder
+      // Fetch Teams
+      .addCase(fetchTeams.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchTeams.fulfilled, (state, action) => {
+        state.loading = false;
+        teamsAdapter.setAll(state, action.payload);
+      })
+      .addCase(fetchTeams.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Create Team
+      .addCase(createTeam.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createTeam.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload) {
+          teamsAdapter.addOne(state, action.payload);
+        }
+      })
+      .addCase(createTeam.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(joinTeamByInviteCode.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(joinTeamByInviteCode.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload) {
+          teamsAdapter.addOne(state, action.payload);
+        }
+      })
+      .addCase(joinTeamByInviteCode.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
+  },
 });
 
-export const {
-  createTeam,
-  joinTeam,
-  leaveTeam,
-  addTeamMember,
-  removeTeamMember,
-  addTeamProject,
-  removeTeamProject,
-  updateTeam,
-  deleteTeam,
-  setTeams,
-  setLoading,
-  setError,
-  clearError,
-  resetState: resetTeamsState,
+export const { 
+  setCurrentTeamId, 
+  clearTeamsError, 
+  resetTeamsState 
 } = teamsSlice.actions;
 
+// Export selectors
+export const {
+  selectAll: selectAllTeams,
+  selectById: selectTeamById,
+  selectIds: selectTeamIds,
+  selectEntities: selectTeamEntities,
+  selectTotal: selectTeamTotal,
+} = teamsAdapter.getSelectors((state) => state.teams);
+
+// Custom selectors
+export const selectTeamsLoading = (state) => state.teams.loading;
+export const selectTeamsError = (state) => state.teams.error;
+export const selectCurrentTeamId = (state) => state.teams.currentTeamId;
+export const selectCurrentTeam = (state) => 
+  state.teams.currentTeamId ? state.teams.entities[state.teams.currentTeamId] : null;
+
 export default teamsSlice.reducer;
+

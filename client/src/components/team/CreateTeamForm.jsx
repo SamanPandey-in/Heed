@@ -9,57 +9,56 @@ import {
   TextField,
 } from '@mui/material';
 import { Plus } from 'lucide-react';
-import { useCreateTeamMutation } from '../../store/slices/apiSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { createTeam, selectTeamsLoading, selectTeamsError } from '../../store';
 
 const CreateTeamForm = ({ onTeamCreated }) => {
+  const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const isSubmitting = useSelector(selectTeamsLoading);
+  const serverError = useSelector(selectTeamsError);
+  const [localError, setLocalError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
   });
 
-  const [createTeam] = useCreateTeamMutation();
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    setError('');
+    setLocalError('');
   };
 
   const resetForm = () => {
     setFormData({ name: '', description: '' });
-    setError('');
+    setLocalError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      setError('Team name is required');
+      setLocalError('Team name is required');
       return;
     }
 
-    setIsSubmitting(true);
-    setError('');
+    setLocalError('');
 
     try {
-      const result = await createTeam({
+      const result = await dispatch(createTeam({
         name: formData.name.trim(),
         description: formData.description.trim(),
-      }).unwrap();
+      })).unwrap();
 
       resetForm();
       setIsOpen(false);
 
       if (onTeamCreated) {
-        onTeamCreated(result.team);
+        onTeamCreated(result);
       }
     } catch (err) {
-      setError(err?.data?.message || 'Failed to create team');
-    } finally {
-      setIsSubmitting(false);
+      // Error is handled by Redux state (selectTeamsError), 
+      // but we can also catch it here if we want local feedback.
     }
   };
 
@@ -115,8 +114,11 @@ const CreateTeamForm = ({ onTeamCreated }) => {
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">{formData.description.length}/200</p>
               </div>
 
-              {error && (
-                <p className="text-sm text-red-500">{error}</p>
+              {localError && (
+                <p className="text-sm text-red-500 mb-2">{localError}</p>
+              )}
+              {serverError && (
+                <p className="text-sm text-red-500 mb-2">{serverError}</p>
               )}
 
               <DialogActions sx={{ px: 0, pt: 2 }}>
