@@ -33,9 +33,11 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config || {};
     const requestUrl = String(originalRequest.url || '');
-    const isAuthEndpoint = requestUrl.startsWith('/auth/');
+    // Only skip the refresh loop for the /auth/refresh endpoint itself,
+    // otherwise expired tokens on /auth/me or /auth/change-password would never auto-recover.
+    const isRefreshEndpoint = requestUrl.includes('/auth/refresh');
 
-    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isRefreshEndpoint) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });

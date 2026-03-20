@@ -14,16 +14,24 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const hasRestoredSession = useRef(false);
 
-  // On mount: verify session via HttpOnly refresh cookie
+  // On mount: verify session via HttpOnly refresh cookie and get a fresh access token
   useEffect(() => {
     if (hasRestoredSession.current) return;
     hasRestoredSession.current = true;
 
     const restoreSession = async () => {
       try {
+        // Always get a fresh access token on mount — the stored one may be expired (15 min TTL).
+        // /auth/refresh validates the HttpOnly refresh cookie (7d TTL) and returns a new access token.
+        const { data: refreshData } = await api.post('/auth/refresh');
+        localStorage.setItem('accessToken', refreshData.accessToken);
+        api.defaults.headers.common['Authorization'] = `Bearer ${refreshData.accessToken}`;
+
+        // Now fetch the full user profile with the fresh token.
         const { data } = await api.get('/auth/me');
         setUser(data.user);
       } catch {
+        // Refresh token absent or expired → no session, send to login.
         setUser(null);
       } finally {
         setLoading(false);

@@ -1,7 +1,7 @@
 // slice to manage API interactions using RTK Query
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 export const apiSlice = createApi({
   reducerPath: 'api',
@@ -87,19 +87,19 @@ export const apiSlice = createApi({
     getTeams: builder.query({
       query: () => '/teams',
       providesTags: (result) =>
-        result?.data
+        result?.teams
           ? [
-              ...result.data.map(({ _id }) => ({ type: 'Team', id: _id })),
+              ...result.teams.map(({ id }) => ({ type: 'Team', id })),
               { type: 'Team', id: 'LIST' },
             ]
           : [{ type: 'Team', id: 'LIST' }],
-      transformResponse: (response) => response.data,
+      transformResponse: (response) => response,
     }),
     
     getTeamById: builder.query({
       query: (id) => `/teams/${id}`,
       providesTags: (result, error, id) => [{ type: 'Team', id }],
-      transformResponse: (response) => response.data,
+      transformResponse: (response) => response,
     }),
     
     createTeam: builder.mutation({
@@ -109,7 +109,7 @@ export const apiSlice = createApi({
         body: data,
       }),
       invalidatesTags: [{ type: 'Team', id: 'LIST' }],
-      transformResponse: (response) => response.data,
+      transformResponse: (response) => response,
     }),
     
     updateTeam: builder.mutation({
@@ -122,7 +122,7 @@ export const apiSlice = createApi({
         { type: 'Team', id },
         { type: 'Team', id: 'LIST' },
       ],
-      transformResponse: (response) => response.data,
+      transformResponse: (response) => response,
     }),
     
     deleteTeam: builder.mutation({
