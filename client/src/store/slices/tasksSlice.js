@@ -62,6 +62,20 @@ const tasksSlice = createSlice({
   name: "tasks",
   initialState,
   reducers: {
+    updateTask: (state, action) => {
+      const task = action.payload;
+      if (!task?.id) return;
+
+      tasksAdapter.updateOne(state, {
+        id: task.id,
+        changes: task,
+      });
+    },
+    deleteTask: (state, action) => {
+      const payload = action.payload;
+      const ids = Array.isArray(payload) ? payload : [payload];
+      tasksAdapter.removeMany(state, ids.filter(Boolean));
+    },
     clearTasksError: (state) => {
       state.error = null;
     },
@@ -106,7 +120,7 @@ const tasksSlice = createSlice({
   },
 });
 
-export const { clearTasksError, resetTasksState } = tasksSlice.actions;
+export const { updateTask, deleteTask, clearTasksError, resetTasksState } = tasksSlice.actions;
 
 // Export selectors
 export const {
