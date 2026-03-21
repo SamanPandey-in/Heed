@@ -35,7 +35,7 @@ app.use(
     credentials: true,
   }),
 );
-app.options("*", cors());
+app.options(/.*/, cors());
 
 // Body parsing and cookie parsing
 app.use(express.json({ limit: "1mb" }));
