@@ -5,7 +5,6 @@ import app from "./app.js";
 import { prisma } from "./src/prisma/client.js";
 
 const PORT = process.env.PORT || 5000;
-const HOST = process.env.HOST || "localhost";
 
 let server;
 
@@ -16,8 +15,8 @@ async function startServer() {
     await prisma.$queryRaw`SELECT 1`;
     console.log("✓ Database connection established");
 
-    server = app.listen(PORT, HOST, () => {
-      console.log(`✓ Server running at http://${HOST}:${PORT}`);
+    server = app.listen(PORT, () => {
+      console.log(`✓ Server running on port ${PORT}`);
       console.log(`✓ Environment: ${process.env.NODE_ENV || "development"}`);
     });
   } catch (error) {
