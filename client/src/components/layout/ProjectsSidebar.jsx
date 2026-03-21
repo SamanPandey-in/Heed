@@ -52,7 +52,6 @@ const ProjectSidebar = () => {
                         {expandedProjects.has(project.id) && (
                             <div className="ml-5 mt-1 space-y-1">
                                 {getProjectSubItems(project.id).map((subItem) => {
-                                    // checking if the current path matches the sub-item's URL
                                     const isActive =
                                         location.pathname === `/projects/${project.id}` &&
                                         searchParams.get('tab') === subItem.title.toLowerCase();

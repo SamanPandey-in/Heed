@@ -74,7 +74,6 @@ const selectProjectIds = (state) => selectProjectsState(state).ids || [];
 const selectTaskEntities = (state) => selectTasksState(state).entities || {};
 const selectTaskIds = (state) => selectTasksState(state).ids || [];
 
-// Users
 export const selectCurrentUser = createSelector(
   [selectCurrentUserIdValue, selectUserEntities],
   (currentUserId, users) => users[currentUserId] || { id: null, name: "", email: "", teamIds: [] }

@@ -79,7 +79,6 @@ const TaskDetails = () => {
 
     return (
         <div className="flex flex-col-reverse lg:flex-row gap-6 sm:p-4 text-gray-900 dark:text-zinc-100 max-w-6xl mx-auto">
-            {/* Left: Comments / Chatbox */}
             <div className="w-full lg:w-2/3">
                 <div className="p-5 rounded-md  border border-gray-300 dark:border-zinc-800  flex flex-col lg:h-[80vh]">
                     <h2 className="text-base font-semibold flex items-center gap-2 mb-4 text-gray-900 dark:text-white">
@@ -123,7 +122,6 @@ const TaskDetails = () => {
                         )}
                     </div>
 
-                    {/* Add Comment */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3">
                         <TextField
                             value={newComment}
@@ -145,9 +143,7 @@ const TaskDetails = () => {
                 </div>
             </div>
 
-            {/* Right: Task + Project Info */}
             <div className="w-full lg:w-1/2 flex flex-col gap-6">
-                {/* Task Info */}
                 <div className="p-5 rounded-md bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-800 ">
                     <div className="mb-3">
                         <h1 className="text-lg font-medium text-gray-900 dark:text-zinc-100">{task.title}</h1>
@@ -175,7 +171,6 @@ const TaskDetails = () => {
                     </div>
                 </div>
 
-                {/* Project Info */}
                 {project && (
                     <div className="p-4 rounded-md bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 border border-gray-300 dark:border-zinc-800 ">
                         <p className="text-xl font-medium mb-4">Project Details</p>

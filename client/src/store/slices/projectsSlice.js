@@ -2,7 +2,6 @@ import { createSlice, createAsyncThunk, createEntityAdapter } from "@reduxjs/too
 import api from "../../lib/api";
 import { fetchTeams } from "./teamsSlice";
 
-// Status normalization
 const normalizeProjectStatus = (status) => {
   const normalized = String(status || "").trim().toLowerCase();
   if (normalized === "completed" || normalized === "done") return "completed";
@@ -10,13 +9,11 @@ const normalizeProjectStatus = (status) => {
   return "active";
 };
 
-// Entity adapter for projects
 const projectsAdapter = createEntityAdapter({
   selectId: (project) => project.id,
   sortComparer: (a, b) => b.createdAt.localeCompare(a.createdAt),
 });
 
-// Async thunks
 export const fetchProjects = createAsyncThunk(
   "projects/fetchProjects",
   async (_, { rejectWithValue }) => {

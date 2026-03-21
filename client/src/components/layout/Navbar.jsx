@@ -49,14 +49,11 @@ const Navbar = ({ setIsSidebarOpen }) => {
   return (
     <div className="glass-nav sticky top-0 w-full z-50 px-6 xl:px-16 py-3 flex-shrink-0">
       <div className="flex items-center justify-between max-w-6xl mx-auto">
-        {/* Left section */}
         <div className="flex items-center gap-4 min-w-0 flex-1">
-          {/* Sidebar Trigger */}
           <IconButton onClick={() => setIsSidebarOpen((prev) => !prev)} className="sm:hidden">
             <PanelLeft size={20} />
           </IconButton>
 
-          {/* Search Input */}
           <div className="relative flex-1 max-w-sm">
             <TextField
               placeholder="Search projects, tasks..."
@@ -72,11 +69,9 @@ const Navbar = ({ setIsSidebarOpen }) => {
           </div>
         </div>
 
-        {/* Right section */}
         <div className="flex items-center gap-3">
           <ThemeToggle />
 
-          {/* User Profile Dropdown */}
           <div className="relative" ref={profileMenuRef}>
             <IconButton
               onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -119,7 +114,7 @@ const Navbar = ({ setIsSidebarOpen }) => {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default Navbar

@@ -22,7 +22,6 @@ export default function ResetPassword() {
     confirmPassword: '',
   });
 
-  // Redirect if no token provided
   useEffect(() => {
     if (!token) {
       setError('Invalid or missing reset token. Please request a new password reset.');

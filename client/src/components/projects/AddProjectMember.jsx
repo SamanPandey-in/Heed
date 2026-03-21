@@ -23,12 +23,10 @@ const AddProjectMember = ({ isDialogOpen, setIsDialogOpen, projectId: projectIdP
     const { data: projectData } = useGetProjectByIdQuery(id, { skip: !id });
     const project = projectData?.project;
 
-    // Fetch the team so we know all possible members to add
     const { data: teamData } = useGetTeamByIdQuery(project?.teamId, { skip: !project?.teamId });
 
     const [addProjectMember] = useAddProjectMemberMutation();
 
-    // Team members minus people already in the project
     const projectMemberIds = project?.memberIds || [];
     const teamMembers = teamData?.team?.members || [];
     const availableMembers = teamMembers

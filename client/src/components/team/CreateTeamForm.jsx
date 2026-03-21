@@ -57,8 +57,6 @@ const CreateTeamForm = ({ onTeamCreated }) => {
         onTeamCreated(result);
       }
     } catch (err) {
-      // Error is handled by Redux state (selectTeamsError), 
-      // but we can also catch it here if we want local feedback.
     }
   };
 

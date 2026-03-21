@@ -24,7 +24,6 @@ export default function Projects() {
 
     return (
         <div className="space-y-6 max-w-6xl mx-auto">
-            {/* Header */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                 <div>
                     <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-1"> Projects </h1>
@@ -41,7 +40,6 @@ export default function Projects() {
                 <CreateProjectDialog isDialogOpen={isDialogOpen} setIsDialogOpen={setIsDialogOpen} />
             </div>
 
-            {/* Status Filters */}
             <div className="flex flex-wrap items-center gap-2">
                 <ButtonGroup size="small" variant="outlined">
                 {statusButtons.map((filter) => (

@@ -1,16 +1,12 @@
-// Store
 export { default as store } from "./store.js";
 
-// Async Thunks
 export { fetchTeams, createTeam, joinTeamByInviteCode } from "./slices/teamsSlice.js";
 export { fetchProjects, createProject } from "./slices/projectsSlice.js";
 export { fetchTasks } from "./slices/tasksSlice.js";
 
-// Theme Slice
 export { toggleTheme, setTheme, loadTheme } from "./slices/themeSlice.js";
 export { default as themeReducer } from "./slices/themeSlice.js";
 
-// User Slice
 export {
   setUser,
   setCurrentTeamId as setUserCurrentTeamId,
@@ -22,7 +18,6 @@ export {
 } from "./slices/userSlice.js";
 export { default as userReducer } from "./slices/userSlice.js";
 
-// Projects Slice
 export {
   setCurrentProjectId,
   clearProjectsError,
@@ -38,7 +33,6 @@ export {
 } from "./slices/projectsSlice.js";
 export { default as projectsReducer } from "./slices/projectsSlice.js";
 
-// Tasks Slice
 export {
   updateTask,
   deleteTask,
@@ -53,7 +47,6 @@ export {
 } from "./slices/tasksSlice.js";
 export { default as tasksReducer } from "./slices/tasksSlice.js";
 
-// Teams Slice
 export {
   setCurrentTeamId,
   clearTeamsError,
@@ -70,7 +63,6 @@ export {
 } from "./slices/teamsSlice.js";
 export { default as teamsReducer } from "./slices/teamsSlice.js";
 
-// Settings Slice
 export {
   updateUserSettings,
   updateNotifications,
@@ -82,7 +74,6 @@ export {
 } from "./slices/settingsSlice.js";
 export { default as settingsReducer } from "./slices/settingsSlice.js";
 
-// Derived Selectors
 export {
   selectCurrentUserId,
   selectUserTeams,

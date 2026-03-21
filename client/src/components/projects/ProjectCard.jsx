@@ -24,7 +24,6 @@ const ProjectCard = ({ project }) => {
 
     return (
         <Link to={`/projects/${project.id}?tab=tasks`} className={tokens.cardBgClass}>
-            {/* Header */}
             <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-gray-900 dark:text-zinc-200 mb-1 truncate group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">

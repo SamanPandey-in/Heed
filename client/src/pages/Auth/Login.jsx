@@ -41,7 +41,6 @@ export default function Login() {
     }
   };
 
-  /* Handle Forgot Password */
   const handleForgotPassword = async (e) => {
     e.preventDefault();
     setError("");

@@ -15,7 +15,6 @@ const TeamsList = ({ userId, maxTeams = 6 }) => {
 
   return (
     <div className="bg-white dark:bg-black border border-zinc-200 dark:border-white/10 rounded-lg overflow-hidden">
-      {/* Header */}
       <div className="border-b border-zinc-200 dark:border-white/10 p-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Users className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
@@ -34,7 +33,6 @@ const TeamsList = ({ userId, maxTeams = 6 }) => {
         </Link>
       </div>
 
-      {/* Teams List or Empty State */}
       <div className="p-4">
         {userTeams.length === 0 ? (
           <div className="text-center py-8">

@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk, createEntityAdapter } from "@reduxjs/toolkit";
 import api from "../../lib/api";
 
-// Entity adapter for tasks
 const tasksAdapter = createEntityAdapter({
   selectId: (task) => task.id,
   sortComparer: (a, b) => {
@@ -11,7 +10,6 @@ const tasksAdapter = createEntityAdapter({
   },
 });
 
-// Async thunks
 export const fetchTasks = createAsyncThunk(
   "tasks/fetchTasks",
   async (_, { rejectWithValue }) => {

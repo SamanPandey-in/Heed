@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { CheckCircle, Clock, AlertTriangle, Users, ArrowRightIcon } from 'lucide-react';
 
-// Colors for charts and priorities
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 const PRIORITY_COLORS = {
     LOW: "text-red-600 bg-red-200 dark:text-red-500 dark:bg-red-600",
@@ -93,7 +92,6 @@ const ProjectAnalytics = ({ project, tasks }) => {
 
     return (
         <div className="space-y-6">
-            {/* Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {metrics.map((m, i) => (
                     <div

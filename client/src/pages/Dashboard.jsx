@@ -81,7 +81,6 @@ const Dashboard = () => {
 
     return (
         <div className='max-w-6xl mx-auto space-y-6'>
-            {/* Header */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                 <div>
                     <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-1">

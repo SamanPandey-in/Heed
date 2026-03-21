@@ -10,7 +10,6 @@ export default function ThemeProvider({ children }) {
 
   const muiTheme = useMemo(() => buildTheme(mode), [mode]);
 
-  // Sync Tailwind dark mode automatically
   useEffect(() => {
     const root = document.documentElement;
 

@@ -43,7 +43,6 @@ const Settings = () => {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   useEffect(() => {
-    // Load settings from localStorage
     const savedSettings = localStorage.getItem('userSettings');
     const savedTheme = localStorage.getItem('theme') || 'light';
 

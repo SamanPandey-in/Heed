@@ -25,7 +25,6 @@ export default function Signup() {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const isEmailValid = (email) => email === "" || emailRegex.test(email);
 
-  /* Handle Signup */
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
     setError("");

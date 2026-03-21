@@ -1,13 +1,11 @@
 import { createSlice, createAsyncThunk, createEntityAdapter } from "@reduxjs/toolkit";
 import api from "../../lib/api";
 
-// Entity adapter for teams
 const teamsAdapter = createEntityAdapter({
   selectId: (team) => team.id,
   sortComparer: (a, b) => b.createdAt.localeCompare(a.createdAt),
 });
 
-// Async thunks
 export const fetchTeams = createAsyncThunk(
   "teams/fetchTeams",
   async (_, { rejectWithValue }) => {

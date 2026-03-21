@@ -1,4 +1,3 @@
-// slice to manage API interactions using RTK Query
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 // In dev, Vite proxies /api/* to http://localhost:5000. In prod set VITE_API_BASE_URL.
@@ -19,7 +18,6 @@ export const apiSlice = createApi({
   }),
   tagTypes: ['Team', 'Project', 'Task', 'User', 'Comment'],
   endpoints: (builder) => ({
-    // TEAM ENDPOINTS
     getTeams: builder.query({
       query: () => '/teams',
       providesTags: (result) =>

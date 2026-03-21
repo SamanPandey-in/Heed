@@ -84,13 +84,11 @@ const Landing = () => {
             </button>
           </div>
         </div>
-        {/* Dashboard Preview Section - Replaced with Macbook Scroll */}
         <div className="relative pt-20 -mt-20 overflow-hidden">
           <MacbookScrollDemo />
         </div>
       </main>
 
-      {/* Features Section */}
       <section id="features" className="py-32 px-6 border-t border-white/5">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
@@ -117,7 +115,6 @@ const Landing = () => {
         </div>
       </section >
 
-      {/* Bento / Secondary Value Prop */}
       < section className="py-20 px-6" >
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
           <div>
@@ -151,7 +148,6 @@ const Landing = () => {
         </div>
       </section >
 
-      {/* Pricing Section */}
       < section id="pricing" className="py-32 px-6 border-t border-white/5 relative z-10" >
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
@@ -159,7 +155,6 @@ const Landing = () => {
             <p className="text-slate-400 max-w-2xl mx-auto">Choose the plan that fits your team's needs. All plans include our core predictive engine.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Starter */}
             <PlanCard
               title="Starter"
               price="$0"
@@ -167,7 +162,6 @@ const Landing = () => {
               features={["Up to 5 active projects", "Basic risk detection", "Community support"]}
               btnText="Get Started"
             />
-            {/* Pro */}
             <PlanCard
               title="Pro"
               price="$19"
@@ -176,7 +170,6 @@ const Landing = () => {
               btnText="Start Free Trial"
               highlighted
             />
-            {/* Enterprise */}
             <PlanCard
               title="Enterprise"
               price="Custom"

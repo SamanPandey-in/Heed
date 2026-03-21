@@ -1,4 +1,3 @@
-// redux store configuration
 import { configureStore } from "@reduxjs/toolkit";
 import themeReducer from "./slices/themeSlice";
 import userReducer from "./slices/userSlice";
@@ -21,7 +20,6 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(apiSlice.middleware),
   
-  // Optional: enable Redux DevTools automatically in dev
   devTools: import.meta.env.DEV,
 });
 

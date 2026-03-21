@@ -12,7 +12,6 @@ const Layout = () => {
     const { loading } = useSelector((state) => state.projects)
     const dispatch = useDispatch()
 
-    // Initial load of theme
     useEffect(() => {
         dispatch(loadTheme())
     }, [])

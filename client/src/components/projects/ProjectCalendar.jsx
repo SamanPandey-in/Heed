@@ -61,7 +61,6 @@ const ProjectCalendar = ({ tasks }) => {
 
     return (
         <div className="grid lg:grid-cols-3 gap-6">
-            {/* Calendar View */}
             <div className="lg:col-span-2 ">
                 <div className="not-dark:bg-white dark:bg-linear-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-300 dark:border-zinc-800 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-4">
