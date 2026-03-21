@@ -7,9 +7,13 @@ import {
   FormControlLabel,
   MenuItem,
   Select,
+  TextField,
+  Alert,
 } from '@mui/material';
 import { Bell, Lock, Settings as SettingsIcon, Check } from 'lucide-react';
+import toast from 'react-hot-toast';
 
+import api from '../lib/api';
 import { updateUserSettings } from '../store';
 
 const Settings = () => {
@@ -33,6 +37,10 @@ const Settings = () => {
     }
   });
   const [saved, setSaved] = useState(false);
+  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   useEffect(() => {
     // Load settings from localStorage
@@ -98,6 +106,39 @@ const Settings = () => {
     dispatch(updateUserSettings(settings));
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess(false);
+
+    const { currentPassword, newPassword, confirmPassword } = passwordData;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError('All fields are required');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+    if (newPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters');
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      await api.post('/auth/change-password', { currentPassword, newPassword });
+      setPasswordSuccess(true);
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      toast.success('Password changed successfully');
+    } catch (err) {
+      setPasswordError(err.response?.data?.message || 'Failed to change password');
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   const handleResetSettings = () => {
@@ -207,6 +248,55 @@ const Settings = () => {
               />
             </div>
           </div>
+        </div>
+
+        {/* Change Password */}
+        <div className="bg-white dark:bg-black border border-gray-200 dark:border-white/10 rounded p-6">
+          <div className="flex items-center gap-2 mb-5">
+            <Lock className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Change Password</h2>
+          </div>
+
+          {passwordError && (
+            <Alert severity="error" sx={{ mb: 2 }}>{passwordError}</Alert>
+          )}
+          {passwordSuccess && (
+            <Alert severity="success" sx={{ mb: 2 }}>Password changed successfully!</Alert>
+          )}
+
+          <form onSubmit={handleChangePassword} className="space-y-3 max-w-sm">
+            <TextField
+              label="Current Password"
+              type="password"
+              size="small"
+              fullWidth
+              value={passwordData.currentPassword}
+              onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+            />
+            <TextField
+              label="New Password"
+              type="password"
+              size="small"
+              fullWidth
+              value={passwordData.newPassword}
+              onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+            />
+            <TextField
+              label="Confirm New Password"
+              type="password"
+              size="small"
+              fullWidth
+              value={passwordData.confirmPassword}
+              onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={isChangingPassword}
+            >
+              {isChangingPassword ? 'Changing...' : 'Change Password'}
+            </Button>
+          </form>
         </div>
 
         {/* Preferences Settings */}
