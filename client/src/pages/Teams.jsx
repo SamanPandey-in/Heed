@@ -13,7 +13,8 @@ import {
     selectTeamsError,
     joinTeamByInviteCode,
     fetchTeams,
-    selectCurrentUserId 
+    selectCurrentUserId,
+    selectAllProjects,
 } from '../store';
 
 export const Teams = () => {
