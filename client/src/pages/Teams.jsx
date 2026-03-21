@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Button, InputAdornment, TextField } from '@mui/material';
+import { createSelector } from '@reduxjs/toolkit';
 import { KeyRound, PlusCircle, UsersIcon } from 'lucide-react';
 import tokens from '../theme/tokens';
 import { TeamsPageSkeleton } from '../components/ui';
@@ -22,6 +23,21 @@ export const Teams = () => {
     const teamsLoading = useSelector(selectTeamsLoading);
     const serverError = useSelector(selectTeamsError);
 
+    const selectProjectsCountByTeam = useMemo(
+        () =>
+            createSelector([selectAllProjects], (projects) => {
+                const countByTeam = {};
+                projects.forEach((project) => {
+                    const teamId = project.teamId;
+                    countByTeam[teamId] = (countByTeam[teamId] || 0) + 1;
+                });
+                return countByTeam;
+            }),
+        []
+    );
+
+    const projectsByTeam = useSelector(selectProjectsCountByTeam);
+
     const [joinIdentifier, setJoinIdentifier] = useState('');
     const [isJoining, setIsJoining] = useState(false);
     const [joinError, setJoinError] = useState('');
@@ -30,9 +46,9 @@ export const Teams = () => {
         () =>
             userTeams.map((team) => ({
                 ...team,
-                projectsCount: team.projectIds?.length || 0,
+                projectsCount: projectsByTeam[team.id] || 0,
             })),
-        [userTeams]
+        [userTeams, projectsByTeam]
     );
 
     const handleJoinTeam = async (e) => {
