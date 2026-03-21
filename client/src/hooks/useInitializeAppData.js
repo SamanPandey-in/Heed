@@ -70,11 +70,16 @@ export const useInitializeAppData = () => {
 
         // Trigger all data fetches
         // These thunks handle their own loading/error state in Redux
-        await Promise.allSettled([
+        const results = await Promise.allSettled([
           dispatch(fetchTeams()).unwrap(),
           dispatch(fetchProjects()).unwrap(),
           dispatch(fetchTasks()).unwrap(),
         ]);
+
+        const failed = results.filter((r) => r.status === 'rejected');
+        if (failed.length) {
+          dispatch(setUserError('Some data failed to load'));
+        }
 
         console.log('[App] Initialized user profile, teams, projects, and tasks via thunks');
       } catch (error) {
