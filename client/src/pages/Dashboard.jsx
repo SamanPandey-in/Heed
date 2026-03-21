@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
     Button,
     Chip,
     FormControl,
+    Menu,
     MenuItem,
     Select,
     Table,
@@ -13,18 +14,69 @@ import {
     TableHead,
     TableRow,
 } from '@mui/material';
-import { Plus, Calendar, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { Plus, Calendar, CheckCircle, AlertCircle, Clock, LayoutGrid, List, ChevronDown, Flag } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 import { StatsGrid, ProjectOverview, RecentActivity, TasksSummary, CreateProjectDialog } from '../components';
-import { selectUserTasksSortedByDueDate, selectUserTasksCountByStatus, selectCurrentUser } from '../store';
+import { selectUserTasksSortedByDueDate, selectUserTasksCountByStatus, selectCurrentUser, updateTask as updateTaskAction } from '../store';
+import { useUpdateTaskMutation } from '../store/slices/apiSlice';
+
+const statusMap = {
+    TODO:        { label: 'Todo',        color: 'default', icon: <Calendar size={14} /> },
+    IN_PROGRESS: { label: 'In Progress', color: 'primary', icon: <Clock size={14} /> },
+    IN_REVIEW:   { label: 'In Review',   color: 'warning', icon: <AlertCircle size={14} /> },
+    DONE:        { label: 'Done',        color: 'success', icon: <CheckCircle size={14} /> },
+};
+
+const priorityMap = {
+    HIGH:   { label: 'High Priority',   color: 'text-red-500',   bgColor: 'bg-red-50 dark:bg-red-950/40' },
+    MEDIUM: { label: 'Medium Priority', color: 'text-amber-500', bgColor: 'bg-amber-50 dark:bg-amber-950/40' },
+    LOW:    { label: 'Low Priority',    color: 'text-blue-500',  bgColor: 'bg-blue-50 dark:bg-blue-950/40' },
+    NONE:   { label: 'No Priority',     color: 'text-gray-400',  bgColor: 'bg-gray-50 dark:bg-zinc-950/40' },
+};
 
 const Dashboard = () => {
+    const dispatch = useDispatch();
     const currentUser = useSelector(selectCurrentUser);
     const userTasks = useSelector(selectUserTasksSortedByDueDate);
     const taskStats = useSelector(selectUserTasksCountByStatus);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [sortBy, setSortBy] = useState('dueDate'); // 'dueDate' or 'status'
     const [filterStatus, setFilterStatus] = useState('ALL');
+    const [viewMode, setViewMode] = useState('table'); // 'table' or 'grid'
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [activeTaskId, setActiveTaskId] = useState(null);
+    const [activeTaskStatus, setActiveTaskStatus] = useState(null);
+
+    const [updateTask] = useUpdateTaskMutation();
+
+    const handleOpenMenu = (event, taskId, taskStatus) => {
+        setAnchorEl(event.currentTarget);
+        setActiveTaskId(taskId);
+        setActiveTaskStatus(taskStatus);
+    };
+
+    const handleCloseMenu = () => {
+        setAnchorEl(null);
+        setActiveTaskId(null);
+        setActiveTaskStatus(null);
+    };
+
+    const handleStatusUpdate = async (newStatus) => {
+        if (!activeTaskId) return;
+        let loadingToast;
+        try {
+            loadingToast = toast.loading('Updating status...');
+            const { task: updatedTask } = await updateTask({ id: activeTaskId, status: newStatus }).unwrap();
+            dispatch(updateTaskAction(updatedTask));
+            toast.success('Task status updated successfully');
+        } catch (error) {
+            toast.error(error?.data?.message || error?.message || 'Failed to update status');
+        } finally {
+            if (loadingToast) toast.dismiss(loadingToast);
+        }
+        handleCloseMenu();
+    };
 
     const toSafeDate = (value) => {
         if (!value) return null;
@@ -54,16 +106,7 @@ const Dashboard = () => {
     });
 
     const getStatusIcon = (status) => {
-        switch (status) {
-            case 'DONE':
-                return <CheckCircle size={16} />;
-            case 'IN_PROGRESS':
-                return <Clock size={16} />;
-            case 'IN_REVIEW':
-                return <AlertCircle size={16} />;
-            default:
-                return <Calendar size={16} />;
-        }
+        return statusMap[status]?.icon ?? <Calendar size={16} />;
     };
 
     const formatDate = (dateString) => {
@@ -124,7 +167,23 @@ const Dashboard = () => {
                             {taskStats.total} total tasks across all teams and projects
                         </p>
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        {/* View Toggle */}
+                        <div className="flex bg-gray-100 dark:bg-zinc-800 p-1 rounded-lg mr-2">
+                            <button
+                                onClick={() => setViewMode('table')}
+                                className={`p-1.5 rounded-md transition-all ${viewMode === 'table' ? 'bg-white dark:bg-zinc-700 shadow-sm text-primary' : 'text-gray-500'}`}
+                            >
+                                <List size={18} />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-zinc-700 shadow-sm text-primary' : 'text-gray-500'}`}
+                            >
+                                <LayoutGrid size={18} />
+                            </button>
+                        </div>
+
                         <FormControl size="small" sx={{ minWidth: 150 }}>
                             <Select
                                 value={filterStatus}
@@ -165,17 +224,18 @@ const Dashboard = () => {
                 </div>
 
                 {/* Tasks List */}
-                <div className="border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden">
-                    {sortedTasks.length === 0 ? (
-                        <div className="p-8 text-center">
-                            <Calendar className="size-12 mx-auto mb-4 text-gray-400 dark:text-zinc-600" />
-                            <p className="text-gray-600 dark:text-zinc-400">
-                                {userTasks.length === 0 
-                                    ? "No tasks assigned to you yet" 
-                                    : "No tasks match your filter"}
-                            </p>
-                        </div>
-                    ) : (
+                {sortedTasks.length === 0 ? (
+                    <div className="p-12 border border-dashed border-gray-300 dark:border-zinc-800 rounded-xl text-center">
+                        <Calendar aria-label="No tasks available" className="size-10 mx-auto mb-3 text-gray-400" />
+                        <p className="text-gray-500 dark:text-zinc-400">
+                            {userTasks.length === 0
+                                ? "No tasks assigned to you yet"
+                                : "No tasks match your filter"}
+                        </p>
+                    </div>
+                ) : viewMode === 'table' ? (
+                    // --- TABLE VIEW ---
+                    <div className="border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900/50">
                         <TableContainer>
                             <Table size="small">
                                 <TableHead>
@@ -222,8 +282,78 @@ const Dashboard = () => {
                                 </TableBody>
                             </Table>
                         </TableContainer>
-                    )}
-                </div>
+                    </div>
+                ) : (
+                    // --- CARD / GRID VIEW ---
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {sortedTasks.map((task) => {
+                            const priority = priorityMap[task.priority] ?? priorityMap.NONE;
+                            const status = statusMap[task.status] ?? statusMap.TODO;
+                            return (
+                                <div key={task.id} className="p-4 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl hover:border-blue-500/50 transition-colors shadow-sm relative overflow-hidden">
+                                    {/* Subtle priority corner accent */}
+                                    {task.priority && task.priority !== 'NONE' && (
+                                        <div className={`absolute top-0 right-0 h-10 w-10 ${priority.bgColor} rounded-bl-full`} />
+                                    )}
+
+                                    <div className="flex justify-between items-start mb-2 relative z-10">
+                                        <Chip
+                                            label={task.projectName}
+                                            size="small"
+                                            variant="outlined"
+                                            className="text-[10px] uppercase tracking-wider"
+                                        />
+                                        {/* Priority indicator */}
+                                        <div className={`flex items-center gap-1.5 text-xs font-semibold ${priority.color}`}>
+                                            <Flag size={14} />
+                                            {priority.label}
+                                        </div>
+                                    </div>
+
+                                    <h4 className="font-semibold text-gray-900 dark:text-white line-clamp-1">{task.title}</h4>
+                                    <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1 line-clamp-2 min-h-[40px]">
+                                        {task.description || 'No description provided'}
+                                    </p>
+
+                                    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-zinc-800 flex justify-between items-center relative z-10">
+                                        <span className="text-xs font-medium text-gray-400">Due {formatDate(task.dueDate)}</span>
+                                        <Chip
+                                            label={status.label}
+                                            size="small"
+                                            color={status.color}
+                                            onClick={(e) => handleOpenMenu(e, task.id, task.status)}
+                                            onDelete={(e) => handleOpenMenu(e, task.id, task.status)}
+                                            deleteIcon={<ChevronDown size={12} />}
+                                            className="cursor-pointer hover:opacity-80 transition-opacity"
+                                            sx={{ height: 24, fontSize: '0.7rem', fontWeight: 600 }}
+                                        />
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {/* Global Status Quick-Edit Menu */}
+                <Menu
+                    anchorEl={anchorEl}
+                    open={Boolean(anchorEl)}
+                    onClose={handleCloseMenu}
+                    PaperProps={{
+                        sx: { mt: 1, width: 160, borderRadius: 2, boxShadow: '0px 4px 20px rgba(0,0,0,0.1)' }
+                    }}
+                >
+                    {Object.entries(statusMap).map(([key, { label, icon }]) => (
+                        <MenuItem
+                            key={key}
+                            onClick={() => handleStatusUpdate(key)}
+                            selected={activeTaskStatus === key}
+                            sx={{ gap: 1.5, fontSize: '0.875rem' }}
+                        >
+                            {icon} {label}
+                        </MenuItem>
+                    ))}
+                </Menu>
             </div>
         </div>
     );
