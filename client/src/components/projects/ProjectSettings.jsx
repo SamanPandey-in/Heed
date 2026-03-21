@@ -5,6 +5,7 @@ import { Button, IconButton, MenuItem, Slider, TextField } from '@mui/material';
 import { format } from 'date-fns';
 import { Plus, Save, Trash2 } from 'lucide-react';
 import { useDeleteProjectMutation, useRemoveProjectMemberMutation, useUpdateProjectMutation } from '../../store/slices/apiSlice';
+import { selectCurrentUserId } from '../../store';
 import AddProjectMember from './AddProjectMember';
 
 const toDateInputValue = (value) => {
@@ -42,7 +43,7 @@ const buildFormData = (project) => ({
 });
 
 export default function ProjectSettings({ project }) {
-    const currentUserId = useSelector((state) => state.users?.currentUserId);
+    const currentUserId = useSelector(selectCurrentUserId);
     const navigate = useNavigate();
     const [updateProject] = useUpdateProjectMutation();
     const [removeProjectMember] = useRemoveProjectMemberMutation();
