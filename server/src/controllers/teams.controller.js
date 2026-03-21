@@ -414,6 +414,17 @@ export const joinByInviteCode = async (req, res, next) => {
       },
     });
 
+    const newMember = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        fullName: true,
+        email: true,
+        avatarUrl: true,
+      },
+    });
+
     res.json({
       message: "Joined team successfully",
       team: {
@@ -423,7 +434,7 @@ export const joinByInviteCode = async (req, res, next) => {
         ownerId: team.ownerId,
         owner: team.owner,
         inviteCode: team.inviteCode,
-        members: [...team.members.map((m) => m.user), { id: userId }],
+        members: [...team.members.map((m) => m.user), newMember],
       },
     });
   } catch (err) {

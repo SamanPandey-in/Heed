@@ -1,7 +1,3 @@
-
-## ✅ `audit_fix_tasks.md`
-
-```md
 # Heed Audit Fix Plan — Executable Tasks
 
 ## 🚨 Execution Rules (STRICT)
@@ -37,7 +33,7 @@ router.get('/:taskId', getTaskById);
 
 ```id="v24j26"
 
-[ ] Task C-01
+[x] Task C-01
 
 ---
 
@@ -54,7 +50,7 @@ Actions:
 
 Reason: Calls non-existent API `/tasks/:id/status`
 
-[ ] Task C-02
+[x] Task C-02
 
 ---
 
@@ -76,7 +72,7 @@ dispatch(updateTaskAction(updated.task));
 
 ```id="f8x3k8"
 
-[ ] Task C-03
+[x] Task C-03
 
 ---
 
@@ -95,7 +91,7 @@ if (!team) return <p>Team not found</p>;
 
 ```id="38nq5f"
 
-[ ] Task H-06
+[x] Task H-06
 
 ---
 
@@ -108,7 +104,7 @@ Add:
 <MenuItem value="URGENT">Urgent</MenuItem>
 ``` id="wkr0op"
 
-[ ] Task H-03
+[x] Task H-03
 
 ---
 
@@ -123,7 +119,7 @@ Add:
 { label: 'In Review', value: 'IN_REVIEW' }
 ``` id="72kv7i"
 
-[ ] Task H-04
+[x] Task H-04
 
 ---
 
@@ -151,7 +147,7 @@ projectsByTeam[team.id] || 0
 
 ```id="tn73jv"
 
-[ ] Task H-01
+[x] Task H-01
 
 ---
 
@@ -167,7 +163,7 @@ Remove limiter from:
 - `/refresh`
 - `/me`
 
-[ ] Task H-05
+[x] Task H-05
 
 ---
 
@@ -187,7 +183,7 @@ dispatch(setUserError('Some data failed to load'));
 
 ```id="3b1l1a"
 
-[ ] Task H-02
+[x] Task H-02
 
 ---
 
@@ -210,7 +206,7 @@ Body:
 
 ```id="sh6o4g"
 
-[ ] Task M-02
+[x] Task M-02
 
 ---
 
@@ -221,7 +217,7 @@ Action:
 - Remove direct export of `selectTeamsLoading`
 - Use selector from `selectors.js`
 
-[ ] Task M-01
+[x] Task M-01
 
 ---
 
@@ -231,7 +227,7 @@ Action:
 Remove:
 - updateTaskStatus export (if still exists)
 
-[ ] Task M-03
+[x] Task M-03
 
 ---
 
@@ -252,7 +248,7 @@ useSelector(selectCurrentUserId)
 
 ```id="1n1l61"
 
-[ ] Task M-04
+[x] Task M-04
 
 ---
 
@@ -263,7 +259,7 @@ Fix:
 - Replace stub `{ id: userId }`
 - Fetch full user object OR trigger full refetch
 
-[ ] Task M-05
+[x] Task M-05
 
 ---
 
@@ -275,7 +271,7 @@ Fix:
 Action:
 - Remove `"crypto"` from dependencies
 
-[ ] Task I-02
+[x] Task I-02
 
 ---
 
@@ -287,7 +283,7 @@ Delete:
 - Request APIs
 - Technician APIs
 
-[ ] Task I-03
+[x] Task I-03
 
 ---
 
@@ -297,7 +293,7 @@ Delete:
 Action:
 - Delete file
 
-[ ] Task I-04
+[x] Task I-04
 
 ---
 
@@ -307,7 +303,7 @@ Action:
 Action:
 - Remove unused thunk export
 
-[ ] Task I-01
+[x] Task I-01
 
 ---
 
@@ -325,4 +321,3 @@ After all tasks:
 ---
 
 # 🎯 END
-```

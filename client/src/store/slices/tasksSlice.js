@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk, createEntityAdapter } from "@reduxjs/toolkit";
 import api from "../../lib/api";
-import { fetchProjects } from "./projectsSlice";
 
 // Entity adapter for tasks
 const tasksAdapter = createEntityAdapter({
@@ -21,21 +20,6 @@ export const fetchTasks = createAsyncThunk(
       return response.data.tasks || [];
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Failed to fetch tasks");
-    }
-  }
-);
-
-export const createTask = createAsyncThunk(
-  "tasks/createTask",
-  async (taskData, { dispatch, rejectWithValue }) => {
-    try {
-      const response = await api.post("/tasks", taskData);
-      // Hybrid pattern + dependency refresh
-      dispatch(fetchTasks());
-      dispatch(fetchProjects()); // Update project's task list
-      return response.data.task;
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || "Failed to create task");
     }
   }
 );
@@ -79,20 +63,6 @@ const tasksSlice = createSlice({
         tasksAdapter.setAll(state, action.payload);
       })
       .addCase(fetchTasks.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      .addCase(createTask.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(createTask.fulfilled, (state, action) => {
-        state.loading = false;
-        if (action.payload) {
-          tasksAdapter.addOne(state, action.payload);
-        }
-      })
-      .addCase(createTask.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

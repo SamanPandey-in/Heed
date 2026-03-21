@@ -4,7 +4,7 @@ export { default as store } from "./store.js";
 // Async Thunks
 export { fetchTeams, createTeam, joinTeamByInviteCode } from "./slices/teamsSlice.js";
 export { fetchProjects, createProject } from "./slices/projectsSlice.js";
-export { fetchTasks, createTask } from "./slices/tasksSlice.js";
+export { fetchTasks } from "./slices/tasksSlice.js";
 
 // Theme Slice
 export { toggleTheme, setTheme, loadTheme } from "./slices/themeSlice.js";
