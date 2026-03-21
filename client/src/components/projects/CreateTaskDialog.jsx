@@ -118,6 +118,7 @@ export default function CreateTaskDialog({ showCreateTask, setShowCreateTask, pr
                             <MenuItem value="LOW">Low</MenuItem>
                             <MenuItem value="MEDIUM">Medium</MenuItem>
                             <MenuItem value="HIGH">High</MenuItem>
+                            <MenuItem value="URGENT">Urgent</MenuItem>
                         </TextField>
                     </Box>
 
