@@ -1,8 +1,5 @@
-// Projects Controller - handles project-related operations
-
 import { prisma } from "../prisma/client.js";
 
-// GET all projects for authenticated user's teams
 export const getProjects = async (req, res, next) => {
   try {
     const userId = req.userId;
@@ -10,7 +7,6 @@ export const getProjects = async (req, res, next) => {
       return res.status(401).json({ message: "User not authenticated" });
     }
 
-    // Get projects from teams user is member of
     const projects = await prisma.project.findMany({
       where: {
         team: {
@@ -61,7 +57,6 @@ export const getProjects = async (req, res, next) => {
   }
 };
 
-// GET single project by ID
 export const getProjectById = async (req, res, next) => {
   try {
     const { projectId } = req.params;
@@ -84,7 +79,6 @@ export const getProjectById = async (req, res, next) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    // Check if user has access
     const userTeam = await prisma.teamMember.findUnique({
       where: {
         teamId_userId: {
@@ -109,7 +103,6 @@ export const getProjectById = async (req, res, next) => {
   }
 };
 
-// CREATE project
 export const createProject = async (req, res, next) => {
   try {
     const userId = req.userId;
@@ -181,7 +174,6 @@ export const createProject = async (req, res, next) => {
   }
 };
 
-// UPDATE project
 export const updateProject = async (req, res, next) => {
   try {
     const { projectId } = req.params;
@@ -253,7 +245,6 @@ export const updateProject = async (req, res, next) => {
   }
 };
 
-// ADD project member
 export const addProjectMember = async (req, res, next) => {
   try {
     const { projectId } = req.params;
@@ -339,7 +330,6 @@ export const addProjectMember = async (req, res, next) => {
   }
 };
 
-// REMOVE project member
 export const removeProjectMember = async (req, res, next) => {
   try {
     const { projectId, userId: targetUserId } = req.params;
@@ -392,7 +382,6 @@ export const removeProjectMember = async (req, res, next) => {
   }
 };
 
-// DELETE project
 export const deleteProject = async (req, res, next) => {
   try {
     const { projectId } = req.params;

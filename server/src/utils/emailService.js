@@ -1,5 +1,3 @@
-// Email sending utility using Nodemailer
-
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
@@ -12,7 +10,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Verify SMTP configuration on startup
 transporter.verify((err, success) => {
   if (err) {
     console.warn('[Email] SMTP not configured or connection failed:', err.message);
@@ -21,12 +18,6 @@ transporter.verify((err, success) => {
   }
 });
 
-/**
- * Send password reset email
- * @param {string} toEmail - Recipient email address
- * @param {string} resetToken - Password reset token
- * @param {string} clientOrigin - Frontend origin for reset link
- */
 export const sendPasswordResetEmail = async (toEmail, resetToken, clientOrigin) => {
   const resetLink = `${clientOrigin}/reset-password?token=${resetToken}`;
   
@@ -90,12 +81,6 @@ export const sendPasswordResetEmail = async (toEmail, resetToken, clientOrigin) 
   }
 };
 
-/**
- * Send welcome email on user registration
- * @param {string} toEmail - User email
- * @param {string} fullName - User full name
- * @param {string} clientOrigin - Frontend origin
- */
 export const sendWelcomeEmail = async (toEmail, fullName, clientOrigin) => {
   const mailOptions = {
     from: process.env.SMTP_FROM || process.env.SMTP_USER,

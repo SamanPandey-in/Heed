@@ -1,5 +1,3 @@
-// Server entry point
-
 import "dotenv/config";
 import app from "./app.js";
 import { prisma } from "./src/prisma/client.js";
@@ -8,10 +6,8 @@ const PORT = process.env.PORT || 5000;
 
 let server;
 
-// Start server
 async function startServer() {
   try {
-    // Test Prisma connection
     await prisma.$queryRaw`SELECT 1`;
     console.log("✓ Database connection established");
 
@@ -25,7 +21,6 @@ async function startServer() {
   }
 }
 
-// Graceful shutdown
 async function shutdown(signal) {
   console.log(`\n✓ Received ${signal}, shutting down gracefully...`);
 
@@ -51,7 +46,6 @@ async function shutdown(signal) {
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
 
-// Uncaught exceptions
 process.on("uncaughtException", (error) => {
   console.error("✗ Uncaught Exception:", error);
   process.exit(1);
@@ -62,5 +56,4 @@ process.on("unhandledRejection", (reason, promise) => {
   process.exit(1);
 });
 
-// Start
 startServer();

@@ -1,5 +1,3 @@
-// Teams routes
-
 import { Router } from "express";
 import { authenticate } from "../middlewares/auth.middleware.js";
 import {
@@ -15,7 +13,6 @@ import {
 
 const router = Router();
 
-// All routes require authentication
 router.use(authenticate);
 
 router.get("/", getTeams);

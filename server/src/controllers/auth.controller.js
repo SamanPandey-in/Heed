@@ -1,5 +1,3 @@
-//auth logics: login, logout, refresh, /me, forgot/reset password
-
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
@@ -10,8 +8,6 @@ const SALT_ROUNDS = 12;
 const ACCESS_TOKEN_TTL = "15m";
 const REFRESH_TOKEN_TTL = "7d";
 const REFRESH_COOKIE = "refreshToken";
-
-// Helpers
 
 const signAccess = (userId) =>
   jwt.sign({ userId }, process.env.JWT_ACCESS_SECRET, {
@@ -56,8 +52,6 @@ const safeUser = (u) => ({
     ? u.teamMemberships.map((membership) => membership.teamId)
     : [],
 });
-
-// REGISTER
 
 export const register = async (req, res, next) => {
   try {
@@ -111,8 +105,6 @@ export const register = async (req, res, next) => {
   }
 };
 
-// LOGIN
-
 export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -146,8 +138,6 @@ export const login = async (req, res, next) => {
   }
 };
 
-// LOGOUT
-
 export const logout = async (req, res, next) => {
   try {
     const token = req.cookies[REFRESH_COOKIE];
@@ -168,8 +158,6 @@ export const logout = async (req, res, next) => {
     next(err);
   }
 };
-
-// REFRESH
 
 export const refresh = async (req, res, next) => {
   try {
@@ -214,8 +202,6 @@ export const refresh = async (req, res, next) => {
   }
 };
 
-// GET ME
-
 export const getMe = async (req, res, next) => {
   try {
     const token = req.cookies[REFRESH_COOKIE];
@@ -239,8 +225,6 @@ export const getMe = async (req, res, next) => {
   }
 };
 
-// FORGOT PASSWORD
-
 export const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
@@ -263,7 +247,6 @@ export const forgotPassword = async (req, res, next) => {
         data: { resetToken: hashedToken, resetTokenExp },
       });
 
-      // Send password reset email
       const clientOrigin = process.env.CORS_ORIGIN || "http://localhost:5173";
       const emailResult = await sendPasswordResetEmail(email, resetToken, clientOrigin);
       
@@ -278,8 +261,6 @@ export const forgotPassword = async (req, res, next) => {
     next(err);
   }
 };
-
-// RESET PASSWORD
 
 export const resetPassword = async (req, res, next) => {
   try {
@@ -315,8 +296,6 @@ export const resetPassword = async (req, res, next) => {
     next(err);
   }
 };
-
-// CHANGE PASSWORD (authenticated)
 
 export const changePassword = async (req, res, next) => {
   try {

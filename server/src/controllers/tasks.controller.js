@@ -1,8 +1,5 @@
-// Tasks Controller - handles task-related operations
-
 import { prisma } from "../prisma/client.js";
 
-// GET all tasks for authenticated user's projects
 export const getTasks = async (req, res, next) => {
   try {
     const userId = req.userId;
@@ -10,7 +7,6 @@ export const getTasks = async (req, res, next) => {
       return res.status(401).json({ message: "User not authenticated" });
     }
 
-    // Get tasks from projects in user's teams
     const tasks = await prisma.task.findMany({
       where: {
         project: {
@@ -69,13 +65,11 @@ export const getTasks = async (req, res, next) => {
   }
 };
 
-// GET tasks for a specific project
 export const getProjectTasks = async (req, res, next) => {
   try {
     const { projectId } = req.params;
     const userId = req.userId;
 
-    // Verify user has access to project
     const project = await prisma.project.findUnique({
       where: { id: projectId },
     });
@@ -124,7 +118,6 @@ export const getProjectTasks = async (req, res, next) => {
   }
 };
 
-// GET single task by ID
 export const getTaskById = async (req, res, next) => {
   try {
     const { taskId } = req.params;
@@ -199,7 +192,6 @@ export const getTaskById = async (req, res, next) => {
   }
 };
 
-// CREATE task
 export const createTask = async (req, res, next) => {
   try {
     const userId = req.userId;
@@ -213,7 +205,6 @@ export const createTask = async (req, res, next) => {
       return res.status(400).json({ message: "Project ID is required" });
     }
 
-    // Verify user has access to project
     const project = await prisma.project.findUnique({
       where: { id: projectId },
     });
@@ -268,7 +259,6 @@ export const createTask = async (req, res, next) => {
   }
 };
 
-// UPDATE task
 export const updateTask = async (req, res, next) => {
   try {
     const { taskId } = req.params;
@@ -307,7 +297,6 @@ export const updateTask = async (req, res, next) => {
   }
 };
 
-// DELETE task
 export const deleteTask = async (req, res, next) => {
   try {
     const { taskId } = req.params;

@@ -1,9 +1,6 @@
-// Teams Controller - handles team-related operations
-
 import { prisma } from "../prisma/client.js";
 import { randomBytes } from 'crypto';
 
-// GET all teams for authenticated user
 export const getTeams = async (req, res, next) => {
   try {
     const userId = req.userId; // Set by auth middleware
@@ -11,7 +8,6 @@ export const getTeams = async (req, res, next) => {
       return res.status(401).json({ message: "User not authenticated" });
     }
 
-    // Get all teams where user is a member
     const teams = await prisma.team.findMany({
       where: {
         members: {
@@ -65,7 +61,6 @@ export const getTeams = async (req, res, next) => {
   }
 };
 
-// GET single team by ID
 export const getTeamById = async (req, res, next) => {
   try {
     const { teamId } = req.params;
@@ -98,7 +93,6 @@ export const getTeamById = async (req, res, next) => {
       return res.status(404).json({ message: "Team not found" });
     }
 
-    // Check if user is member of team
     if (!team.members.some((m) => m.userId === userId) && team.ownerId !== userId) {
       return res.status(403).json({ message: "Access denied" });
     }
@@ -123,7 +117,6 @@ export const getTeamById = async (req, res, next) => {
   }
 };
 
-// CREATE team
 export const createTeam = async (req, res, next) => {
   try {
     const userId = req.userId;
@@ -177,7 +170,6 @@ export const createTeam = async (req, res, next) => {
   }
 };
 
-// UPDATE team
 export const updateTeam = async (req, res, next) => {
   try {
     const { teamId } = req.params;
@@ -236,7 +228,6 @@ export const updateTeam = async (req, res, next) => {
   }
 };
 
-// ADD team member
 export const addTeamMember = async (req, res, next) => {
   try {
     const { teamId } = req.params;
@@ -300,7 +291,6 @@ export const addTeamMember = async (req, res, next) => {
   }
 };
 
-// REMOVE team member
 export const removeTeamMember = async (req, res, next) => {
   try {
     const { teamId, userId: targetUserId } = req.params;
@@ -353,7 +343,6 @@ export const removeTeamMember = async (req, res, next) => {
   }
 };
 
-// JOIN team by invite code
 export const joinByInviteCode = async (req, res, next) => {
   try {
     const { inviteCode } = req.body;
@@ -442,7 +431,6 @@ export const joinByInviteCode = async (req, res, next) => {
   }
 };
 
-// DELETE team (owner only)
 export const deleteTeam = async (req, res, next) => {
   try {
     const { teamId } = req.params;

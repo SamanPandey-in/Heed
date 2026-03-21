@@ -1,4 +1,3 @@
-// POST /register /login /logout /refresh /forgot-password /reset-password, GET /me
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import {
