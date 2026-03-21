@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Button, Chip } from '@mui/material';
+import { Button, Chip, Skeleton } from '@mui/material';
 import { ArrowLeft, FolderOpen, ShieldAlert, UserPlus, UsersIcon } from 'lucide-react';
 
 import { InviteMemberDialog } from '../components';
@@ -13,6 +13,7 @@ import {
     selectProjectsByTeam,
     selectTeamById,
     selectTeamMembers,
+    selectTeamsLoading,
 } from '../store';
 
 const normalizeStatus = (status) => {
@@ -34,6 +35,7 @@ const TeamDetails = () => {
     const isUserInTeam = useSelector((state) => selectIsUserInTeam(state, teamId));
     const teamMembers = useSelector((state) => selectTeamMembers(state, teamId));
     const teamProjects = useSelector((state) => selectProjectsByTeam(state, teamId));
+    const teamsLoading = useSelector(selectTeamsLoading);
 
     const [statusFilter, setStatusFilter] = useState('all');
     const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
@@ -64,6 +66,7 @@ const TeamDetails = () => {
         return teamProjects.filter((project) => normalizeStatus(project.status) === statusFilter);
     }, [teamProjects, statusFilter]);
 
+    if (teamsLoading) return <Skeleton />;
     if (!team) {
         return (
             <div className="max-w-6xl mx-auto py-10">

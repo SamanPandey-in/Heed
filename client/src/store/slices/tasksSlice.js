@@ -40,19 +40,6 @@ export const createTask = createAsyncThunk(
   }
 );
 
-export const updateTaskStatus = createAsyncThunk(
-  "tasks/updateTaskStatus",
-  async ({ id, status }, { dispatch, rejectWithValue }) => {
-    try {
-      const response = await api.patch(`/tasks/${id}/status`, { status });
-      dispatch(fetchTasks());
-      return response.data.task;
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || "Failed to update task status");
-    }
-  }
-);
-
 const initialState = tasksAdapter.getInitialState({
   loading: false,
   error: null,
@@ -108,14 +95,6 @@ const tasksSlice = createSlice({
       .addCase(createTask.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      })
-      .addCase(updateTaskStatus.fulfilled, (state, action) => {
-        if (action.payload) {
-          tasksAdapter.updateOne(state, {
-            id: action.payload.id,
-            changes: action.payload,
-          });
-        }
       });
   },
 });

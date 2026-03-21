@@ -47,15 +47,8 @@ app.use(
   }),
 );
 
-// Auth route gets stricter limiter to prevent brute-force attacks on login/register endpoints
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
-  message: { message: "Too many auth attempts, please try again later." },
-});
-
 // Routes
-app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/projects", projectRoutes);

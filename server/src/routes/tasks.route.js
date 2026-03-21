@@ -17,8 +17,8 @@ const router = Router();
 router.use(authenticate);
 
 router.get("/", getTasks);
-router.get("/:taskId", getTaskById);
 router.get("/project/:projectId", getProjectTasks);
+router.get("/:taskId", getTaskById);
 router.post("/", createTask);
 router.put("/:taskId", updateTask);
 router.delete("/:taskId", deleteTask);

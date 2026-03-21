@@ -42,8 +42,10 @@ const typeIcons = {
 };
 
 const statusOptions = [
+    { label: 'Backlog', value: 'BACKLOG' },
     { label: 'To Do', value: 'TODO' },
     { label: 'In Progress', value: 'IN_PROGRESS' },
+    { label: 'In Review', value: 'IN_REVIEW' },
     { label: 'Done', value: 'DONE' },
 ];
 
@@ -131,10 +133,7 @@ const ProjectTasks = ({ tasks }) => {
 
         try {
             loadingToast = toast.loading('Updating status...');
-            await updateTask({ id: taskId, status: newStatus }).unwrap();
-
-            const updatedTask = structuredClone(tasks.find((t) => t.id === taskId));
-            updatedTask.status = newStatus;
+            const { task: updatedTask } = await updateTask({ id: taskId, status: newStatus }).unwrap();
             dispatch(updateTaskAction(updatedTask));
 
             toast.success('Task status updated successfully');
