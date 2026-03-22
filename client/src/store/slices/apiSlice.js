@@ -68,10 +68,10 @@ export const apiSlice = createApi({
     }),
     
     addTechnicianToTeam: builder.mutation({
-      query: ({ teamId, technicianId }) => ({
-        url: `/teams/${teamId}/technicians`,
+      query: ({ teamId, userId }) => ({
+        url: `/teams/${teamId}/members`,
         method: 'POST',
-        body: { technicianId },
+        body: { userId },
       }),
       invalidatesTags: (result, error, { teamId }) => [
         { type: 'Team', id: teamId },
@@ -81,10 +81,9 @@ export const apiSlice = createApi({
     }),
     
     removeTechnicianFromTeam: builder.mutation({
-      query: ({ teamId, technicianId }) => ({
-        url: `/teams/${teamId}/technicians`,
+      query: ({ teamId, userId }) => ({
+        url: `/teams/${teamId}/members/${userId}`,
         method: 'DELETE',
-        body: { technicianId },
       }),
       invalidatesTags: (result, error, { teamId }) => [
         { type: 'Team', id: teamId },

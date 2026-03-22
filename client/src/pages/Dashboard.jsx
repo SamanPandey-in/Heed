@@ -190,6 +190,7 @@ const Dashboard = () => {
                                 onChange={(e) => setFilterStatus(e.target.value)}
                             >
                                 <MenuItem value="ALL">All Status</MenuItem>
+                                <MenuItem value="BACKLOG">Backlog</MenuItem>
                                 <MenuItem value="TODO">Todo</MenuItem>
                                 <MenuItem value="IN_PROGRESS">In Progress</MenuItem>
                                 <MenuItem value="IN_REVIEW">In Review</MenuItem>

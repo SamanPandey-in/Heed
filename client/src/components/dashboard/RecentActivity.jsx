@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { useSelector } from 'react-redux';
-import { GitCommit, MessageSquare, Clock, Bug, Zap, Square } from 'lucide-react';
+import { MessageSquare, Clock, Bug, Zap, Square } from 'lucide-react';
 import { selectRecentTasks } from '../../store';
 import { Box } from '@mui/material';
 import { styled } from '@mui/material/styles';
@@ -45,7 +45,6 @@ const typeIcons = {
     FEATURE: { icon: Zap, style: {} },
     TASK: { icon: Square, style: {} },
     IMPROVEMENT: { icon: MessageSquare, style: {} },
-    OTHER: { icon: GitCommit, style: {} },
 };
 
 const RecentActivity = () => {

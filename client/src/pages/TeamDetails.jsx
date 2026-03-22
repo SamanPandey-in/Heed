@@ -97,7 +97,13 @@ const TeamDetails = () => {
         return teamProjects.filter((project) => normalizeStatus(project.status) === statusFilter);
     }, [teamProjects, statusFilter]);
 
-    if (teamsLoading) return <Skeleton />;
+    if (teamsLoading) return (
+        <div className="max-w-6xl mx-auto space-y-6 py-6">
+            <Skeleton variant="rectangular" width="50%" height={36} />
+            <Skeleton variant="rectangular" width="100%" height={200} />
+            <Skeleton variant="rectangular" width="100%" height={200} />
+        </div>
+    );
     if (!team) {
         return (
             <div className="max-w-6xl mx-auto py-10">

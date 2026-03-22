@@ -60,9 +60,10 @@ const Navbar = ({ onMenuClick }) => {
 
           <div className="relative flex-1 max-w-xs sm:max-w-sm">
             <TextField
-              placeholder="Search..."
+              placeholder="Search coming soon..."
               size="small"
               fullWidth
+              disabled
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -70,7 +71,6 @@ const Navbar = ({ onMenuClick }) => {
                   </InputAdornment>
                 ),
               }}
-              // Hide placeholder on very small screens to save space
               inputProps={{ 'aria-label': 'search' }}
             />
           </div>
