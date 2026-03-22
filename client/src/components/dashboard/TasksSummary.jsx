@@ -65,7 +65,17 @@ export default function TasksSummary() {
                                     </div>
                                 ))}
                                 {card.count > 3 && (
-                                    <Button size="small" fullWidth variant="text" color="inherit" className="mt-2">
+                                    <Button
+                                        size="small"
+                                        fullWidth
+                                        variant="text"
+                                        color="inherit"
+                                        className="mt-2"
+                                        onClick={() => {
+                                            const el = document.getElementById('my-tasks');
+                                            if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                        }}
+                                    >
                                         View {card.count - 3} more <ArrowRight className="w-3 h-3 ml-2" />
                                     </Button>
                                 )}

@@ -127,7 +127,7 @@ const Dashboard = () => {
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                 <div>
                     <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-1">
-                        Welcome back, {currentUser?.name || 'User'}
+                        Welcome back, {currentUser?.fullName || currentUser?.name || 'User'}
                     </h1>
                     <p className="text-gray-500 dark:text-zinc-400 text-sm">
                         Here's what's happening with your projects today
@@ -157,7 +157,7 @@ const Dashboard = () => {
             </div>
 
             {/* My Tasks Section */}
-            <div className="mt-12 space-y-6">
+            <div id="my-tasks" className="mt-12 space-y-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
@@ -234,55 +234,96 @@ const Dashboard = () => {
                         </p>
                     </div>
                 ) : viewMode === 'table' ? (
-                    // --- TABLE VIEW ---
-                    <div className="border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900/50">
-                        <TableContainer>
-                            <Table size="small">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell>Task</TableCell>
-                                        <TableCell className="hidden sm:table-cell">Project</TableCell>
-                                        <TableCell className="hidden md:table-cell">Status</TableCell>
-                                        <TableCell>Due Date</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {sortedTasks.map((task) => (
-                                        <TableRow key={task.id} hover>
-                                            <TableCell>
-                                                <div>
-                                                    <p className="font-medium text-gray-900 dark:text-white line-clamp-2">
-                                                        {task.title}
-                                                    </p>
-                                                    <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
-                                                        {task.description || 'No description'}
-                                                    </p>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="hidden sm:table-cell">{task.projectName}</TableCell>
-                                            <TableCell className="hidden md:table-cell">
-                                                <Chip
-                                                    size="small"
-                                                    icon={getStatusIcon(task.status)}
-                                                    label={task.status.replace('_', ' ')}
-                                                    color={
-                                                        task.status === 'DONE'
-                                                            ? 'success'
-                                                            : task.status === 'IN_PROGRESS'
-                                                                ? 'info'
-                                                                : task.status === 'IN_REVIEW'
-                                                                    ? 'warning'
-                                                                    : 'default'
-                                                    }
-                                                />
-                                            </TableCell>
-                                            <TableCell>{formatDate(task.dueDate)}</TableCell>
+                    // --- TABLE VIEW (hidden on mobile, always cards on small screens) ---
+                    <>
+                        {/* Card list on mobile */}
+                        <div className="sm:hidden grid grid-cols-1 gap-4">
+                            {sortedTasks.map((task) => {
+                                const priority = priorityMap[task.priority] ?? priorityMap.NONE;
+                                const status = statusMap[task.status] ?? statusMap.TODO;
+                                return (
+                                    <div key={task.id} className="p-4 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl hover:border-blue-500/50 transition-colors shadow-sm relative overflow-hidden">
+                                        {task.priority && task.priority !== 'NONE' && (
+                                            <div className={`absolute top-0 right-0 h-10 w-10 ${priority.bgColor} rounded-bl-full`} />
+                                        )}
+                                        <div className="flex justify-between items-start mb-2 relative z-10">
+                                            <Chip label={task.projectName} size="small" variant="outlined" className="text-[10px] uppercase tracking-wider" />
+                                            <div className={`flex items-center gap-1.5 text-xs font-semibold ${priority.color}`}>
+                                                <Flag size={14} />
+                                                {priority.label}
+                                            </div>
+                                        </div>
+                                        <h4 className="font-semibold text-gray-900 dark:text-white line-clamp-1">{task.title}</h4>
+                                        <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1 line-clamp-2 min-h-[40px]">
+                                            {task.description || 'No description provided'}
+                                        </p>
+                                        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-zinc-800 flex justify-between items-center relative z-10">
+                                            <span className="text-xs font-medium text-gray-400">Due {formatDate(task.dueDate)}</span>
+                                            <Chip
+                                                label={status.label}
+                                                size="small"
+                                                color={status.color}
+                                                onClick={(e) => handleOpenMenu(e, task.id, task.status)}
+                                                onDelete={(e) => handleOpenMenu(e, task.id, task.status)}
+                                                deleteIcon={<ChevronDown size={12} />}
+                                                className="cursor-pointer hover:opacity-80 transition-opacity"
+                                                sx={{ height: 24, fontSize: '0.7rem', fontWeight: 600 }}
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        {/* Table on sm+ screens */}
+                        <div className="hidden sm:block border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900/50">
+                            <TableContainer>
+                                <Table size="small">
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Task</TableCell>
+                                            <TableCell className="hidden sm:table-cell">Project</TableCell>
+                                            <TableCell className="hidden md:table-cell">Status</TableCell>
+                                            <TableCell>Due Date</TableCell>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    </div>
+                                    </TableHead>
+                                    <TableBody>
+                                        {sortedTasks.map((task) => (
+                                            <TableRow key={task.id} hover>
+                                                <TableCell>
+                                                    <div>
+                                                        <p className="font-medium text-gray-900 dark:text-white line-clamp-2">
+                                                            {task.title}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
+                                                            {task.description || 'No description'}
+                                                        </p>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="hidden sm:table-cell">{task.projectName}</TableCell>
+                                                <TableCell className="hidden md:table-cell">
+                                                    <Chip
+                                                        size="small"
+                                                        icon={getStatusIcon(task.status)}
+                                                        label={task.status.replace('_', ' ')}
+                                                        color={
+                                                            task.status === 'DONE'
+                                                                ? 'success'
+                                                                : task.status === 'IN_PROGRESS'
+                                                                    ? 'info'
+                                                                    : task.status === 'IN_REVIEW'
+                                                                        ? 'warning'
+                                                                        : 'default'
+                                                        }
+                                                    />
+                                                </TableCell>
+                                                <TableCell>{formatDate(task.dueDate)}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </div>
+                    </>
                 ) : (
                     // --- CARD / GRID VIEW ---
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

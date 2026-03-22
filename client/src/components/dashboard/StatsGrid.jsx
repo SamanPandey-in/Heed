@@ -1,13 +1,19 @@
 import { useSelector } from 'react-redux';
 import { FolderOpen, CheckCircle, Users, AlertTriangle } from 'lucide-react';
 import { selectDashboardStats } from '../../store';
-import { Box } from '@mui/material';
-import { styled } from '@mui/material/styles';
-import { MediumAvatar } from '../ui/ReusableStyled';
+import { Box, useTheme } from '@mui/material';
 import tokens from '../../theme/tokens';
+
+const CARD_ACCENTS = [
+    { lightBg: '#dbeafe', lightIcon: '#2563eb', darkBg: 'rgba(37,99,235,0.18)',   darkIcon: '#60a5fa' }, // blue
+    { lightBg: '#d1fae5', lightIcon: '#059669', darkBg: 'rgba(5,150,105,0.18)',   darkIcon: '#34d399' }, // green
+    { lightBg: '#ede9fe', lightIcon: '#7c3aed', darkBg: 'rgba(124,58,237,0.18)', darkIcon: '#a78bfa' }, // purple
+    { lightBg: '#fee2e2', lightIcon: '#dc2626', darkBg: 'rgba(220,38,38,0.18)',   darkIcon: '#f87171' }, // red
+];
 
 export default function StatsGrid() {
     const stats = useSelector(selectDashboardStats);
+    const theme = useTheme();
 
     const statCards = [
         {
@@ -36,19 +42,15 @@ export default function StatsGrid() {
         },
     ];
 
-    const StatIconBox = styled(Box)(({ theme }) => ({
-        padding: theme.spacing(1.5),
-        borderRadius: 16,
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-    }));
-
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 my-9">
-            {statCards.map(
-                ({ icon: Icon, title, value, subtitle }, i) => (
+            {statCards.map(({ icon: Icon, title, value, subtitle }, i) => {
+                const accent = CARD_ACCENTS[i];
+                const isDark = theme.palette.mode === 'dark';
+                const iconBg = isDark ? accent.darkBg : accent.lightBg;
+                const iconColor = isDark ? accent.darkIcon : accent.lightIcon;
+
+                return (
                     <div key={i} className={tokens.cardBgClass}>
                         <div className="p-6 py-4">
                             <div className="flex items-start justify-between">
@@ -65,14 +67,23 @@ export default function StatsGrid() {
                                         </p>
                                     )}
                                 </div>
-                                <StatIconBox>
-                                    <Icon size={20} style={{ color: 'white' }} />
-                                </StatIconBox>
+                                <Box
+                                    sx={{
+                                        padding: 1.5,
+                                        borderRadius: 2,
+                                        backgroundColor: iconBg,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    <Icon size={20} style={{ color: iconColor }} />
+                                </Box>
                             </div>
                         </div>
                     </div>
-                )
-            )}
+                );
+            })}
         </div>
     );
 }

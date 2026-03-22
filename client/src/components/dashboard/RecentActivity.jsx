@@ -4,17 +4,32 @@ import { GitCommit, MessageSquare, Clock, Bug, Zap, Square } from 'lucide-react'
 import { selectRecentTasks } from '../../store';
 import { Box } from '@mui/material';
 import { styled } from '@mui/material/styles';
-const StatusChip = styled('span')(({ theme }) => ({
-    marginLeft: theme.spacing(0.5),
-    padding: '2px 8px',
-    borderRadius: 6,
-    fontSize: 12,
-    backgroundColor: 'var(--color-surface-variant)',
-    color: 'var(--color-text)',
-    display: 'inline-block',
-    minWidth: 48,
-    textAlign: 'center',
-}));
+
+const statusChipStyles = {
+    TODO:        { bg: 'rgba(113,113,122,0.12)', darkBg: 'rgba(113,113,122,0.25)', color: '#52525b', darkColor: '#a1a1aa' },
+    IN_PROGRESS: { bg: 'rgba(37,99,235,0.10)',  darkBg: 'rgba(96,165,250,0.20)',  color: '#2563eb', darkColor: '#60a5fa' },
+    IN_REVIEW:   { bg: 'rgba(217,119,6,0.10)',  darkBg: 'rgba(251,191,36,0.20)',  color: '#b45309', darkColor: '#fbbf24' },
+    DONE:        { bg: 'rgba(5,150,105,0.10)',  darkBg: 'rgba(52,211,153,0.20)',  color: '#059669', darkColor: '#34d399' },
+};
+
+const StatusChip = styled('span', {
+    shouldForwardProp: (prop) => prop !== 'status',
+})(({ theme, status }) => {
+    const s = statusChipStyles[status] || statusChipStyles.TODO;
+    return {
+        marginLeft: theme.spacing(0.5),
+        padding: '2px 8px',
+        borderRadius: 6,
+        fontSize: 12,
+        backgroundColor: theme.palette.mode === 'dark' ? s.darkBg : s.bg,
+        color: theme.palette.mode === 'dark' ? s.darkColor : s.color,
+        display: 'inline-block',
+        minWidth: 48,
+        textAlign: 'center',
+        fontWeight: 500,
+        whiteSpace: 'nowrap',
+    };
+});
 
 const IconBg = styled(Box)(({ theme }) => ({
     padding: theme.spacing(1),
@@ -31,12 +46,6 @@ const typeIcons = {
     TASK: { icon: Square, style: {} },
     IMPROVEMENT: { icon: MessageSquare, style: {} },
     OTHER: { icon: GitCommit, style: {} },
-};
-
-const statusColors = {
-    TODO: { bg: 'var(--color-surface-variant)', text: 'var(--color-text)' },
-    IN_PROGRESS: { bg: 'var(--color-surface-variant)', text: 'var(--color-text)' },
-    DONE: { bg: 'var(--color-surface-variant)', text: 'var(--color-text)' },
 };
 
 const RecentActivity = () => {
@@ -78,7 +87,7 @@ const RecentActivity = () => {
                                                 <h4 className="text-zinc-800 dark:text-zinc-200 truncate">
                                                     {task.title}
                                                 </h4>
-                                                <StatusChip>
+                                                <StatusChip status={task.status}>
                                                     {task.status.replace("_", " ")}
                                                 </StatusChip>
                                             </div>

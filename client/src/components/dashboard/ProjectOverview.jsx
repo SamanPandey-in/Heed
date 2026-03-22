@@ -59,6 +59,9 @@ const ProjectOverview = () => {
                         {projects.slice(0, 5).map((project) => {
                             const teamName = teams.find((team) => team.id === project.teamId)?.name || 'Unknown team';
                             const memberCount = project?.memberIds?.length ?? project?.members?.length ?? 0;
+                            const doneTasks = (project.tasks || []).filter(t => t.status === 'DONE').length;
+                            const totalTasks = (project.tasks || []).length;
+                            const progress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
                             return (
                                 <Link key={project.id} to={`/projects/${project.id}?tab=tasks`} className="block p-6 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
@@ -102,11 +105,11 @@ const ProjectOverview = () => {
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between text-xs">
                                         <span className="text-zinc-500 dark:text-zinc-500">Progress</span>
-                                        <span className="text-zinc-600 dark:text-zinc-400">{project.progress || 0}%</span>
+                                        <span className="text-zinc-600 dark:text-zinc-400">{progress}%</span>
                                     </div>
                                     <LinearProgressRounded
                                         variant="determinate"
-                                        value={project.progress || 0}
+                                        value={progress}
                                     />
                                 </div>
                                 </Link>
