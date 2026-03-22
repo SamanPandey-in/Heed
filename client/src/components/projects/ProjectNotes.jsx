@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { Button, TextField, IconButton, List, ListItem, ListItemText, ListItemSecondaryAction, Divider, InputAdornment } from '@mui/material';
 import { Save, Plus, Trash2, Link as LinkIcon, FileText, ExternalLink } from 'lucide-react';
 import { useUpdateProjectMutation } from '../../store/slices/apiSlice';
+import { fetchProjects } from '../../store/slices/projectsSlice';
 
 export default function ProjectNotes({ project }) {
+    const dispatch = useDispatch();
     const [updateProject] = useUpdateProjectMutation();
     const [notes, setNotes] = useState(project?.notes || '');
     const [links, setLinks] = useState(project?.links || []);
@@ -26,6 +29,8 @@ export default function ProjectNotes({ project }) {
                 notes,
                 links,
             }).unwrap();
+            // Refresh entity store so other tabs see updated data
+            dispatch(fetchProjects());
         } catch (err) {
             setError(err?.data?.message || 'Failed to save changes');
         } finally {
