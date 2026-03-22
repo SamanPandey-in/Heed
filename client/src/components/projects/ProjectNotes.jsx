@@ -139,7 +139,7 @@ export default function ProjectNotes({ project }) {
                             value={newLink.label}
                             onChange={(e) => setNewLink({ ...newLink, label: e.target.value })}
                         />
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 mt-2">
                             <TextField
                                 fullWidth
                                 size="small"
@@ -156,7 +156,10 @@ export default function ProjectNotes({ project }) {
                                 <Plus className="size-4" />
                             </Button>
                         </div>
-                    </div>
+                        </div>
+
+                        {/* spacer between URL input and links list */}
+                        <div className="mt-4" />
 
                     <Divider className="my-8" />
 
