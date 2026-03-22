@@ -73,6 +73,7 @@ const filterOptionMap = {
         { label: 'Low', value: 'LOW' },
         { label: 'Medium', value: 'MEDIUM' },
         { label: 'High', value: 'HIGH' },
+        { label: 'Urgent', value: 'URGENT' },
     ],
 };
 
@@ -80,6 +81,7 @@ const priorityColor = {
     HIGH: 'error',
     MEDIUM: 'warning',
     LOW: 'default',
+    URGENT: 'error',
 };
 
 const taskTypeOptions = [
