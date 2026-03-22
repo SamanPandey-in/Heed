@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, IconButton } from '@mui/material';
-import { format, isSameDay, isBefore, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths } from 'date-fns';
+import { format, isSameDay, isBefore, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, getDay } from 'date-fns';
 import { CalendarIcon, Clock, User, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const typeColors = {
@@ -54,6 +54,8 @@ const ProjectCalendar = ({ tasks }) => {
         end: endOfMonth(currentMonth),
     });
 
+    const startDayOffset = getDay(startOfMonth(currentMonth));
+
 
     const handleMonthChange = (direction) => {
         setCurrentMonth((prev) => (direction === "next" ? addMonths(prev, 1) : subMonths(prev, 1)));
@@ -85,6 +87,9 @@ const ProjectCalendar = ({ tasks }) => {
                     </div>
 
                     <div className="grid grid-cols-7 gap-2">
+                        {Array.from({ length: startDayOffset }).map((_, i) => (
+                            <div key={`empty-${i}`} />
+                        ))}
                         {daysInMonth.map((day) => {
                             const dayTasks = getTasksForDate(day);
                             const isSelected = isSameDay(day, selectedDate);
