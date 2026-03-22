@@ -46,6 +46,8 @@ export const getProjects = async (req, res, next) => {
         teamId: project.teamId,
         team: project.team,
         createdBy: project.createdBy,
+        notes: project.notes || '',
+        links: project.links || [],
         memberIds: project.members.map((m) => m.userId),
         members: project.members.map((m) => m.user),
         createdAt: project.createdAt,
@@ -178,7 +180,7 @@ export const updateProject = async (req, res, next) => {
   try {
     const { projectId } = req.params;
     const userId = req.userId;
-    const { name, description, status, result } = req.body;
+    const { name, description, status, result, notes, links } = req.body;
 
     const project = await prisma.project.findUnique({
       where: { id: projectId },
@@ -208,6 +210,8 @@ export const updateProject = async (req, res, next) => {
         description: description?.trim() || project.description,
         status: status || project.status,
         result: result ?? project.result,
+        ...(notes !== undefined && { notes }),
+        ...(links !== undefined && { links }),
       },
       include: {
         members: {
@@ -234,6 +238,8 @@ export const updateProject = async (req, res, next) => {
         description: updated.description,
         status: updated.status,
         result: updated.result,
+        notes: updated.notes || '',
+        links: updated.links || [],
         teamId: updated.teamId,
         createdBy: updated.createdBy,
         memberIds: updated.members.map((m) => m.userId),

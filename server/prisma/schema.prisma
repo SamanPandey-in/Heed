@@ -154,6 +154,8 @@ model Project {
   startDate   DateTime?     @map("start_date") @db.Date
   endDate     DateTime?     @map("end_date") @db.Date
   key         String        @db.VarChar(10)
+  notes       String?       @default("")
+  links       Json?         @default("[]")
   createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz
 
