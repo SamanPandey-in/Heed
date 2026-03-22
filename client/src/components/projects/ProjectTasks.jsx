@@ -31,19 +31,19 @@ const MinWidthFormControl = styled(FormControl)({
 });
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
-import { Bug, Calendar as CalendarIcon, GitCommit, MessageSquare, Pen, Square, Trash, XIcon, Zap } from 'lucide-react';
+import { Calendar as CalendarIcon, Pen, Trash, XIcon, Zap } from 'lucide-react';
 
 import { deleteTask as deleteTaskAction, updateTask as updateTaskAction } from '../../store';
 import { useDeleteTaskMutation, useGetProjectByIdQuery, useGetTeamByIdQuery, useUpdateTaskMutation } from '../../store/slices/apiSlice';
 
-const typeIcons = {
-    BUG: { icon: Bug, color: 'error' },
-    FEATURE: { icon: Zap, color: 'info' },
-    TASK: { icon: Square, color: 'success' },
-    IMPROVEMENT: { icon: GitCommit, color: 'secondary' },
-    EPIC: { icon: MessageSquare, color: 'warning' },
-    STORY: { icon: MessageSquare, color: 'info' },
-    SUB_TASK: { icon: GitCommit, color: 'default' },
+const typeChipColor = {
+    BUG: 'error',
+    FEATURE: 'info',
+    TASK: 'success',
+    IMPROVEMENT: 'secondary',
+    EPIC: 'warning',
+    STORY: 'info',
+    SUB_TASK: 'default',
 };
 
 const statusOptions = [
@@ -380,8 +380,7 @@ const ProjectTasks = ({ tasks, projectId }) => {
                         <TableBody>
                             {filteredTasks.length > 0 ? (
                                 filteredTasks.map((task) => {
-                                    const Icon = typeIcons[task.type]?.icon;
-                                    const chipColor = typeIcons[task.type]?.color || 'default';
+                                    const chipColor = typeChipColor[task.type] || 'default';
 
                                     return (
                                         <TableRow
@@ -398,10 +397,7 @@ const ProjectTasks = ({ tasks, projectId }) => {
                                             </TableCell>
                                             <TableCell>{task.title}</TableCell>
                                             <TableCell>
-                                                <Stack direction="row" spacing={1} alignItems="center">
-                                                    {Icon ? <Icon className="size-4" /> : null}
-                                                    <Chip size="small" label={task.type} color={chipColor} />
-                                                </Stack>
+                                                <Chip size="small" label={task.type} color={chipColor} />
                                             </TableCell>
                                             <TableCell>
                                                 <Chip
@@ -469,8 +465,6 @@ const ProjectTasks = ({ tasks, projectId }) => {
             <div className="sm:hidden space-y-3">
                 {filteredTasks.length > 0 ? (
                     filteredTasks.map((task) => {
-                        const Icon = typeIcons[task.type]?.icon;
-
                         return (
                             <div
                                 key={task.id}
@@ -480,10 +474,7 @@ const ProjectTasks = ({ tasks, projectId }) => {
                                 <div className="flex items-start justify-between">
                                     <div className="space-y-1">
                                         <h3 className="font-medium text-sm">{task.title}</h3>
-                                        <div className="flex items-center gap-2">
-                                            {Icon && <Icon className="size-3.5 text-zinc-500" />}
-                                            <span className="text-xs text-zinc-500">{task.type}</span>
-                                        </div>
+                                        <span className="text-xs text-zinc-500">{task.type}</span>
                                     </div>
                                     <div className="flex items-center gap-1">
                                         <Button
