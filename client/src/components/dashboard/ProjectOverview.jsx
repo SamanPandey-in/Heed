@@ -12,7 +12,7 @@ import tokens from '../../theme/tokens';
 const ProjectOverview = () => {
     const statusColors = {
         active: "bg-zinc-200 text-zinc-900 dark:bg-white/10 dark:text-white",
-        completed: "bg-zinc-900 text-white dark:bg-white dark:text-black",
+        completed: "bg-blue-100 text-blue-800 dark:bg-white dark:text-black",
         deprecated: "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400"
     };
 

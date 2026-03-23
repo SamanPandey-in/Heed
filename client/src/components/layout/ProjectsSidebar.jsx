@@ -45,7 +45,7 @@ const ProjectSidebar = () => {
                     <div key={project.id}>
                         <Button onClick={() => toggleProject(project.id)} className="w-full justify-start gap-2" color="inherit" size="small">
                             <ChevronRightIcon className={`size-3 text-gray-500 dark:text-zinc-400 transition-transform duration-200 ${expandedProjects.has(project.id) && 'rotate-90'}`} />
-                            <div className="size-2 rounded-full bg-white/20" />
+                            <div className="size-2 rounded-full bg-gray-400 dark:bg-white/20" />
                             <span className="truncate max-w-40 text-sm">{project.name}</span>
                         </Button>
 

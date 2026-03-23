@@ -305,7 +305,7 @@ const Profile = () => {
             <textarea
               value={about}
               onChange={(e) => setAbout(e.target.value)}
-              className="w-full px-4 py-3 text-sm border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-white/20 focus:border-transparent outline-none resize-none"
+              className="w-full px-4 py-3 text-sm border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-black/10 dark:focus:ring-white/20 focus:border-gray-400 dark:focus:border-transparent outline-none resize-none"
               rows="4"
               placeholder="Tell us about yourself..."
             />

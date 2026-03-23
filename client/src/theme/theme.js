@@ -16,13 +16,28 @@ export const buildTheme = (mode = 'light') => {
         main: colors[700],
       },
       error: {
-        main: colors[400],
+        main:         isDark ? '#f87171' : '#dc2626',
+        light:        isDark ? '#fca5a5' : '#fecaca',
+        dark:         isDark ? '#ef4444' : '#b91c1c',
+        contrastText: '#ffffff',
       },
       warning: {
-        main: colors[500],
+        main:         isDark ? '#fbbf24' : '#d97706',
+        light:        isDark ? '#fcd34d' : '#fde68a',
+        dark:         isDark ? '#f59e0b' : '#b45309',
+        contrastText: isDark ? '#000000' : '#ffffff',
       },
       success: {
-        main: colors[600],
+        main:         isDark ? '#34d399' : '#16a34a',
+        light:        isDark ? '#6ee7b7' : '#bbf7d0',
+        dark:         isDark ? '#10b981' : '#15803d',
+        contrastText: '#ffffff',
+      },
+      info: {
+        main:         isDark ? '#60a5fa' : '#2563eb',
+        light:        isDark ? '#93c5fd' : '#bfdbfe',
+        dark:         isDark ? '#3b82f6' : '#1d4ed8',
+        contrastText: '#ffffff',
       },
       background: {
         default: isDark ? colors[0] : colors[0],
@@ -86,10 +101,72 @@ export const buildTheme = (mode = 'light') => {
           size: 'small',
           fullWidth: true,
         },
+        styleOverrides: {
+          root: {
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: isDark ? colors[50] : colors[0],
+              fontSize: '0.875rem',
+              '& fieldset': {
+                borderColor: colors[200],
+              },
+              '&:hover fieldset': {
+                borderColor: isDark ? colors[600] : colors[700],
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: colors[1000],
+                borderWidth: '1px',
+              },
+            },
+            '& .MuiInputBase-input': {
+              color: colors[1000],
+            },
+            '& .MuiInputLabel-root': {
+              color: colors[500],
+              '&.Mui-focused': {
+                color: colors[1000],
+              },
+            },
+          },
+        },
       },
       MuiSelect: {
-        defaultProps: {
-          size: 'small',
+        defaultProps: { size: 'small' },
+        styleOverrides: {
+          root: {
+            backgroundColor: isDark ? colors[50] : colors[0],
+            color: colors[1000],
+            fontSize: '0.875rem',
+            '& .MuiOutlinedInput-notchedOutline': {
+              borderColor: colors[200],
+            },
+            '&:hover .MuiOutlinedInput-notchedOutline': {
+              borderColor: isDark ? colors[600] : colors[700],
+            },
+            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+              borderColor: colors[1000],
+              borderWidth: '1px',
+            },
+          },
+          icon: {
+            color: colors[500],
+          },
+        },
+      },
+      MuiMenuItem: {
+        styleOverrides: {
+          root: {
+            fontSize: '0.875rem',
+            color: colors[1000],
+            '&:hover': {
+              backgroundColor: isDark ? `rgba(255,255,255,0.06)` : `rgba(0,0,0,0.04)`,
+            },
+            '&.Mui-selected': {
+              backgroundColor: isDark ? `rgba(255,255,255,0.10)` : `rgba(0,0,0,0.08)`,
+              '&:hover': {
+                backgroundColor: isDark ? `rgba(255,255,255,0.14)` : `rgba(0,0,0,0.10)`,
+              },
+            },
+          },
         },
       },
     },

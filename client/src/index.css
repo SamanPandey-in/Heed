@@ -649,24 +649,44 @@
   }
 
   .glass-nav {
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   }
 
   .hero-gradient-text {
-    background: linear-gradient(180deg, #FFFFFF 0%, #a1a1aa 100%);
+    background: linear-gradient(180deg, #111111 0%, #525252 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
   .dashboard-glow {
-    box-shadow: 0 0 100px -20px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 100px -20px rgba(0, 0, 0, 0.08);
   }
 
   .border-subtle {
-    border-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(0, 0, 0, 0.08);
   }
+}
+
+/* Dark mode overrides for mode-aware component classes */
+.dark .glass-nav {
+  background: rgba(0, 0, 0, 0.75);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dark .hero-gradient-text {
+  background: linear-gradient(180deg, #FFFFFF 0%, #a1a1aa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dark .dashboard-glow {
+  box-shadow: 0 0 100px -20px rgba(255, 255, 255, 0.1);
+}
+
+.dark .border-subtle {
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 /* ============================================================================
@@ -831,163 +851,164 @@
    RESPONSIVE BREAKPOINTS
    ============================================================================ */
 
-/* Mobile first - additional styles as needed */
-@media (max-width: 640px) {
-  /* ============================================================================
+/* ============================================================================
    STATUS & PRIORITY UTILITY CLASSES - CENTRALIZED THEME
    All status badges, priority indicators use B&W theme variables
+   Moved out of @media (max-width: 640px) so they apply on all screen sizes
    ============================================================================ */
 
-  /* Status Badge Classes */
-  .status-planning,
-  .status-PLANNING {
-    background-color: var(--color-surface-variant);
-    color: var(--color-text);
-    border-color: var(--color-border);
-  }
+/* Status Badge Classes */
+.status-planning,
+.status-PLANNING {
+  background-color: var(--color-surface-variant);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
 
-  .status-active,
-  .status-ACTIVE {
-    background-color: var(--color-surface-variant);
-    color: var(--color-text);
-    border-color: var(--color-border);
-  }
+.status-active,
+.status-ACTIVE {
+  background-color: var(--color-surface-variant);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
 
-  .status-on-hold,
-  .status-ON_HOLD {
-    background-color: var(--color-surface-variant);
-    color: var(--color-text);
-    border-color: var(--color-border);
-  }
+.status-on-hold,
+.status-ON_HOLD {
+  background-color: var(--color-surface-variant);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
 
-  .status-completed,
-  .status-COMPLETED {
-    background-color: var(--color-surface-variant);
-    color: var(--color-text);
-    border-color: var(--color-border);
-  }
+.status-completed,
+.status-COMPLETED {
+  background-color: var(--color-surface-variant);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
 
-  .status-cancelled,
-  .status-CANCELLED {
-    background-color: var(--color-surface-variant);
-    color: var(--color-text);
-    border-color: var(--color-border);
-  }
+.status-cancelled,
+.status-CANCELLED {
+  background-color: var(--color-surface-variant);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
 
-  .status-done,
-  .status-DONE {
-    background-color: var(--color-surface-variant);
-    color: var(--color-text);
-    border-color: var(--color-border);
-  }
+.status-done,
+.status-DONE {
+  background-color: var(--color-surface-variant);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
 
-  .status-in-progress,
-  .status-IN_PROGRESS {
-    background-color: var(--color-surface-variant);
-    color: var(--color-text);
-    border-color: var(--color-border);
-  }
+.status-in-progress,
+.status-IN_PROGRESS {
+  background-color: var(--color-surface-variant);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
 
-  /* Priority Badge Classes */
-  .priority-low,
-  .priority-LOW {
-    background-color: var(--color-surface-variant);
-    color: var(--color-text);
-    border-color: var(--color-border);
-  }
+/* Priority Badge Classes */
+.priority-low,
+.priority-LOW {
+  background-color: var(--color-surface-variant);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
 
-  .priority-medium,
-  .priority-MEDIUM {
-    background-color: var(--color-surface-variant);
-    color: var(--color-text);
-    border-color: var(--color-border);
-  }
+.priority-medium,
+.priority-MEDIUM {
+  background-color: var(--color-surface-variant);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
 
-  .priority-high,
-  .priority-HIGH {
-    background-color: var(--color-surface-variant);
-    color: var(--color-text);
-    border-color: var(--color-border);
-  }
+.priority-high,
+.priority-HIGH {
+  background-color: var(--color-surface-variant);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
 
-  /* Type Badge Classes */
-  .type-bug,
-  .type-BUG {
-    background-color: var(--color-surface-variant);
-    color: var(--color-text);
-    border-color: var(--color-border);
-  }
+/* Type Badge Classes */
+.type-bug,
+.type-BUG {
+  background-color: var(--color-surface-variant);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
 
-  .type-feature,
-  .type-FEATURE {
-    background-color: var(--color-surface-variant);
-    color: var(--color-text);
-    border-color: var(--color-border);
-  }
+.type-feature,
+.type-FEATURE {
+  background-color: var(--color-surface-variant);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
 
-  .type-task,
-  .type-TASK {
-    background-color: var(--color-surface-variant);
-    color: var(--color-text);
-    border-color: var(--color-border);
-  }
+.type-task,
+.type-TASK {
+  background-color: var(--color-surface-variant);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
 
-  .type-improvement,
-  .type-IMPROVEMENT {
-    background-color: var(--color-surface-variant);
-    color: var(--color-text);
-    border-color: var(--color-border);
-  }
+.type-improvement,
+.type-IMPROVEMENT {
+  background-color: var(--color-surface-variant);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
 
-  .type-other,
-  .type-OTHER {
-    background-color: var(--color-surface-variant);
-    color: var(--color-text);
-    border-color: var(--color-border);
-  }
+.type-other,
+.type-OTHER {
+  background-color: var(--color-surface-variant);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
 
-  /* Analytics and stat colors - all grayscale */
-  .stat-completed {
-    color: var(--color-text);
-    background-color: var(--color-surface-variant);
-  }
+/* Analytics and stat colors - all grayscale */
+.stat-completed {
+  color: var(--color-text);
+  background-color: var(--color-surface-variant);
+}
 
-  .stat-in-progress {
-    color: var(--color-text);
-    background-color: var(--color-surface-variant);
-  }
+.stat-in-progress {
+  color: var(--color-text);
+  background-color: var(--color-surface-variant);
+}
 
-  .stat-at-risk {
-    color: var(--color-text);
-    background-color: var(--color-surface-variant);
-  }
+.stat-at-risk {
+  color: var(--color-text);
+  background-color: var(--color-surface-variant);
+}
 
-  .stat-team {
-    color: var(--color-text);
-    background-color: var(--color-surface-variant);
-  }
+.stat-team {
+  color: var(--color-text);
+  background-color: var(--color-surface-variant);
+}
 
-  /* Activity Event Colors */
-  .activity-bug {
-    color: var(--color-text-secondary);
-  }
+/* Activity Event Colors */
+.activity-bug {
+  color: var(--color-text-secondary);
+}
 
-  .activity-feature {
-    color: var(--color-text-secondary);
-  }
+.activity-feature {
+  color: var(--color-text-secondary);
+}
 
-  .activity-task {
-    color: var(--color-text-secondary);
-  }
+.activity-task {
+  color: var(--color-text-secondary);
+}
 
-  .activity-improvement {
-    color: var(--color-text-secondary);
-  }
+.activity-improvement {
+  color: var(--color-text-secondary);
+}
 
-  .activity-other {
-    color: var(--color-text-secondary);
-  }
+.activity-other {
+  color: var(--color-text-secondary);
+}
 
+/* Mobile first - additional styles as needed */
+@media (max-width: 640px) {
   /* Small screens */
   .sm\:hidden {
     display: none;

@@ -149,37 +149,37 @@ export default function ProjectDetail() {
 
                 <div className="mt-6">
                     {activeTab === 'tasks' && (
-                        <div className="dark:bg-zinc-900/40 rounded max-w-6xl">
+                        <div className="bg-gray-50/50 dark:bg-zinc-900/40 rounded max-w-6xl">
                             <ProjectTasks tasks={tasks} projectId={projectId} />
                         </div>
                     )}
                     {activeTab === 'analytics' && (
-                        <div className="dark:bg-zinc-900/40 rounded max-w-6xl">
+                        <div className="bg-gray-50/50 dark:bg-zinc-900/40 rounded max-w-6xl">
                             <ProjectAnalytics tasks={tasks} project={project} />
                         </div>
                     )}
                     {activeTab === 'calendar' && (
-                        <div className="dark:bg-zinc-900/40 rounded max-w-6xl">
+                        <div className="bg-gray-50/50 dark:bg-zinc-900/40 rounded max-w-6xl">
                             <ProjectCalendar tasks={tasks} />
                         </div>
                     )}
                     {activeTab === 'notes' && (
-                        <div className="dark:bg-zinc-900/40 rounded max-w-6xl">
+                        <div className="bg-gray-50/50 dark:bg-zinc-900/40 rounded max-w-6xl">
                             <ProjectNotes project={project} />
                         </div>
                     )}
                     {activeTab === 'activity' && (
-                        <div className="dark:bg-zinc-900/40 rounded max-w-6xl">
+                        <div className="bg-gray-50/50 dark:bg-zinc-900/40 rounded max-w-6xl">
                             <ProjectActivity projectId={projectId} />
                         </div>
                     )}
                     {activeTab === 'settings' && (
-                        <div className="dark:bg-zinc-900/40 rounded max-w-6xl">
+                        <div className="bg-gray-50/50 dark:bg-zinc-900/40 rounded max-w-6xl">
                             <ProjectSettings key={project.id} project={project} />
                         </div>
                     )}
                     {activeTab === 'kanban' && (
-                        <div className="dark:bg-zinc-900/40 rounded max-w-6xl">
+                        <div className="bg-gray-50/50 dark:bg-zinc-900/40 rounded max-w-6xl">
                             <KanbanBoard tasks={tasks} />
                         </div>
                     )}

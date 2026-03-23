@@ -250,7 +250,7 @@ const TaskDetails = () => {
     return (
         <div className="flex flex-col-reverse lg:flex-row gap-6 sm:p-4 text-gray-900 dark:text-zinc-100 max-w-6xl mx-auto">
             <div className="w-full lg:w-2/3">
-                <div className="p-5 rounded-md border border-gray-300 dark:border-zinc-800 flex flex-col lg:h-[80vh]">
+                <div className="p-5 rounded-md bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-800 flex flex-col lg:h-[80vh]">
                     <h2 className="text-base font-semibold flex items-center gap-2 mb-4 text-gray-900 dark:text-white">
                         <MessageCircle className="size-5" /> Task Discussion ({comments.length})
                     </h2>
