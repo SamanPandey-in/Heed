@@ -8,7 +8,7 @@ import { useInitializeAppData } from './hooks';
 import { AppShellSkeleton, AuthScreenSkeleton } from './components/ui';
 
 import {
-  Landing, Login, Signup, ForgotPassword, ResetPassword,
+  Landing, Login, Signup, ForgotPassword, ResetPassword, VerifyEmail,
   Dashboard, Projects, ProjectDetails,
   Teams, TeamDetails, TaskDetails, Settings, Profile
 } from './pages/index';
@@ -57,6 +57,7 @@ function AppRoutes() {
       <Route path="/auth" element={<PublicRoute><Login /></PublicRoute>} />
       <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
       <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
 
       <Route path="/*" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="dashboard" element={<Dashboard />} />
