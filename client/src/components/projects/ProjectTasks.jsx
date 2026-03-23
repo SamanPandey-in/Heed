@@ -196,20 +196,22 @@ const ProjectTasks = ({ tasks, projectId }) => {
     }, [filters, tasks]);
 
     const handleStatusChange = async (taskId, newStatus) => {
-        let loadingToast;
+        // Find the current task to get its original status for rollback
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) return;
+
+        // Optimistic update: dispatch immediately to Redux
+        dispatch(updateTaskAction({ ...task, status: newStatus }));
 
         try {
-            loadingToast = toast.loading('Updating status...');
+            // Fire API in background
             const { task: updatedTask } = await updateTask({ id: taskId, status: newStatus }).unwrap();
+            // Reconcile with server value
             dispatch(updateTaskAction(updatedTask));
-
-            toast.success('Task status updated successfully');
         } catch (error) {
-            toast.error(error?.data?.message || error?.response?.data?.message || error.message);
-        } finally {
-            if (loadingToast) {
-                toast.dismiss(loadingToast);
-            }
+            // Rollback on error
+            dispatch(updateTaskAction({ ...task, status: task.status }));
+            toast.error(error?.data?.message || error?.response?.data?.message || error.message || 'Failed to update status');
         }
     };
 
