@@ -1,16 +1,51 @@
-import { useState, useEffect } from 'react';
-import { Button, TextField, IconButton, List, ListItem, ListItemText, ListItemSecondaryAction, Divider, InputAdornment } from '@mui/material';
-import { Save, Plus, Trash2, Link as LinkIcon, FileText, ExternalLink, Pencil } from 'lucide-react';
-import { useUpdateProjectMutation } from '../../store/slices/apiSlice';
+import { useMemo, useState, useEffect } from 'react';
+import { Button, TextField, IconButton, Divider, MenuItem } from '@mui/material';
+import { Save, Plus, Trash2, Link as LinkIcon, FileText, ExternalLink, Pencil, Eye, PenSquare, AtSign } from 'lucide-react';
+import MDEditor from '@uiw/react-md-editor';
+import '@uiw/react-md-editor/markdown-editor.css';
+import '@uiw/react-markdown-preview/markdown.css';
+import { useGetTeamByIdQuery, useUpdateProjectMutation } from '../../store/slices/apiSlice';
 
 export default function ProjectNotes({ project }) {
     const [updateProject] = useUpdateProjectMutation();
+    const { data: teamData } = useGetTeamByIdQuery(project?.teamId, { skip: !project?.teamId });
     const [notes, setNotes] = useState(project?.notes || '');
     const [links, setLinks] = useState(project?.links || []);
+    const [notesMode, setNotesMode] = useState('write');
+    const [selectedMentionId, setSelectedMentionId] = useState('');
     const [newLink, setNewLink] = useState({ label: '', url: '' });
     const [editingLink, setEditingLink] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
+
+    const teamMembers = useMemo(() => {
+        const rawMembers = teamData?.team?.members || [];
+        const membersById = new Map();
+
+        rawMembers.forEach((member) => {
+            const memberUser = member?.user || member;
+            const memberId = memberUser?.id || member?.userId || null;
+            if (!memberId || membersById.has(memberId)) return;
+
+            membersById.set(memberId, {
+                id: memberId,
+                username: memberUser?.username || '',
+                displayName: memberUser?.fullName || memberUser?.username || memberUser?.email || memberId,
+            });
+        });
+
+        return Array.from(membersById.values());
+    }, [teamData]);
+
+    const membersByUsername = useMemo(() => {
+        const map = new Map();
+        teamMembers.forEach((member) => {
+            if (member.username) {
+                map.set(member.username.toLowerCase(), member);
+            }
+        });
+        return map;
+    }, [teamMembers]);
 
     useEffect(() => {
         setNotes(project?.notes || '');
@@ -33,8 +68,30 @@ export default function ProjectNotes({ project }) {
         }
     };
 
+    const normalizeMentionsToLinks = (rawMarkdown) => {
+        if (!rawMarkdown) return '';
+
+        return rawMarkdown.replace(/(^|[^\w])@([a-zA-Z0-9_.-]+)/g, (match, prefix, username) => {
+            const member = membersByUsername.get(username.toLowerCase());
+            if (!member) return match;
+            return `${prefix}[@${username}](/profile?userId=${member.id})`;
+        });
+    };
+
     const handleSaveNotes = () => {
-        persistChanges(notes, links);
+        const normalizedNotes = normalizeMentionsToLinks(notes);
+        setNotes(normalizedNotes);
+        persistChanges(normalizedNotes, links);
+    };
+
+    const insertMention = (memberId) => {
+        const member = teamMembers.find((m) => m.id === memberId);
+        if (!member) return;
+
+        const mentionUsername = member.username || member.displayName.replace(/\s+/g, '').toLowerCase();
+        const mentionMarkdown = `[@${mentionUsername}](/profile?userId=${member.id})`;
+        setNotes((prev) => `${prev}${prev && !prev.endsWith(' ') && !prev.endsWith('\n') ? ' ' : ''}${mentionMarkdown}`);
+        setSelectedMentionId('');
     };
 
     const sanitizeUrl = (url) => {
@@ -78,7 +135,11 @@ export default function ProjectNotes({ project }) {
     };
 
     const cardClasses = "rounded-lg border p-6 not-dark:bg-white dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 shadow-sm";
-    const labelClasses = "text-sm text-zinc-600 dark:text-zinc-400 font-medium mb-1.5 block";
+    const notesNavBtn = (active) => `px-3 py-1.5 text-sm rounded-md border transition ${
+        active
+            ? 'bg-zinc-200 text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100 border-zinc-300 dark:border-zinc-600'
+            : 'bg-transparent text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700'
+    }`;
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -88,34 +149,75 @@ export default function ProjectNotes({ project }) {
                         <FileText className="size-5 text-zinc-500" />
                         <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Project Notes</h2>
                     </div>
-                    <Button
-                        variant="contained"
-                        size="small"
-                        startIcon={<Save className="size-4" />}
-                        onClick={handleSaveNotes}
-                        disabled={isSaving}
-                        sx={{ borderRadius: '8px', textTransform: 'none' }}
-                    >
-                        {isSaving ? 'Saving...' : 'Save Notes'}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                            <button
+                                type="button"
+                                className={notesNavBtn(notesMode === 'write')}
+                                onClick={() => setNotesMode('write')}
+                            >
+                                <span className="inline-flex items-center gap-1"><PenSquare className="size-3.5" /> Write</span>
+                            </button>
+                            <button
+                                type="button"
+                                className={notesNavBtn(notesMode === 'preview')}
+                                onClick={() => setNotesMode('preview')}
+                            >
+                                <span className="inline-flex items-center gap-1"><Eye className="size-3.5" /> Preview</span>
+                            </button>
+                        </div>
+                        <Button
+                            variant="contained"
+                            size="small"
+                            startIcon={<Save className="size-4" />}
+                            onClick={handleSaveNotes}
+                            disabled={isSaving}
+                            sx={{ borderRadius: '8px', textTransform: 'none' }}
+                        >
+                            {isSaving ? 'Saving...' : 'Save Notes'}
+                        </Button>
+                    </div>
                 </div>
 
-                <TextField
-                    fullWidth
-                    multiline
-                    rows={15}
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Document project-wide information..."
-                    sx={{
-                        '& .MuiOutlinedInput-root': {
-                            backgroundColor: 'rgba(0,0,0,0.02)',
-                            borderRadius: '8px',
-                            '& fieldset': { borderColor: 'rgba(0,0,0,0.1)' },
-                        },
-                        '& .MuiInputBase-input': { fontSize: '0.925rem', lineHeight: 1.6 }
-                    }}
-                />
+                {notesMode === 'write' ? (
+                    <div data-color-mode="light" className="rounded-md overflow-hidden border border-zinc-200 dark:border-zinc-700" style={{ minHeight: 380 }}>
+                        <MDEditor
+                            value={notes}
+                            onChange={(value) => setNotes(value || '')}
+                            preview="edit"
+                            height={380}
+                            visibleDragbar={false}
+                            textareaProps={{ placeholder: 'Document project-wide information in Markdown...' }}
+                        />
+                    </div>
+                ) : (
+                    <div className="rounded-md border border-zinc-200 dark:border-zinc-700 p-4 min-h-95 bg-white dark:bg-zinc-900/70">
+                        <MDEditor.Markdown source={normalizeMentionsToLinks(notes)} style={{ background: 'transparent' }} />
+                    </div>
+                )}
+
+                <div className="mt-3 flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-zinc-500 inline-flex items-center gap-1"><AtSign className="size-3.5" /> Mention:</span>
+                    <TextField
+                        size="small"
+                        select
+                        value={selectedMentionId}
+                        onChange={(e) => insertMention(e.target.value)}
+                        placeholder="Insert @mention"
+                        sx={{ minWidth: 240 }}
+                    >
+                        <MenuItem value="" disabled>Select team member</MenuItem>
+                        {teamMembers.map((member) => (
+                            <MenuItem key={member.id} value={member.id}>
+                                @{member.username || member.displayName} ({member.displayName})
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                </div>
+
+                <p className="text-xs text-zinc-500 mt-2">
+                    Type <strong>@username</strong> and save, or use the mention selector to insert a profile link.
+                </p>
 
                 {error && <p className="text-red-500 text-xs mt-4 font-medium">{error}</p>}
             </div>
@@ -159,7 +261,7 @@ export default function ProjectNotes({ project }) {
 
                     <Divider className="my-8" />
 
-                    <div className="space-y-3 max-h-[500px] overflow-y-auto no-scrollbar pr-1">
+                    <div className="space-y-3 max-h-125 overflow-y-auto no-scrollbar pr-1">
                         {!links || links.length === 0 ? (
                             <div className="text-center py-8">
                                 <p className="text-zinc-500 text-xs italic">No project links yet.</p>
