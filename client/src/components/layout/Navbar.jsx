@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 
 import { useAuth } from '../../context/AuthContext';
 import ThemeToggle from '../theme/ThemeToggle';
+import NotificationBell from './NotificationBell';
 
 const Navbar = ({ onMenuClick }) => {
   const navigate = useNavigate();
@@ -78,6 +79,7 @@ const Navbar = ({ onMenuClick }) => {
 
         <div className="flex items-center gap-2 sm:gap-3 ml-2">
           <ThemeToggle />
+          <NotificationBell />
 
           <div className="relative" ref={profileMenuRef}>
             <IconButton

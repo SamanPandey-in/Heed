@@ -1,5 +1,6 @@
 import { prisma } from "../prisma/client.js";
 import { randomBytes } from 'crypto';
+import { createNotification } from "../utils/notify.js";
 
 export const getTeams = async (req, res, next) => {
   try {
@@ -277,6 +278,17 @@ export const addTeamMember = async (req, res, next) => {
       },
     });
 
+    if (targetUser.id !== userId) {
+      createNotification({
+        userId: targetUser.id,
+        type: "TEAM_MEMBER_ADDED",
+        title: "You were added to a team",
+        message: `You have been added to the team "${team.name}".`,
+        entityType: "team",
+        entityId: teamId,
+      });
+    }
+
     res.status(201).json({
       message: "Member added successfully",
       member: {
@@ -401,6 +413,15 @@ export const joinByInviteCode = async (req, res, next) => {
         teamId: team.id,
         userId,
       },
+    });
+
+    createNotification({
+      userId,
+      type: "TEAM_MEMBER_ADDED",
+      title: "You joined a team",
+      message: `You successfully joined the team "${team.name}".`,
+      entityType: "team",
+      entityId: team.id,
     });
 
     const newMember = await prisma.user.findUnique({

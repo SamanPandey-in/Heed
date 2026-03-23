@@ -1,4 +1,5 @@
 import { prisma } from "../prisma/client.js";
+import { createNotifications, extractMentions } from "../utils/notify.js";
 
 export const getComments = async (req, res, next) => {
   try {
@@ -119,6 +120,31 @@ export const createComment = async (req, res, next) => {
         },
       },
     });
+
+    const notifyIds = [task.createdBy, task.assigneeId].filter(Boolean);
+    createNotifications(notifyIds, userId, {
+      type: "COMMENT_ADDED",
+      title: "New comment on your task",
+      message: `${comment.user.fullName || comment.user.username} commented on "${task.title}": ${content.slice(0, 80)}${content.length > 80 ? "..." : ""}`,
+      entityType: "task",
+      entityId: taskId,
+    });
+
+    const mentionedUsernames = extractMentions(content);
+    if (mentionedUsernames.length) {
+      const mentionedUsers = await prisma.user.findMany({
+        where: { username: { in: mentionedUsernames } },
+        select: { id: true },
+      });
+      const mentionIds = mentionedUsers.map((user) => user.id);
+      createNotifications(mentionIds, userId, {
+        type: "MENTION",
+        title: "You were mentioned",
+        message: `${comment.user.fullName || comment.user.username} mentioned you in a comment on "${task.title}".`,
+        entityType: "task",
+        entityId: taskId,
+      });
+    }
 
     res.status(201).json({
       message: "Comment created successfully",

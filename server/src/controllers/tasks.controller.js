@@ -1,4 +1,5 @@
 import { prisma } from "../prisma/client.js";
+import { createNotification } from "../utils/notify.js";
 
 export const getTasks = async (req, res, next) => {
   try {
@@ -273,6 +274,17 @@ export const createTask = async (req, res, next) => {
       },
     });
 
+    if (task.assigneeId && task.assigneeId !== userId) {
+      createNotification({
+        userId: task.assigneeId,
+        type: "TASK_ASSIGNED",
+        title: "You were assigned a task",
+        message: `${task.creator.fullName || task.creator.username} assigned "${task.title}" to you.`,
+        entityType: "task",
+        entityId: task.id,
+      });
+    }
+
     res.status(201).json({
       message: "Task created successfully",
       task,
@@ -371,6 +383,33 @@ export const updateTask = async (req, res, next) => {
         },
       },
     });
+
+    const assigneeChanged =
+      Object.prototype.hasOwnProperty.call(req.body, "assigneeId") &&
+      updated.assigneeId &&
+      updated.assigneeId !== task.assigneeId;
+
+    if (assigneeChanged && updated.assigneeId !== userId) {
+      createNotification({
+        userId: updated.assigneeId,
+        type: "TASK_ASSIGNED",
+        title: "You were assigned a task",
+        message: `${userId === task.createdBy ? "The creator" : "A team member"} assigned "${updated.title}" to you.`,
+        entityType: "task",
+        entityId: updated.id,
+      });
+    }
+
+    if (status && status !== task.status && task.createdBy !== userId) {
+      createNotification({
+        userId: task.createdBy,
+        type: "TASK_UPDATED",
+        title: "Task status updated",
+        message: `"${updated.title}" was moved to ${status.replace("_", " ")}.`,
+        entityType: "task",
+        entityId: updated.id,
+      });
+    }
 
     res.json({
       message: "Task updated successfully",

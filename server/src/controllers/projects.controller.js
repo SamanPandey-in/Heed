@@ -1,4 +1,5 @@
 import { prisma } from "../prisma/client.js";
+import { createNotification, createNotifications } from "../utils/notify.js";
 
 export const getProjects = async (req, res, next) => {
   try {
@@ -156,6 +157,20 @@ export const createProject = async (req, res, next) => {
           },
         },
       },
+    });
+
+    const teamWithMembers = await prisma.team.findUnique({
+      where: { id: teamId },
+      include: { members: { select: { userId: true } } },
+    });
+    const teamMemberIds = (teamWithMembers?.members || []).map((member) => member.userId);
+
+    createNotifications(teamMemberIds, userId, {
+      type: "PROJECT_UPDATED",
+      title: "New project in your team",
+      message: `A new project "${project.name}" was created in your team.`,
+      entityType: "project",
+      entityId: project.id,
     });
 
     res.status(201).json({
@@ -321,6 +336,17 @@ export const addProjectMember = async (req, res, next) => {
         userId: targetUser.id,
       },
     });
+
+    if (targetUser.id !== userId) {
+      createNotification({
+        userId: targetUser.id,
+        type: "PROJECT_MEMBER_ADDED",
+        title: "You were added to a project",
+        message: `You have been added to the project "${project.name}".`,
+        entityType: "project",
+        entityId: projectId,
+      });
+    }
 
     res.status(201).json({
       message: "Member added successfully",

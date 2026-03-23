@@ -16,7 +16,7 @@ export const apiSlice = createApi({
       return headers;
     },
   }),
-  tagTypes: ['Team', 'Project', 'Task', 'User', 'Comment'],
+  tagTypes: ['Team', 'Project', 'Task', 'User', 'Comment', 'Notification'],
   endpoints: (builder) => ({
     getTeams: builder.query({
       query: () => '/teams',
@@ -294,6 +294,36 @@ export const apiSlice = createApi({
         { type: 'Comment', id: `task-${taskId}` },
       ],
     }),
+
+    getNotifications: builder.query({
+      query: () => '/notifications',
+      providesTags: ['Notification'],
+      transformResponse: (response) => response,
+    }),
+
+    markNotificationRead: builder.mutation({
+      query: (id) => ({
+        url: `/notifications/${id}/read`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: ['Notification'],
+    }),
+
+    markAllNotificationsRead: builder.mutation({
+      query: () => ({
+        url: '/notifications/read-all',
+        method: 'PATCH',
+      }),
+      invalidatesTags: ['Notification'],
+    }),
+
+    clearAllNotifications: builder.mutation({
+      query: () => ({
+        url: '/notifications',
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Notification'],
+    }),
   }),
 });
 
@@ -333,4 +363,10 @@ export const {
   useGetCommentsQuery,
   useCreateCommentMutation,
   useDeleteCommentMutation,
+
+  // Notifications
+  useGetNotificationsQuery,
+  useMarkNotificationReadMutation,
+  useMarkAllNotificationsReadMutation,
+  useClearAllNotificationsMutation,
 } = apiSlice;
