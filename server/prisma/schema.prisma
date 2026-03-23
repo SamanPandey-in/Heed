@@ -80,6 +80,8 @@ model User {
   refreshToken    String?   @map("refresh_token")
   resetToken      String?   @map("reset_token")
   resetTokenExp   DateTime? @map("reset_token_exp") @db.Timestamptz
+  verificationToken    String?   @map("verification_token")
+  verificationTokenExp DateTime? @map("verification_token_exp") @db.Timestamptz
   lastLoginAt     DateTime? @map("last_login_at") @db.Timestamptz
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz

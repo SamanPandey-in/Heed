@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button, IconButton, InputAdornment, TextField } from '@mui/material';
 import { Mail, Lock, User, Loader2, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -8,11 +8,12 @@ import { useAuth } from '../../context/AuthContext';
 import { Logo } from '../../components';
 
 export default function Signup() {
-  const navigate = useNavigate();
   const { signup } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -39,14 +40,56 @@ export default function Signup() {
     setLoading(true);
     try {
       const result = await signup(formData);
-      if (result.success) navigate("/dashboard");
-      else setError(result.error || "Signup failed");
+      if (result.success) {
+        setRegisteredEmail(result.email || formData.email);
+        setVerificationSent(true);
+      } else {
+        setError(result.error || "Signup failed");
+      }
     } catch {
       setError("Something went wrong");
     } finally {
       setLoading(false);
     }
   };
+
+  if (verificationSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#000000] px-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative w-full max-w-[420px] rounded-3xl overflow-hidden
+                     bg-zinc-950/50 border border-white/10 backdrop-blur-3xl
+                     shadow-2xl p-8 sm:p-10 text-center"
+        >
+          <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/30
+                          flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+
+          <h2 className="text-2xl font-bold text-white mb-2">Check your email</h2>
+          <p className="text-zinc-400 text-sm mb-6">
+            We sent a verification link to{" "}
+            <span className="text-white font-medium">{registeredEmail}</span>.
+            Click the link to activate your account.
+          </p>
+          <p className="text-zinc-600 text-xs mb-6">
+            The link expires in 24 hours. Check your spam folder if you do not see it.
+          </p>
+
+          <Link to="/login"
+            className="block w-full py-3 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700
+                       text-white text-sm font-medium transition-colors text-center"
+          >
+            Go to Login
+          </Link>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#000000] px-4 font-sans selection:bg-white/10">

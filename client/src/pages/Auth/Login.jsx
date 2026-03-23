@@ -9,12 +9,15 @@ import { Logo } from '../../components';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, forgotPassword } = useAuth();
+  const { login, forgotPassword, resendVerification } = useAuth();
 
   const [mode, setMode] = useState('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [unverifiedEmail, setUnverifiedEmail] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -28,12 +31,19 @@ export default function Login() {
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setUnverifiedEmail("");
+    setResendSuccess(false);
     setLoading(true);
 
     try {
       const result = await login(formData.email, formData.password);
-      if (result.success) navigate("/dashboard");
-      else setError(result.error || "Invalid credentials");
+      if (result.success) {
+        navigate("/dashboard");
+      } else if (result.code === "EMAIL_NOT_VERIFIED") {
+        setUnverifiedEmail(result.email || formData.email);
+      } else {
+        setError(result.error || "Invalid credentials");
+      }
     } catch {
       setError("Something went wrong");
     } finally {
@@ -56,6 +66,14 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleResendVerification = async () => {
+    if (!unverifiedEmail) return;
+    setResendLoading(true);
+    const result = await resendVerification(unverifiedEmail);
+    setResendLoading(false);
+    if (result.success) setResendSuccess(true);
   };
 
   return (
@@ -99,6 +117,39 @@ export default function Login() {
                 className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400"
               >
                 {error}
+              </motion.div>
+            )}
+
+            {unverifiedEmail && !resendSuccess && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm"
+              >
+                <p className="text-amber-300 font-medium mb-1">Email not verified</p>
+                <p className="text-amber-400/80 text-xs mb-3">
+                  Check your inbox for <span className="font-medium text-amber-300">{unverifiedEmail}</span>.
+                  The link expires after 24 hours.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={resendLoading}
+                  className="text-xs font-semibold text-white bg-amber-600 hover:bg-amber-500
+                             px-3 py-1.5 rounded-md transition-colors disabled:opacity-50"
+                >
+                  {resendLoading ? "Sending..." : "Resend verification email"}
+                </button>
+              </motion.div>
+            )}
+
+            {resendSuccess && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400"
+              >
+                Verification email resent! Check your inbox.
               </motion.div>
             )}
 

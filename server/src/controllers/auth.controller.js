@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { prisma } from "../prisma/client.js";
-import { sendPasswordResetEmail } from "../utils/emailService.js";
+import { sendPasswordResetEmail, sendVerificationEmail } from "../utils/emailService.js";
 
 const SALT_ROUNDS = 12;
 const ACCESS_TOKEN_TTL = "15m";
@@ -79,27 +79,39 @@ export const register = async (req, res, next) => {
     }
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+    const tokenExp = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
     const user = await prisma.user.create({
       data: {
         fullName,
         username: username.toLowerCase(),
         email: email.toLowerCase(),
         passwordHash,
+        isEmailVerified: false,
+        verificationToken: hashedToken,
+        verificationTokenExp: tokenExp,
       },
     });
 
-    const accessToken = signAccess(user.id);
-    const refreshToken = signRefresh(user.id);
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        refreshToken: await bcrypt.hash(refreshToken, 10),
-        lastLoginAt: new Date(),
-      },
-    });
+    const clientOrigin = process.env.CORS_ORIGIN || "http://localhost:5173";
+    const emailResult = await sendVerificationEmail(
+      user.email,
+      user.fullName,
+      rawToken,
+      clientOrigin,
+    );
 
-    setRefreshCookie(res, refreshToken);
-    res.status(201).json({ user: safeUser(user), accessToken });
+    if (!emailResult.success) {
+      console.warn("[Auth] Verification email failed for", user.email, "— token stored, user can resend.");
+    }
+
+    return res.status(201).json({
+      message: "Account created. Please check your email to verify your account.",
+      email: user.email,
+    });
   } catch (err) {
     next(err);
   }
@@ -120,6 +132,14 @@ export const login = async (req, res, next) => {
 
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) return res.status(401).json({ message: "Invalid credentials" });
+
+    if (!user.isEmailVerified) {
+      return res.status(403).json({
+        message: "Please verify your email before logging in.",
+        code: "EMAIL_NOT_VERIFIED",
+        email: user.email,
+      });
+    }
 
     const accessToken = signAccess(user.id);
     const refreshToken = signRefresh(user.id);
@@ -355,5 +375,76 @@ export const changePassword = async (req, res, next) => {
     });
   } catch (err) {
     return next(err);
+  }
+};
+
+export const verifyEmail = async (req, res, next) => {
+  try {
+    const { token } = req.query;
+    if (!token) return res.status(400).json({ message: "Verification token is required" });
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await prisma.user.findFirst({
+      where: {
+        verificationToken: hashedToken,
+        verificationTokenExp: { gt: new Date() },
+      },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        message: "Verification link is invalid or has expired. Please request a new one.",
+        code: "INVALID_TOKEN",
+      });
+    }
+
+    if (user.isEmailVerified) {
+      return res.json({ message: "Email already verified. You can log in.", code: "ALREADY_VERIFIED" });
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        isEmailVerified: true,
+        verificationToken: null,
+        verificationTokenExp: null,
+      },
+    });
+
+    return res.json({ message: "Email verified successfully. You can now log in.", code: "VERIFIED" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const resendVerificationEmail = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
+
+    if (!user || user.isEmailVerified) {
+      return res.json({ message: "If that email exists and is unverified, a new link has been sent." });
+    }
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+    const tokenExp = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { verificationToken: hashedToken, verificationTokenExp: tokenExp },
+    });
+
+    const clientOrigin = process.env.CORS_ORIGIN || "http://localhost:5173";
+    await sendVerificationEmail(user.email, user.fullName, rawToken, clientOrigin);
+
+    return res.json({ message: "If that email exists and is unverified, a new link has been sent." });
+  } catch (err) {
+    next(err);
   }
 };

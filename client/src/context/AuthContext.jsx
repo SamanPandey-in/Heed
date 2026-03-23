@@ -48,17 +48,20 @@ export const AuthProvider = ({ children }) => {
       api.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
       return { success: true, user: data.user };
     } catch (err) {
-      return { success: false, error: err.response?.data?.message || 'Login failed' };
+      const data = err.response?.data || {};
+      return {
+        success: false,
+        error: data.message || 'Login failed',
+        code: data.code || null,
+        email: data.email || null,
+      };
     }
   };
 
   const signup = async ({ fullName, username, email, password }) => {
     try {
       const { data } = await api.post('/auth/register', { fullName, username, email, password });
-      setUser(data.user);
-      localStorage.setItem('accessToken', data.accessToken);
-      api.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
-      return { success: true, user: data.user };
+      return { success: true, email: data.email, message: data.message };
     } catch (err) {
       return { success: false, error: err.response?.data?.message || 'Signup failed' };
     }
@@ -96,6 +99,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const verifyEmail = async (token) => {
+    try {
+      const { data } = await api.get(`/auth/verify-email?token=${token}`);
+      return { success: true, code: data.code, message: data.message };
+    } catch (err) {
+      return {
+        success: false,
+        code: err.response?.data?.code || 'ERROR',
+        error: err.response?.data?.message || 'Verification failed',
+      };
+    }
+  };
+
+  const resendVerification = async (email) => {
+    try {
+      await api.post('/auth/resend-verification', { email });
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.response?.data?.message || 'Failed to resend' };
+    }
+  };
+
   const refreshAccessToken = useCallback(async () => {
     try {
       const { data } = await api.post('/auth/refresh');
@@ -117,6 +142,8 @@ export const AuthProvider = ({ children }) => {
       logout,
       forgotPassword,
       resetPassword,
+      verifyEmail,
+      resendVerification,
       refreshAccessToken,
     }}>
       {children}
