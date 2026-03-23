@@ -110,32 +110,20 @@ export const AppShellSkeleton = () => (
 );
 
 export const TeamsPageSkeleton = () => (
-  <div className="space-y-6 max-w-6xl mx-auto">
-    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-      <div className="space-y-2">
-        <PremiumSkeleton variant="rounded" width={140} height={22} />
-        <PremiumSkeleton variant="rounded" width={240} height={12} />
-      </div>
-      <PremiumSkeleton variant="rounded" width={138} height={36} />
+  <div className="max-w-6xl mx-auto space-y-6 py-6">
+    <div className="space-y-2">
+      <PremiumSkeleton variant="text" width="30%" height={40} />
+      <PremiumSkeleton variant="text" width="50%" height={20} />
     </div>
 
     <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-4 space-y-3">
-      <PremiumSkeleton variant="rounded" width={140} height={12} />
-      <PremiumSkeleton variant="rounded" width="100%" height={40} />
+      <PremiumSkeleton variant="text" width="20%" height={16} />
+      <PremiumSkeleton variant="rectangular" width="100%" height={40} sx={{ borderRadius: 1 }} />
     </div>
 
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {Array.from({ length: 6 }).map((_, index) => (
-        <div key={index} className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 space-y-3">
-          <PremiumSkeleton variant="rounded" width="60%" height={16} />
-          <PremiumSkeleton variant="rounded" width="90%" height={10} />
-          <PremiumSkeleton variant="rounded" width="85%" height={10} />
-          <div className="space-y-2 pt-2">
-            <PremiumSkeleton variant="rounded" width="50%" height={10} />
-            <PremiumSkeleton variant="rounded" width="55%" height={10} />
-            <PremiumSkeleton variant="rounded" width="65%" height={10} />
-          </div>
-        </div>
+        <PremiumSkeleton key={index} variant="rectangular" width="100%" height={300} sx={{ borderRadius: 2 }} />
       ))}
     </div>
   </div>

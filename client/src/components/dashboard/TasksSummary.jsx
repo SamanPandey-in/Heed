@@ -1,9 +1,11 @@
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@mui/material';
 import { ArrowRight, Clock, AlertTriangle, User } from 'lucide-react';
 import { selectTaskSummaryCards } from '../../store';
 
 export default function TasksSummary() {
+    const navigate = useNavigate();
     const { myTasks, overdueTasks, inProgressTasks } = useSelector(selectTaskSummaryCards);
 
     const summaryCards = [
@@ -71,12 +73,10 @@ export default function TasksSummary() {
                                         variant="text"
                                         color="inherit"
                                         className="mt-2"
-                                        onClick={() => {
-                                            const el = document.getElementById('my-tasks');
-                                            if (el) el.scrollIntoView({ behavior: 'smooth' });
-                                        }}
+                                        onClick={() => navigate("/dashboard#my-tasks")}
+                                        endIcon={<ArrowRight className="w-3 h-3" />}
                                     >
-                                        View {card.count - 3} more <ArrowRight className="w-3 h-3 ml-2" />
+                                        View {card.count - 3} more
                                     </Button>
                                 )}
                             </div>
