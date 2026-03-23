@@ -13,6 +13,7 @@ import {
     ZapIcon,
 } from 'lucide-react';
 
+import { KanbanBoard } from '../components';
 import { CreateTaskDialog, ProjectAnalytics, ProjectCalendar, ProjectNotes, ProjectSettings, ProjectTasks } from '../components';
 import { selectProjectById, selectTasksByProjectId, selectTeamById } from '../store';
 
@@ -125,6 +126,7 @@ export default function ProjectDetail() {
                         { key: 'calendar', label: 'Calendar', short: 'Cal', icon: CalendarIcon },
                         { key: 'analytics', label: 'Analytics', short: 'Stats', icon: BarChart3Icon },
                         { key: 'settings', label: 'Settings', short: 'Cfg', icon: SettingsIcon },
+                        { key: 'kanban', label: 'Kanban', short: 'Kanban', icon: KanbanIcon },
                     ].map((tabItem) => (
                         <Button
                             key={tabItem.key}
@@ -166,6 +168,11 @@ export default function ProjectDetail() {
                     {activeTab === 'settings' && (
                         <div className="dark:bg-zinc-900/40 rounded max-w-6xl">
                             <ProjectSettings key={project.id} project={project} />
+                        </div>
+                    )}
+                    {activeTab === 'kanban' && (
+                        <div className="dark:bg-zinc-900/40 rounded max-w-6xl">
+                            <KanbanBoard tasks={tasks} onTasksChange={setTasks} />
                         </div>
                     )}
                 </div>

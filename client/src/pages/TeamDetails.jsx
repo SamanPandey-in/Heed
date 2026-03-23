@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Button, Chip, Skeleton, Tooltip } from '@mui/material';
 import { ArrowLeft, Check, Copy, FolderOpen, Share2, ShieldAlert, UserPlus, UsersIcon } from 'lucide-react';
 
-import { InviteMemberDialog } from '../components';
+import { InviteMemberDialog, ConfirmDialog } from '../components';
 import { useRemoveTeamMemberMutation } from '../store/slices/apiSlice';
 
 import {
@@ -40,15 +40,14 @@ const TeamDetails = () => {
     const [statusFilter, setStatusFilter] = useState('all');
     const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
     const [isLeaving, setIsLeaving] = useState(false);
+    const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
     const [leaveError, setLeaveError] = useState('');
     const [codeCopied, setCodeCopied] = useState(false);
 
-    const handleLeaveTeam = async () => {
+    const handleLeaveTeamConfirm = async () => {
         if (!teamId || !currentUserId) return;
 
-        const shouldLeave = window.confirm('Leave this team?');
-        if (!shouldLeave) return;
-
+        setLeaveConfirmOpen(false);
         setIsLeaving(true);
         setLeaveError('');
 
@@ -60,6 +59,10 @@ const TeamDetails = () => {
         } finally {
             setIsLeaving(false);
         }
+    };
+
+    const handleLeaveTeam = () => {
+        setLeaveConfirmOpen(true);
     };
 
     const handleCopyInviteCode = async () => {
@@ -278,6 +281,14 @@ const TeamDetails = () => {
                 isDialogOpen={isInviteDialogOpen}
                 setIsDialogOpen={setIsInviteDialogOpen}
                 teamId={teamId}
+            />
+
+            <ConfirmDialog
+                open={leaveConfirmOpen}
+                title="Leave Team?"
+                message="You will be removed from this team and may not be able to re-join without an invite."
+                onConfirm={handleLeaveTeamConfirm}
+                onCancel={() => setLeaveConfirmOpen(false)}
             />
         </div>
     );

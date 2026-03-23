@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { Plus, Save, Trash2 } from 'lucide-react';
 import { useDeleteProjectMutation, useRemoveProjectMemberMutation, useUpdateProjectMutation } from '../../store/slices/apiSlice';
 import { selectCurrentUserId } from '../../store';
+import { ConfirmDialog } from '../ui';
 import AddProjectMember from './AddProjectMember';
 
 const toDateInputValue = (value) => {
@@ -54,6 +55,8 @@ export default function ProjectSettings({ project }) {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [error, setError] = useState("");
 
     const handleSubmit = async (e) => {
@@ -76,12 +79,10 @@ export default function ProjectSettings({ project }) {
         }
     };
 
-    const handleLeaveProject = async () => {
+    const handleLeaveProjectConfirm = async () => {
         if (!formData.id || !currentUserId) return;
 
-        const shouldLeave = window.confirm("Leave this project?");
-        if (!shouldLeave) return;
-
+        setLeaveConfirmOpen(false);
         setIsSubmitting(true);
         setError('');
 
@@ -95,12 +96,14 @@ export default function ProjectSettings({ project }) {
         }
     };
 
-    const handleDeleteProject = async () => {
+    const handleLeaveProject = () => {
+        setLeaveConfirmOpen(true);
+    };
+
+    const handleDeleteProjectConfirm = async () => {
         if (!formData.id) return;
 
-        const shouldDelete = window.confirm("Delete this project? This action cannot be undone.");
-        if (!shouldDelete) return;
-
+        setDeleteConfirmOpen(false);
         setIsDeleting(true);
         setError("");
 
@@ -112,6 +115,10 @@ export default function ProjectSettings({ project }) {
         } finally {
             setIsDeleting(false);
         }
+    };
+
+    const handleDeleteProject = () => {
+        setDeleteConfirmOpen(true);
     };
 
     const cardClasses = "rounded-lg border p-6 not-dark:bg-white dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border-zinc-300 dark:border-zinc-800";
@@ -276,6 +283,23 @@ export default function ProjectSettings({ project }) {
                     )}
                 </div>
             </div>
+
+            <ConfirmDialog
+                open={leaveConfirmOpen}
+                title="Leave Project?"
+                message="You will be removed from this project and may not be able to re-join without an invite."
+                onConfirm={handleLeaveProjectConfirm}
+                onCancel={() => setLeaveConfirmOpen(false)}
+            />
+
+            <ConfirmDialog
+                open={deleteConfirmOpen}
+                title="Delete Project?"
+                message="This project will be permanently deleted along with all its tasks and data. This action cannot be undone."
+                onConfirm={handleDeleteProjectConfirm}
+                onCancel={() => setDeleteConfirmOpen(false)}
+                danger={true}
+            />
         </div>
     );
 }

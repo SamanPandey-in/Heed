@@ -25,6 +25,7 @@ import {
     Typography,
 } from '@mui/material';
 import { MediumAvatar } from '../ui/ReusableStyled';
+import { ConfirmDialog } from '../ui';
 import { styled } from '@mui/material/styles';
 const MinWidthFormControl = styled(FormControl)({
     minWidth: 170,
@@ -155,6 +156,7 @@ const ProjectTasks = ({ tasks, projectId }) => {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isEditSubmitting, setIsEditSubmitting] = useState(false);
     const [editError, setEditError] = useState('');
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [editFormData, setEditFormData] = useState({
         id: '',
         title: '',
@@ -266,13 +268,11 @@ const ProjectTasks = ({ tasks, projectId }) => {
         }
     };
 
-    const handleDelete = async () => {
+    const handleDeleteConfirm = async () => {
         let loadingToast;
 
         try {
-            const confirm = window.confirm('Are you sure you want to delete the selected tasks?');
-            if (!confirm) return;
-
+            setDeleteConfirmOpen(false);
             loadingToast = toast.loading('Deleting tasks...');
             await Promise.all(selectedTasks.map((taskId) => deleteTask(taskId).unwrap()));
 
@@ -287,6 +287,10 @@ const ProjectTasks = ({ tasks, projectId }) => {
                 toast.dismiss(loadingToast);
             }
         }
+    };
+
+    const handleDelete = () => {
+        setDeleteConfirmOpen(true);
     };
 
     const toggleSelection = (taskId) => {
@@ -654,6 +658,15 @@ const ProjectTasks = ({ tasks, projectId }) => {
                     </Box>
                 </DialogContent>
             </Dialog>
+
+            <ConfirmDialog
+                open={deleteConfirmOpen}
+                title="Delete Tasks?"
+                message="Are you sure you want to delete the selected tasks? This action cannot be undone."
+                onConfirm={handleDeleteConfirm}
+                onCancel={() => setDeleteConfirmOpen(false)}
+                danger={true}
+            />
         </Box>
     );
 };

@@ -285,6 +285,17 @@ export const createTask = async (req, res, next) => {
       });
     }
 
+    // Calculate and persist project progress
+    const allTasks = await prisma.task.count({ where: { projectId: task.projectId } });
+    const doneTasks = await prisma.task.count({
+      where: { projectId: task.projectId, status: "DONE" }
+    });
+    const progress = allTasks > 0 ? Math.round((doneTasks / allTasks) * 100) : 0;
+    await prisma.project.update({
+      where: { id: task.projectId },
+      data: { progress },
+    });
+
     res.status(201).json({
       message: "Task created successfully",
       task,
@@ -411,6 +422,17 @@ export const updateTask = async (req, res, next) => {
       });
     }
 
+    // Calculate and persist project progress
+    const allTasks = await prisma.task.count({ where: { projectId: task.projectId } });
+    const doneTasks = await prisma.task.count({
+      where: { projectId: task.projectId, status: "DONE" }
+    });
+    const progress = allTasks > 0 ? Math.round((doneTasks / allTasks) * 100) : 0;
+    await prisma.project.update({
+      where: { id: task.projectId },
+      data: { progress },
+    });
+
     res.json({
       message: "Task updated successfully",
       task: updated,
@@ -437,8 +459,21 @@ export const deleteTask = async (req, res, next) => {
       return res.status(403).json({ message: "Only task creator can delete task" });
     }
 
+    const projectId = task.projectId;
+
     await prisma.task.delete({
       where: { id: taskId },
+    });
+
+    // Calculate and persist project progress after deletion
+    const allTasks = await prisma.task.count({ where: { projectId } });
+    const doneTasks = await prisma.task.count({
+      where: { projectId, status: "DONE" }
+    });
+    const progress = allTasks > 0 ? Math.round((doneTasks / allTasks) * 100) : 0;
+    await prisma.project.update({
+      where: { id: projectId },
+      data: { progress },
     });
 
     res.json({ message: "Task deleted successfully" });

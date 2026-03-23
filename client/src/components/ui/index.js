@@ -1,6 +1,7 @@
 import { Input } from "./Input";
 import { Button } from "./Button";
 import { Select } from "./Select";
+import { ConfirmDialog } from "./ConfirmDialog";
 import {
 	PremiumSkeleton,
 	AuthScreenSkeleton,
@@ -15,6 +16,7 @@ export {
 	Input,
 	Button,
 	Select,
+	ConfirmDialog,
 	PremiumSkeleton,
 	AuthScreenSkeleton,
 	AppShellSkeleton,
