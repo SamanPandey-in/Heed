@@ -1034,7 +1034,7 @@
 /* Prevent horizontal overflow on mobile */
 html, body, #root {
   overflow-x: hidden;
-  overscroll-behavior: none;
+  overscroll-behavior-x: none;
 }
 
 /* Better tap target sizes on mobile */
@@ -1050,4 +1050,4 @@ html { scroll-behavior: smooth; }
 /* Fix MUI TextField full-width on mobile */
 @media (max-width: 639px) {
   .MuiTextField-root { width: 100% !important; max-width: 100%; }
-}
+}

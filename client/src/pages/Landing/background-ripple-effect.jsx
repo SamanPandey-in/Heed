@@ -15,7 +15,7 @@ export const BackgroundRippleEffect = ({
         <div
             ref={ref}
             className={cn(
-                "absolute inset-0 h-full w-full",
+                "absolute inset-0 h-full w-full pointer-events-none",
                 "[--cell-border-color:rgba(255,255,255,0.1)] [--cell-fill-color:transparent] [--cell-shadow-color:rgba(255,255,255,0.05)]",
                 "dark:[--cell-border-color:rgba(255,255,255,0.05)] dark:[--cell-fill-color:transparent] dark:[--cell-shadow-color:rgba(255,255,255,0.02)]",
             )}
@@ -35,7 +35,7 @@ export const BackgroundRippleEffect = ({
                         setClickedCell({ row, col });
                         setRippleKey((k) => k + 1);
                     }}
-                    interactive
+                    interactive={false}
                 />
             </div>
         </div>

@@ -4,7 +4,7 @@ import { BackgroundRippleEffect } from "./background-ripple-effect";
 
 export default function BackgroundRippleEffectDemo() {
     return (
-        <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-auto">
+        <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
             <BackgroundRippleEffect rows={20} cols={40} cellSize={60} />
         </div>
     );
