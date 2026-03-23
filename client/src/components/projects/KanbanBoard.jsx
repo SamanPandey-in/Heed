@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
   DndContext,
-  DragEndEvent,
   PointerSensor,
   useSensor,
   useSensors,

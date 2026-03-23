@@ -1,4 +1,3 @@
-import { useQuery } from '@reduxjs/toolkit/query/react';
 import { useGetProjectActivityQuery } from '../store/slices/apiSlice';
 
 export function useProjectActivity(projectId) {

@@ -180,7 +180,7 @@ export default function ProjectDetail() {
                     )}
                     {activeTab === 'kanban' && (
                         <div className="dark:bg-zinc-900/40 rounded max-w-6xl">
-                            <KanbanBoard tasks={tasks} onTasksChange={setTasks} />
+                            <KanbanBoard tasks={tasks} />
                         </div>
                     )}
                 </div>

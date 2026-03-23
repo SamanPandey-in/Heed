@@ -1,7 +1,7 @@
 import { Box, AvatarGroup, Avatar, Tooltip, Typography } from '@mui/material';
 import { useProjectPresence } from '../../hooks/useProjectPresence';
 
-export function PresenceIndicator({ projectId }) {
+export default function PresenceIndicator({ projectId }) {
   const { count, users } = useProjectPresence(projectId);
 
   if (count === 0) {

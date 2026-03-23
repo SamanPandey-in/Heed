@@ -38,3 +38,4 @@ export { default as ThemeProvider } from './theme/ThemeProvider';
 export { default as ThemeToggle } from './theme/ThemeToggle';
 
 export { ConfirmDialog } from './ui/ConfirmDialog';
+export { default as PresenceIndicator } from './ui/PresenceIndicator';
