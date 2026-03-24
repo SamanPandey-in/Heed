@@ -137,7 +137,7 @@ export const Lid = ({
                     className="absolute inset-0 flex items-center justify-center rounded-lg bg-[#010101]"
                 >
                     <span className="text-white">
-                        <AceternityLogo />
+                        <HeedLogo />
                     </span>
                 </div>
             </div>
@@ -616,7 +616,7 @@ export const OptionKey = ({ className }) => {
     );
 };
 
-const AceternityLogo = () => {
+const HeedLogo = () => {
     return (
         <svg
             width="66"

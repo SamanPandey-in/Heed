@@ -70,8 +70,11 @@ const Landing = () => {
           <h1 className="hero-gradient-text text-5xl md:text-8xl font-black tracking-tighter mb-8 leading-[1.1]">
             Stop Reacting.<br />Start Heeding.
           </h1>
-          <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed font-display">
-            The central nervous system for your team. HEED orchestrates tasks, communication, and resources so you catch issues before they become problems.
+          <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-3 leading-relaxed font-display">
+            The central nervous system for your team. HEED orchestrates tasks, communication among projects so you can work at your best.
+          </p>
+          <p className="text-lg md:text-xl text-slate-100 max-w-2xl mx-auto mb-10 leading-relaxed font-display font-bold">
+            Smooth Team, Project and Task Management.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link to="/signup" className="w-full sm:w-auto">
@@ -84,7 +87,7 @@ const Landing = () => {
             </button>
           </div>
         </div>
-        <div className="relative pt-20 -mt-20 overflow-hidden">
+        <div className="relative pt-5 -mt-65 overflow-hidden">
           <MacbookScrollDemo />
         </div>
       </main>
