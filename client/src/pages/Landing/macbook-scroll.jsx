@@ -31,9 +31,14 @@ export const MacbookScroll = ({
     badge,
 }) => {
     const ref = useRef(null);
+    const trackpadRef = useRef(null);
     const { scrollYProgress } = useScroll({
         target: ref,
         offset: ["start start", "end start"],
+    });
+    const { scrollYProgress: lidScrollProgress } = useScroll({
+        target: trackpadRef,
+        offset: ["end end", "end start"],
     });
 
     const [isMobile, setIsMobile] = useState(false);
@@ -45,17 +50,17 @@ export const MacbookScroll = ({
     }, []);
 
     const scaleX = useTransform(
-        scrollYProgress,
+        lidScrollProgress,
         [0, 0.3],
         [1.2, isMobile ? 1 : 1.5],
     );
     const scaleY = useTransform(
-        scrollYProgress,
+        lidScrollProgress,
         [0, 0.3],
         [0.6, isMobile ? 1 : 1.5],
     );
-    const translate = useTransform(scrollYProgress, [0, 1], [0, 1500]);
-    const rotate = useTransform(scrollYProgress, [0.1, 0.12, 0.3], [-28, -28, 0]);
+    const translate = useTransform(lidScrollProgress, [0, 1], [0, 1500]);
+    const rotate = useTransform(lidScrollProgress, [0.1, 0.12, 0.3], [-28, -28, 0]);
     const textTransform = useTransform(scrollYProgress, [0, 0.3], [0, 100]);
     const textOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
 
@@ -102,7 +107,7 @@ export const MacbookScroll = ({
                         <SpeakerGrid />
                     </div>
                 </div>
-                <Trackpad />
+                <Trackpad trackpadRef={trackpadRef} />
                 <div className="absolute inset-x-0 bottom-0 mx-auto h-2 w-20 rounded-tl-3xl rounded-tr-3xl bg-gradient-to-t from-[#272729] to-[#050505]" />
                 {showGradient && (
                     <div className="absolute inset-x-0 bottom-0 z-50 h-40 w-full bg-gradient-to-t from-white via-white to-transparent dark:from-black dark:via-black"></div>
@@ -163,9 +168,10 @@ export const Lid = ({
     );
 };
 
-export const Trackpad = () => {
+export const Trackpad = ({ trackpadRef }) => {
     return (
         <div
+            ref={trackpadRef}
             className="mx-auto my-1 h-32 w-[40%] rounded-xl"
             style={{
                 boxShadow: "0px 0px 1px 1px #00000020 inset",
