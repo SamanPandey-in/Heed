@@ -95,6 +95,7 @@ model User {
   createdTasks       Task[]          @relation("TaskCreator")
   assignedTasks      Task[]          @relation("TaskAssignee")
   comments           Comment[]
+  projectNoteMessages ProjectNoteMessage[]
   activityLogs       ActivityLog[]
   notifications      Notification[]
   sentInvites        TeamInvite[]    @relation("InviteSender")
@@ -168,6 +169,7 @@ model Project {
   members      ProjectMember[]
   tasks        Task[]
   labels       Label[]
+  noteMessages ProjectNoteMessage[]
   activityLogs ActivityLog[]
 
   @@unique([teamId, key])
@@ -175,6 +177,22 @@ model Project {
   @@index([teamId])
   @@index([createdBy])
   @@index([status])
+}
+
+model ProjectNoteMessage {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId String   @map("project_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  content   String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("project_note_messages")
+  @@index([projectId, createdAt])
+  @@index([userId])
 }
 
 // PROJECT MEMBER

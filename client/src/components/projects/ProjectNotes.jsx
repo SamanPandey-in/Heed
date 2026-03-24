@@ -1,64 +1,48 @@
-import { useMemo, useState, useEffect } from 'react';
-import { Button, TextField, IconButton, Divider, MenuItem } from '@mui/material';
-import { Save, Plus, Trash2, Link as LinkIcon, FileText, ExternalLink, Pencil, Eye, PenSquare, AtSign } from 'lucide-react';
-import MDEditor from '@uiw/react-md-editor';
-import '@uiw/react-md-editor/markdown-editor.css';
-import '@uiw/react-markdown-preview/markdown.css';
-import { useGetTeamByIdQuery, useUpdateProjectMutation } from '../../store/slices/apiSlice';
+import { useEffect, useRef, useState } from 'react';
+import { Button, TextField, IconButton, Divider } from '@mui/material';
+import { Plus, Trash2, Link as LinkIcon, MessageCircle, ExternalLink, Pencil } from 'lucide-react';
+import {
+    useCreateProjectNotesMessageMutation,
+    useGetCurrentUserQuery,
+    useGetProjectNotesMessagesQuery,
+    useUpdateProjectMutation,
+} from '../../store/slices/apiSlice';
 
 export default function ProjectNotes({ project }) {
     const [updateProject] = useUpdateProjectMutation();
-    const { data: teamData } = useGetTeamByIdQuery(project?.teamId, { skip: !project?.teamId });
-    const [notes, setNotes] = useState(project?.notes || '');
+    const { data: currentUserData } = useGetCurrentUserQuery();
+    const { data: messagesData, isLoading: isMessagesLoading } = useGetProjectNotesMessagesQuery(project?.id, {
+        skip: !project?.id,
+    });
+    const [createProjectNotesMessage] = useCreateProjectNotesMessageMutation();
+
+    const [messageInput, setMessageInput] = useState('');
     const [links, setLinks] = useState(project?.links || []);
-    const [notesMode, setNotesMode] = useState('write');
-    const [selectedMentionId, setSelectedMentionId] = useState('');
     const [newLink, setNewLink] = useState({ label: '', url: '' });
     const [editingLink, setEditingLink] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [isSendingMessage, setIsSendingMessage] = useState(false);
     const [error, setError] = useState('');
+    const messagesContainerRef = useRef(null);
 
-    const teamMembers = useMemo(() => {
-        const rawMembers = teamData?.team?.members || [];
-        const membersById = new Map();
-
-        rawMembers.forEach((member) => {
-            const memberUser = member?.user || member;
-            const memberId = memberUser?.id || member?.userId || null;
-            if (!memberId || membersById.has(memberId)) return;
-
-            membersById.set(memberId, {
-                id: memberId,
-                username: memberUser?.username || '',
-                displayName: memberUser?.fullName || memberUser?.username || memberUser?.email || memberId,
-            });
-        });
-
-        return Array.from(membersById.values());
-    }, [teamData]);
-
-    const membersByUsername = useMemo(() => {
-        const map = new Map();
-        teamMembers.forEach((member) => {
-            if (member.username) {
-                map.set(member.username.toLowerCase(), member);
-            }
-        });
-        return map;
-    }, [teamMembers]);
+    const messages = messagesData?.messages || [];
+    const currentUser = currentUserData?.user;
 
     useEffect(() => {
-        setNotes(project?.notes || '');
         setLinks(project?.links || []);
     }, [project]);
 
-    const persistChanges = async (updatedNotes, updatedLinks) => {
+    useEffect(() => {
+        if (!messagesContainerRef.current) return;
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }, [messages.length]);
+
+    const persistLinks = async (updatedLinks) => {
         setIsSaving(true);
         setError('');
         try {
             await updateProject({
                 id: project.id,
-                notes: updatedNotes,
                 links: updatedLinks,
             }).unwrap();
         } catch (err) {
@@ -68,30 +52,21 @@ export default function ProjectNotes({ project }) {
         }
     };
 
-    const normalizeMentionsToLinks = (rawMarkdown) => {
-        if (!rawMarkdown) return '';
-
-        return rawMarkdown.replace(/(^|[^\w])@([a-zA-Z0-9_.-]+)/g, (match, prefix, username) => {
-            const member = membersByUsername.get(username.toLowerCase());
-            if (!member) return match;
-            return `${prefix}[@${username}](/profile?userId=${member.id})`;
-        });
-    };
-
-    const handleSaveNotes = () => {
-        const normalizedNotes = normalizeMentionsToLinks(notes);
-        setNotes(normalizedNotes);
-        persistChanges(normalizedNotes, links);
-    };
-
-    const insertMention = (memberId) => {
-        const member = teamMembers.find((m) => m.id === memberId);
-        if (!member) return;
-
-        const mentionUsername = member.username || member.displayName.replace(/\s+/g, '').toLowerCase();
-        const mentionMarkdown = `[@${mentionUsername}](/profile?userId=${member.id})`;
-        setNotes((prev) => `${prev}${prev && !prev.endsWith(' ') && !prev.endsWith('\n') ? ' ' : ''}${mentionMarkdown}`);
-        setSelectedMentionId('');
+    const handleSendMessage = async () => {
+        if (!project?.id || !messageInput.trim()) return;
+        setError('');
+        setIsSendingMessage(true);
+        try {
+            await createProjectNotesMessage({
+                projectId: project.id,
+                content: messageInput,
+            }).unwrap();
+            setMessageInput('');
+        } catch (err) {
+            setError(err?.data?.message || 'Failed to send message');
+        } finally {
+            setIsSendingMessage(false);
+        }
     };
 
     const sanitizeUrl = (url) => {
@@ -110,13 +85,13 @@ export default function ProjectNotes({ project }) {
         const updatedLinks = [...links, { ...newLink, url, id: crypto.randomUUID() }];
         setLinks(updatedLinks);
         setNewLink({ label: '', url: '' });
-        await persistChanges(notes, updatedLinks);
+        await persistLinks(updatedLinks);
     };
 
     const removeLink = async (id) => {
         const updatedLinks = links.filter(l => l.id !== id);
         setLinks(updatedLinks);
-        await persistChanges(notes, updatedLinks);
+        await persistLinks(updatedLinks);
     };
 
     const startEdit = (link) => {
@@ -131,93 +106,89 @@ export default function ProjectNotes({ project }) {
         );
         setLinks(updatedLinks);
         setEditingLink(null);
-        await persistChanges(notes, updatedLinks);
+        await persistLinks(updatedLinks);
     };
 
     const cardClasses = "rounded-lg border p-6 not-dark:bg-white dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 shadow-sm";
-    const notesNavBtn = (active) => `px-3 py-1.5 text-sm rounded-md border transition ${
-        active
-            ? 'bg-zinc-200 text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100 border-zinc-300 dark:border-zinc-600'
-            : 'bg-transparent text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700'
-    }`;
+
+    const formatDateTime = (value) => {
+        if (!value) return '';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '';
+        return date.toLocaleString([], {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    };
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className={`${cardClasses} lg:col-span-2`}>
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2 mb-6">
                     <div className="flex items-center gap-2">
-                        <FileText className="size-5 text-zinc-500" />
-                        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Project Notes</h2>
+                        <MessageCircle className="size-5 text-zinc-500" />
+                        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Project Chat</h2>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1">
-                            <button
-                                type="button"
-                                className={notesNavBtn(notesMode === 'write')}
-                                onClick={() => setNotesMode('write')}
-                            >
-                                <span className="inline-flex items-center gap-1"><PenSquare className="size-3.5" /> Write</span>
-                            </button>
-                            <button
-                                type="button"
-                                className={notesNavBtn(notesMode === 'preview')}
-                                onClick={() => setNotesMode('preview')}
-                            >
-                                <span className="inline-flex items-center gap-1"><Eye className="size-3.5" /> Preview</span>
-                            </button>
+                </div>
+
+                <div
+                    ref={messagesContainerRef}
+                    className="rounded-md border border-zinc-200 dark:border-zinc-700 p-4 h-100 overflow-y-auto no-scrollbar bg-white dark:bg-zinc-900/70"
+                >
+                    {isMessagesLoading ? (
+                        <p className="text-sm text-zinc-500">Loading messages...</p>
+                    ) : messages.length === 0 ? (
+                        <p className="text-sm text-zinc-500">No messages yet. Start the conversation.</p>
+                    ) : (
+                        <div className="flex flex-col gap-3">
+                            {messages.map((item) => {
+                                const isMine = item.user?.id === currentUser?.id;
+
+                                return (
+                                    <div
+                                        key={item.id}
+                                        className={`max-w-[85%] rounded-md border p-3 ${
+                                            isMine
+                                                ? 'ml-auto border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/80'
+                                                : 'mr-auto border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'
+                                        }`}
+                                    >
+                                        <div className="flex items-center justify-between gap-2 mb-1">
+                                            <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                                                {item.user?.fullName || item.user?.username || 'Unknown User'}
+                                            </span>
+                                            <span className="text-xs text-zinc-500">{formatDateTime(item.createdAt)}</span>
+                                        </div>
+                                        <p className="text-sm text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap wrap-break-word">{item.content}</p>
+                                    </div>
+                                );
+                            })}
                         </div>
-                        <Button
-                            variant="contained"
-                            size="small"
-                            startIcon={<Save className="size-4" />}
-                            onClick={handleSaveNotes}
-                            disabled={isSaving}
-                            sx={{ borderRadius: '8px', textTransform: 'none' }}
-                        >
-                            {isSaving ? 'Saving...' : 'Save Notes'}
-                        </Button>
-                    </div>
+                    )}
                 </div>
 
-                {notesMode === 'write' ? (
-                    <div data-color-mode="light" className="rounded-md overflow-hidden border border-zinc-200 dark:border-zinc-700" style={{ minHeight: 380 }}>
-                        <MDEditor
-                            value={notes}
-                            onChange={(value) => setNotes(value || '')}
-                            preview="edit"
-                            height={380}
-                            visibleDragbar={false}
-                            textareaProps={{ placeholder: 'Document project-wide information in Markdown...' }}
-                        />
-                    </div>
-                ) : (
-                    <div className="rounded-md border border-zinc-200 dark:border-zinc-700 p-4 min-h-95 bg-white dark:bg-zinc-900/70">
-                        <MDEditor.Markdown source={normalizeMentionsToLinks(notes)} style={{ background: 'transparent' }} />
-                    </div>
-                )}
-
-                <div className="mt-3 flex items-center gap-2 flex-wrap">
-                    <span className="text-xs text-zinc-500 inline-flex items-center gap-1"><AtSign className="size-3.5" /> Mention:</span>
+                <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-end gap-3">
                     <TextField
-                        size="small"
-                        select
-                        value={selectedMentionId}
-                        onChange={(e) => insertMention(e.target.value)}
-                        placeholder="Insert @mention"
-                        sx={{ minWidth: 240 }}
+                        fullWidth
+                        multiline
+                        minRows={2}
+                        maxRows={6}
+                        value={messageInput}
+                        onChange={(e) => setMessageInput(e.target.value)}
+                        placeholder="Write a message..."
+                    />
+                    <Button
+                        variant="contained"
+                        onClick={handleSendMessage}
+                        disabled={isSendingMessage || !messageInput.trim()}
+                        sx={{ borderRadius: '8px', textTransform: 'none', minWidth: '110px' }}
                     >
-                        <MenuItem value="" disabled>Select team member</MenuItem>
-                        {teamMembers.map((member) => (
-                            <MenuItem key={member.id} value={member.id}>
-                                @{member.username || member.displayName} ({member.displayName})
-                            </MenuItem>
-                        ))}
-                    </TextField>
+                        {isSendingMessage ? 'Sending...' : 'Send'}
+                    </Button>
                 </div>
-
-                <p className="text-xs text-zinc-500 mt-2">
-                    Type <strong>@username</strong> and save, or use the mention selector to insert a profile link.
-                </p>
 
                 {error && <p className="text-red-500 text-xs mt-4 font-medium">{error}</p>}
             </div>
@@ -256,7 +227,6 @@ export default function ProjectNotes({ project }) {
                         </div>
                         </div>
 
-                        {/* spacer between URL input and links list */}
                         <div className="mt-4" />
 
                     <Divider className="my-8" />

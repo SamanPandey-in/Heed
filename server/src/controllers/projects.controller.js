@@ -499,3 +499,118 @@ export const getProjectActivity = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getProjectNoteMessages = async (req, res, next) => {
+  try {
+    const { projectId } = req.params;
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { id: true, teamId: true },
+    });
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    const teamMember = await prisma.teamMember.findUnique({
+      where: {
+        teamId_userId: {
+          teamId: project.teamId,
+          userId,
+        },
+      },
+    });
+
+    if (!teamMember) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const messages = await prisma.projectNoteMessage.findMany({
+      where: { projectId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            fullName: true,
+            avatarUrl: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    res.json({ messages });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const createProjectNoteMessage = async (req, res, next) => {
+  try {
+    const { projectId } = req.params;
+    const { content } = req.body;
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    if (!content?.trim()) {
+      return res.status(400).json({ message: "Message content is required" });
+    }
+
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { id: true, teamId: true },
+    });
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    const teamMember = await prisma.teamMember.findUnique({
+      where: {
+        teamId_userId: {
+          teamId: project.teamId,
+          userId,
+        },
+      },
+    });
+
+    if (!teamMember) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const message = await prisma.projectNoteMessage.create({
+      data: {
+        projectId,
+        userId,
+        content: content.trim(),
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            fullName: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+
+    res.status(201).json({
+      message: "Message sent successfully",
+      noteMessage: message,
+    });
+  } catch (err) {
+    next(err);
+  }
+};

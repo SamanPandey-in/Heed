@@ -16,7 +16,7 @@ export const apiSlice = createApi({
       return headers;
     },
   }),
-  tagTypes: ['Team', 'Project', 'Task', 'User', 'Comment', 'Notification', 'Search'],
+  tagTypes: ['Team', 'Project', 'Task', 'User', 'Comment', 'Notification', 'Search', 'ProjectNoteMessage'],
   endpoints: (builder) => ({
     getTeams: builder.query({
       query: () => '/teams',
@@ -197,6 +197,26 @@ export const apiSlice = createApi({
       ],
     }),
 
+    getProjectNotesMessages: builder.query({
+      query: (projectId) => `/projects/${projectId}/notes/messages`,
+      providesTags: (result, error, projectId) => [
+        { type: 'ProjectNoteMessage', id: `project-${projectId}` },
+      ],
+      transformResponse: (response) => response,
+    }),
+
+    createProjectNotesMessage: builder.mutation({
+      query: ({ projectId, content }) => ({
+        url: `/projects/${projectId}/notes/messages`,
+        method: 'POST',
+        body: { content },
+      }),
+      invalidatesTags: (result, error, { projectId }) => [
+        { type: 'ProjectNoteMessage', id: `project-${projectId}` },
+      ],
+      transformResponse: (response) => response,
+    }),
+
     // TASK ENDPOINTS
     getTasks: builder.query({
       query: () => '/tasks',
@@ -360,6 +380,8 @@ export const {
   useDeleteProjectMutation,
   useAddProjectMemberMutation,
   useRemoveProjectMemberMutation,
+  useGetProjectNotesMessagesQuery,
+  useCreateProjectNotesMessageMutation,
 
   // Tasks
   useGetTasksQuery,
