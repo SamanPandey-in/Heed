@@ -5,7 +5,6 @@ import { Mail, Lock, User, Loader2, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 import { useAuth } from '../../context/AuthContext';
-import { Logo } from '../../components';
 
 export default function Signup() {
   const { signup } = useAuth();
@@ -104,15 +103,6 @@ export default function Signup() {
         animate={{ opacity: 1, y: 0 }}
         className="relative w-full max-w-[420px] rounded-3xl overflow-hidden bg-zinc-950/50 border border-white/10 backdrop-blur-3xl shadow-2xl p-8 sm:p-10"
       >
-        {/* Logo */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex justify-center mb-8"
-        >
-          <Logo />
-        </motion.div>
-
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}

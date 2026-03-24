@@ -3,7 +3,6 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import { Logo } from "../../components";
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
@@ -58,10 +57,6 @@ export default function VerifyEmail() {
                    bg-white/[0.02] border border-white/10 backdrop-blur-2xl
                    shadow-2xl p-8 md:p-10 text-center"
       >
-        <div className="flex justify-center mb-8">
-          <Logo />
-        </div>
-
         {status === "loading" && (
           <div className="space-y-4">
             <Loader2 className="w-12 h-12 text-blue-400 animate-spin mx-auto" />

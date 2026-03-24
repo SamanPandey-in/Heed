@@ -5,7 +5,6 @@ import { Lock, Loader2, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 import { useAuth } from '../../context/AuthContext';
-import { Logo } from '../../components';
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -106,14 +105,6 @@ export default function ResetPassword() {
         animate={{ opacity: 1, y: 0 }}
         className="relative w-full max-w-md rounded-2xl overflow-hidden bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-2xl p-8 md:p-10"
       >
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex justify-center mb-8"
-        >
-          <Logo />
-        </motion.div>
-
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}

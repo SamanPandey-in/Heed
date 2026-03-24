@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle2, Zap, Shield, BarChart3, Users, Globe, Chevron
 import MacbookScrollDemo from "./MacbookScrollDemo";
 import TextHoverEffectDemo from "./TextHoverEffectDemo";
 import BackgroundRippleEffectDemo from "./BackgroundRippleEffectDemo";
-
+import logo from "../../assets/logo.svg";
 /**
  * HEED MONOCHROME LANDING PAGE
  * "Stop Reacting. Start Heeding."
@@ -15,9 +15,7 @@ const Navbar = () => (
     <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
       <div className="flex items-center gap-8">
         <Link className="flex items-center gap-2 group" to="/">
-          <div className="size-8 bg-white rounded-lg flex items-center justify-center text-black">
-            <Zap size={20} className="fill-current" />
-          </div>
+          <img src={logo} alt="HEED logo" className="size-8" />
           <span className="text-white font-bold text-xl tracking-tight uppercase">HEED</span>
         </Link>
         <div className="hidden md:flex items-center gap-6">
@@ -30,10 +28,10 @@ const Navbar = () => (
         <Link to="/login" className="hidden sm:block text-sm font-medium text-slate-400 hover:text-white transition-colors px-4">
           Sign In
         </Link>
-        <Link to="/signup">
-          <div className="size-8 bg-white rounded-lg flex items-center justify-center text-black hover:scale-105 transition-transform cursor-pointer">
-            <Zap size={20} className="fill-current" />
-          </div>
+        <Link to="/signup" className="hidden sm:block">
+          <button className="text-sm font-semibold text-black bg-white hover:bg-slate-100 transition-colors px-4 py-2 rounded-lg">
+            Get Started
+          </button>
         </Link>
       </div>
     </div>
