@@ -1,15 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   DndContext,
   PointerSensor,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
 import { Box, CircularProgress } from '@mui/material';
 import toast from 'react-hot-toast';
 
@@ -26,7 +21,11 @@ const statusOptions = [
 
 export default function KanbanBoard({ tasks, onTasksChange }) {
   const [updateTask, { isLoading }] = useUpdateTaskMutation();
-  const [localTasks, setLocalTasks] = useState(tasks);
+  const [localTasks, setLocalTasks] = useState(tasks || []);
+
+  useEffect(() => {
+    setLocalTasks(tasks || []);
+  }, [tasks]);
 
   // Group tasks by status
   const tasksByStatus = useMemo(() => {
@@ -51,9 +50,31 @@ export default function KanbanBoard({ tasks, onTasksChange }) {
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      distance: 8,
+      activationConstraint: { distance: 8 },
     })
   );
+
+  const resolveGroupedTasks = (taskList) => {
+    const grouped = {};
+
+    statusOptions.forEach((status) => {
+      grouped[status.key] = [];
+    });
+
+    taskList.forEach((task) => {
+      if (grouped[task.status]) {
+        grouped[task.status].push(task);
+      }
+    });
+
+    Object.keys(grouped).forEach((status) => {
+      grouped[status].sort((a, b) => (a.order || 0) - (b.order || 0));
+    });
+
+    return grouped;
+  };
+
+  const isColumnId = (value) => statusOptions.some((status) => status.key === value);
 
   const handleDragEnd = async (event) => {
     const { active, over } = event;
@@ -62,46 +83,88 @@ export default function KanbanBoard({ tasks, onTasksChange }) {
       return;
     }
 
-    // Find source and destination tasks
+    const activeId = String(active.id);
+    const overId = String(over.id);
+
+    // Find source task
     const activeTask = localTasks.find((t) => t.id === active.id);
     const overTask = localTasks.find((t) => t.id === over.id);
 
-    if (!activeTask || !overTask) {
+    if (!activeTask) {
       return;
     }
 
-    // For now, only support reordering within the same column
-    if (activeTask.status !== overTask.status) {
-      toast.error('Cross-column reordering coming soon');
+    const destinationStatus = isColumnId(overId)
+      ? overId
+      : (overTask?.status || null);
+
+    if (!destinationStatus) {
       return;
     }
 
-    // Get tasks in the same column
-    const columnTasks = localTasks.filter((t) => t.status === activeTask.status);
-    const oldIndex = columnTasks.findIndex((t) => t.id === active.id);
-    const newIndex = columnTasks.findIndex((t) => t.id === over.id);
+    const grouped = resolveGroupedTasks(localTasks);
+    const sourceStatus = activeTask.status;
 
-    // Reorder locally
-    const reorderedColumn = arrayMove(columnTasks, oldIndex, newIndex);
-    const newTasks = localTasks.map((task) => {
-      const reorderedTask = reorderedColumn.find((t) => t.id === task.id);
-      if (reorderedTask) {
-        return { ...reorderedTask, order: reorderedColumn.indexOf(reorderedTask) };
-      }
-      return task;
+    const sourceColumn = [...(grouped[sourceStatus] || [])];
+    const destinationColumn = sourceStatus === destinationStatus
+      ? sourceColumn
+      : [...(grouped[destinationStatus] || [])];
+
+    const sourceIndex = sourceColumn.findIndex((task) => task.id === activeId);
+    if (sourceIndex < 0) {
+      return;
+    }
+
+    const [movedTask] = sourceColumn.splice(sourceIndex, 1);
+
+    const destinationIndex = overTask
+      ? destinationColumn.findIndex((task) => task.id === overTask.id)
+      : destinationColumn.length;
+
+    const safeDestinationIndex = destinationIndex < 0 ? destinationColumn.length : destinationIndex;
+
+    destinationColumn.splice(safeDestinationIndex, 0, {
+      ...movedTask,
+      status: destinationStatus,
     });
 
-    setLocalTasks(newTasks);
+    const rebuiltById = new Map(localTasks.map((task) => [task.id, task]));
 
-    // Update on backend
+    const applyColumnOrder = (columnStatus, columnTasks) => {
+      columnTasks.forEach((task, index) => {
+        const prev = rebuiltById.get(task.id);
+        if (!prev) return;
+        rebuiltById.set(task.id, {
+          ...prev,
+          status: columnStatus,
+          order: index,
+        });
+      });
+    };
+
+    applyColumnOrder(sourceStatus, sourceColumn);
+    applyColumnOrder(destinationStatus, destinationColumn);
+
+    const nextTasks = Array.from(rebuiltById.values());
+
+    setLocalTasks(nextTasks);
+    if (onTasksChange) {
+      onTasksChange(nextTasks);
+    }
+
     try {
-      const newOrder = reorderedColumn.indexOf(
-        reorderedColumn.find((t) => t.id === activeTask.id)
-      );
-      await updateTask({ id: activeTask.id, order: newOrder }).unwrap();
+      await updateTask({
+        id: movedTask.id,
+        status: destinationStatus,
+        order: safeDestinationIndex,
+      }).unwrap();
+      toast.success('Task moved', { duration: 1200 });
     } catch (error) {
-      toast.error('Failed to update task order');
-      setLocalTasks(tasks); // Rollback
+      toast.error(error?.data?.message || 'Failed to move task');
+      setLocalTasks(tasks || []);
+      if (onTasksChange) {
+        onTasksChange(tasks || []);
+      }
     }
   };
 

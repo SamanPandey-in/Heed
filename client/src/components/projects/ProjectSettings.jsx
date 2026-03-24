@@ -1,47 +1,55 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { Button, IconButton, MenuItem, Slider, TextField } from '@mui/material';
-import { format } from 'date-fns';
-import { Plus, Save, Trash2 } from 'lucide-react';
-import { useDeleteProjectMutation, useRemoveProjectMemberMutation, useUpdateProjectMutation } from '../../store/slices/apiSlice';
+import { Button, IconButton, MenuItem, TextField } from '@mui/material';
+import { Plus, Save, Trash2, UserMinus } from 'lucide-react';
+import {
+    useDeleteProjectMutation,
+    useGetProjectByIdQuery,
+    useRemoveProjectMemberMutation,
+    useUpdateProjectMutation,
+} from '../../store/slices/apiSlice';
 import { selectCurrentUserId } from '../../store';
 import { ConfirmDialog } from '../ui';
 import AddProjectMember from './AddProjectMember';
 
-const toDateInputValue = (value) => {
-    if (!value) return "";
+const allowedStatuses = new Set(['ACTIVE', 'COMPLETED', 'DEPRECATED']);
 
-    const nextDate = new Date(value);
-    if (Number.isNaN(nextDate.getTime())) return "";
-
-    return format(nextDate, "yyyy-MM-dd");
+const normalizeStatus = (status) => {
+    const normalized = String(status || 'ACTIVE').trim().toUpperCase();
+    return allowedStatuses.has(normalized) ? normalized : 'ACTIVE';
 };
 
 const statusOptions = [
-    { value: "active", label: "Active" },
-    { value: "completed", label: "Completed" },
-    { value: "deprecated", label: "Deprecated" },
+    { value: 'ACTIVE', label: 'Active' },
+    { value: 'COMPLETED', label: 'Completed' },
+    { value: 'DEPRECATED', label: 'Deprecated' },
 ];
 
 const resultOptions = [
-    { value: "", label: "Not Set" },
-    { value: "success", label: "Success" },
-    { value: "failed", label: "Failed" },
-    { value: "ongoing", label: "Ongoing" },
+    { value: '', label: 'Not Set' },
+    { value: 'success', label: 'Success' },
+    { value: 'failed', label: 'Failed' },
+    { value: 'ongoing', label: 'Ongoing' },
 ];
 
 const buildFormData = (project) => ({
-    id: project?.id || "",
-    name: project?.name || "",
-    description: project?.description || "",
-    status: project?.status || "active",
-    result: project?.result || "",
-    priority: project?.priority || "MEDIUM",
-    start_date: toDateInputValue(project?.start_date),
-    end_date: toDateInputValue(project?.end_date),
-    progress: Number(project?.progress || 0),
+    id: project?.id || '',
+    name: project?.name || '',
+    description: project?.description || '',
+    status: normalizeStatus(project?.status),
+    result: project?.result || '',
 });
+
+const toMemberLabel = (member) => {
+    const memberUser = member?.user || member;
+    return memberUser?.fullName || memberUser?.username || memberUser?.email || member?.userId || 'Unknown';
+};
+
+const toMemberId = (member) => {
+    const memberUser = member?.user || member;
+    return memberUser?.id || member?.userId || null;
+};
 
 export default function ProjectSettings({ project }) {
     const currentUserId = useSelector(selectCurrentUserId);
@@ -49,31 +57,68 @@ export default function ProjectSettings({ project }) {
     const [updateProject] = useUpdateProjectMutation();
     const [removeProjectMember] = useRemoveProjectMemberMutation();
     const [deleteProjectMutation] = useDeleteProjectMutation();
+    const { data: projectData, isLoading: isProjectLoading, isFetching: isProjectFetching, refetch } = useGetProjectByIdQuery(project?.id, {
+        skip: !project?.id,
+    });
 
-    const [formData, setFormData] = useState(() => buildFormData(project));
+    const activeProject = projectData?.project || project;
+
+    const [formData, setFormData] = useState(() => buildFormData(activeProject));
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-    const [error, setError] = useState("");
+    const [memberToRemove, setMemberToRemove] = useState(null);
+    const [isRemovingMember, setIsRemovingMember] = useState(false);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        setFormData(buildFormData(activeProject));
+    }, [activeProject]);
+
+    const isProjectCreator = activeProject?.createdBy === currentUserId;
+
+    const memberRows = useMemo(() => {
+        if (Array.isArray(activeProject?.members) && activeProject.members.length > 0) {
+            return activeProject.members
+                .map((member) => {
+                    const id = toMemberId(member);
+                    if (!id) return null;
+
+                    return {
+                        id,
+                        label: toMemberLabel(member),
+                    };
+                })
+                .filter(Boolean);
+        }
+
+        return (activeProject?.memberIds || []).map((memberId) => ({
+            id: memberId,
+            label: memberId,
+        }));
+    }, [activeProject]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!formData.id) return;
+
         setIsSubmitting(true);
-        setError("");
+        setError('');
 
         try {
             await updateProject({
                 id: formData.id,
                 name: formData.name,
                 description: formData.description,
-                status: String(formData.status || '').toUpperCase(),
-                result: formData.status === "completed" ? (formData.result || null) : null,
+                status: formData.status,
+                result: formData.status === 'COMPLETED' ? (formData.result || null) : null,
             }).unwrap();
+            await refetch();
         } catch (apiError) {
-            setError(apiError?.data?.message || "Failed to update project");
+            setError(apiError?.data?.message || 'Failed to update project');
         } finally {
             setIsSubmitting(false);
         }
@@ -105,15 +150,32 @@ export default function ProjectSettings({ project }) {
 
         setDeleteConfirmOpen(false);
         setIsDeleting(true);
-        setError("");
+        setError('');
 
         try {
             await deleteProjectMutation(formData.id).unwrap();
-            navigate("/projects");
+            navigate('/projects');
         } catch (apiError) {
-            setError(apiError?.data?.message || "Failed to delete project");
+            setError(apiError?.data?.message || 'Failed to delete project');
         } finally {
             setIsDeleting(false);
+        }
+    };
+
+    const handleRemoveMemberConfirm = async () => {
+        if (!formData.id || !memberToRemove?.id) return;
+
+        setIsRemovingMember(true);
+        setError('');
+
+        try {
+            await removeProjectMember({ projectId: formData.id, userId: memberToRemove.id }).unwrap();
+            await refetch();
+            setMemberToRemove(null);
+        } catch (apiError) {
+            setError(apiError?.data?.message || 'Failed to remove member');
+        } finally {
+            setIsRemovingMember(false);
         }
     };
 
@@ -121,18 +183,9 @@ export default function ProjectSettings({ project }) {
         setDeleteConfirmOpen(true);
     };
 
-    const cardClasses = "rounded-lg border p-6 not-dark:bg-white dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border-zinc-300 dark:border-zinc-800";
+    const cardClasses = 'rounded-lg border p-6 not-dark:bg-white dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border-zinc-300 dark:border-zinc-800';
 
-    const labelClasses = "text-sm text-zinc-600 dark:text-zinc-400";
-    const memberRows = Array.isArray(project?.members)
-        ? project.members.map((member) => ({
-            id: member?.user?.id || member?.userId,
-            label: member?.user?.email || member?.user?.name || member?.userId || "Unknown",
-        }))
-        : (project?.memberIds || []).map((memberId) => ({
-            id: memberId,
-            label: memberId,
-        }));
+    const labelClasses = 'text-sm text-zinc-600 dark:text-zinc-400';
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -166,7 +219,7 @@ export default function ProjectSettings({ project }) {
                                     setFormData((prev) => ({
                                         ...prev,
                                         status: e.target.value,
-                                        result: e.target.value === "completed" ? prev.result : "",
+                                        result: e.target.value === 'COMPLETED' ? prev.result : '',
                                     }))
                                 }
                             >
@@ -185,7 +238,7 @@ export default function ProjectSettings({ project }) {
                                 fullWidth
                                 value={formData.result || ""}
                                 onChange={(e) => setFormData({ ...formData, result: e.target.value })}
-                                disabled={formData.status !== "completed"}
+                                disabled={formData.status !== 'COMPLETED'}
                             >
                                 {resultOptions.map((option) => (
                                     <MenuItem key={option.value || "not-set"} value={option.value}>
@@ -196,60 +249,38 @@ export default function ProjectSettings({ project }) {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className={labelClasses}>Priority</label>
-                            <TextField select fullWidth value={formData.priority} onChange={(e) => setFormData({ ...formData, priority: e.target.value })}>
-                                <MenuItem value="LOW">Low</MenuItem>
-                                <MenuItem value="MEDIUM">Medium</MenuItem>
-                                <MenuItem value="HIGH">High</MenuItem>
-                            </TextField>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className={labelClasses}>Progress: {formData.progress}%</label>
-                            <Slider min={0} max={100} step={5} value={formData.progress} onChange={(_, value) => setFormData({ ...formData, progress: Number(value) })} />
-                        </div>
-                    </div>
-
-                    <div className="space-y-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className={labelClasses}>Start Date</label>
-                            <TextField fullWidth type="date" value={formData.start_date} onChange={(e) => setFormData({ ...formData, start_date: e.target.value })} InputLabelProps={{ shrink: true }} />
-                        </div>
-                        <div className="space-y-2">
-                            <label className={labelClasses}>End Date</label>
-                            <TextField fullWidth type="date" value={formData.end_date} onChange={(e) => setFormData({ ...formData, end_date: e.target.value })} InputLabelProps={{ shrink: true }} />
-                        </div>
-                    </div>
-
                     {error && <p className="text-sm text-red-500">{error}</p>}
+                    {isProjectLoading || isProjectFetching ? <p className="text-xs text-zinc-500">Syncing latest project data...</p> : null}
 
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                            <Button
-                                type="button"
-                                disabled={isSubmitting || isDeleting}
-                                onClick={handleLeaveProject}
-                                variant="outlined"
-                                className="sm:flex-1"
-                            >
-                                Leave Project
-                            </Button>
-                            <Button
-                                type="button"
-                                disabled={isSubmitting}
-                                onClick={handleDeleteProject}
-                                variant="outlined"
-                                color="error"
-                                startIcon={<Trash2 className="size-4" />}
-                                className="sm:flex-1"
-                            >
-                                {isDeleting ? "Deleting..." : "Delete Project"}
-                            </Button>
+                            {!isProjectCreator && (
+                                <Button
+                                    type="button"
+                                    disabled={isSubmitting || isDeleting || isRemovingMember}
+                                    onClick={handleLeaveProject}
+                                    variant="outlined"
+                                    className="sm:flex-1"
+                                >
+                                    Leave Project
+                                </Button>
+                            )}
+                            {isProjectCreator && (
+                                <Button
+                                    type="button"
+                                    disabled={isSubmitting || isRemovingMember}
+                                    onClick={handleDeleteProject}
+                                    variant="outlined"
+                                    color="error"
+                                    startIcon={<Trash2 className="size-4" />}
+                                    className="sm:flex-1"
+                                >
+                                    {isDeleting ? 'Deleting...' : 'Delete Project'}
+                                </Button>
+                            )}
                         </div>
-                        <Button type="submit" disabled={isSubmitting || isDeleting} variant="contained" startIcon={<Save className="size-4" />} className="w-full sm:w-auto">
-                            {isSubmitting ? "Saving..." : "Save Changes"}
+                        <Button type="submit" disabled={isSubmitting || isDeleting || isRemovingMember} variant="contained" startIcon={<Save className="size-4" />} className="w-full sm:w-auto">
+                            {isSubmitting ? 'Saving...' : 'Save Changes'}
                         </Button>
                     </div>
                 </form>
@@ -267,7 +298,7 @@ export default function ProjectSettings({ project }) {
                         <AddProjectMember
                             isDialogOpen={isDialogOpen}
                             setIsDialogOpen={setIsDialogOpen}
-                            projectId={project?.id}
+                            projectId={activeProject?.id}
                         />
                     </div>
 
@@ -276,7 +307,19 @@ export default function ProjectSettings({ project }) {
                             {memberRows.map((member) => (
                                 <div key={member.id} className="flex items-center justify-between px-3 py-2 rounded dark:bg-zinc-800 text-sm text-zinc-900 dark:text-zinc-300" >
                                     <span>{member.label}</span>
-                                    {project.team_lead === member.id && <span className="px-2 py-0.5 rounded-xs ring ring-zinc-200 dark:ring-zinc-600">Team Lead</span>}
+                                    {isProjectCreator && member.id !== activeProject?.createdBy && (
+                                        <Button
+                                            type="button"
+                                            size="small"
+                                            color="error"
+                                            variant="text"
+                                            startIcon={<UserMinus className="size-4" />}
+                                            disabled={isSubmitting || isDeleting || isRemovingMember}
+                                            onClick={() => setMemberToRemove(member)}
+                                        >
+                                            Remove
+                                        </Button>
+                                    )}
                                 </div>
                             ))}
                         </div>
@@ -290,6 +333,15 @@ export default function ProjectSettings({ project }) {
                 message="You will be removed from this project and may not be able to re-join without an invite."
                 onConfirm={handleLeaveProjectConfirm}
                 onCancel={() => setLeaveConfirmOpen(false)}
+            />
+
+            <ConfirmDialog
+                open={Boolean(memberToRemove)}
+                title="Remove Member?"
+                message={memberToRemove ? `Remove ${memberToRemove.label} from this project?` : ''}
+                onConfirm={handleRemoveMemberConfirm}
+                onCancel={() => setMemberToRemove(null)}
+                danger={true}
             />
 
             <ConfirmDialog

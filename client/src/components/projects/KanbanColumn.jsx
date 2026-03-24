@@ -1,13 +1,18 @@
-import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Box, Typography } from '@mui/material';
 import KanbanCard from './KanbanCard';
 
 export default function KanbanColumn({ status, label, tasks }) {
   const taskIds = tasks.map((task) => task.id);
+  const { setNodeRef, isOver } = useDroppable({
+    id: status,
+    data: { type: 'column', status },
+  });
 
   return (
     <Box
+      ref={setNodeRef}
       sx={{
         backgroundColor: 'var(--color-surface-variant)',
         borderRadius: 2,
@@ -15,6 +20,7 @@ export default function KanbanColumn({ status, label, tasks }) {
         minHeight: 400,
         display: 'flex',
         flexDirection: 'column',
+        outline: isOver ? '2px dashed var(--color-border-hover)' : 'none',
       }}
     >
       <Typography
@@ -30,7 +36,7 @@ export default function KanbanColumn({ status, label, tasks }) {
         {label} ({tasks.length})
       </Typography>
 
-      <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
+      <SortableContext id={status} items={taskIds} strategy={verticalListSortingStrategy}>
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
           {tasks.length === 0 ? (
             <Box

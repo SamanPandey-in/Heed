@@ -48,6 +48,7 @@ export const getTasks = async (req, res, next) => {
         id: task.id,
         title: task.title,
         description: task.description,
+        order: task.order,
         status: task.status,
         priority: task.priority,
         type: task.type,
@@ -192,6 +193,7 @@ export const getTaskById = async (req, res, next) => {
         id: task.id,
         title: task.title,
         description: task.description,
+        order: task.order,
         status: task.status,
         priority: task.priority,
         type: task.type,
@@ -339,7 +341,7 @@ export const updateTask = async (req, res, next) => {
   try {
     const userId = req.userId;
     const { taskId } = req.params;
-    const { title, description, status, priority, type, assigneeId, dueDate, timeSpent } = req.body;
+    const { title, description, status, priority, type, assigneeId, dueDate, timeSpent, order } = req.body;
     const normalizedAssigneeId = typeof assigneeId === "string" ? assigneeId.trim() : assigneeId;
 
     const task = await prisma.task.findUnique({
@@ -396,6 +398,13 @@ export const updateTask = async (req, res, next) => {
       }
     }
 
+    if (Object.prototype.hasOwnProperty.call(req.body, "order")) {
+      const numericOrder = Number(order);
+      if (!Number.isInteger(numericOrder) || numericOrder < 0) {
+        return res.status(400).json({ message: "order must be a non-negative integer" });
+      }
+    }
+
     const updateData = {
       ...(typeof title === "string" && { title: title.trim() }),
       ...(typeof description === "string" && { description: description.trim() }),
@@ -410,6 +419,9 @@ export const updateTask = async (req, res, next) => {
       }),
       ...(Object.prototype.hasOwnProperty.call(req.body, "timeSpent") && {
         timeSpent: Number(timeSpent),
+      }),
+      ...(Object.prototype.hasOwnProperty.call(req.body, "order") && {
+        order: Number(order),
       }),
     };
 
