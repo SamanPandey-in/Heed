@@ -1,32 +1,23 @@
-import Brevo from '@getbrevo/brevo';
+import { BrevoClient } from '@getbrevo/brevo';
 
 const API_KEY = process.env.BREVO_API_KEY || '';
 const SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER || '';
 const SENDER_NAME = process.env.BREVO_SENDER_NAME || 'Heed';
 
-let transactionalApi = null;
+let brevoClient = null;
 
-const getTransactionalApi = () => {
+const getBrevoClient = () => {
   if (!API_KEY) {
     console.warn('[Email] BREVO_API_KEY is missing. Transactional emails are disabled.');
     return null;
   }
 
-  if (!transactionalApi) {
-    const instance = new Brevo.TransactionalEmailsApi();
-    const apiKey = instance.authentications?.apiKey;
-
-    if (!apiKey) {
-      console.error('[Email] Brevo SDK initialization failed: apiKey authentication not available.');
-      return null;
-    }
-
-    apiKey.apiKey = API_KEY;
-    transactionalApi = instance;
+  if (!brevoClient) {
+    brevoClient = new BrevoClient({ apiKey: API_KEY });
     console.log('[Email] Brevo transactional email client configured.');
   }
 
-  return transactionalApi;
+  return brevoClient;
 };
 
 const getErrorMessage = (error) => {
@@ -44,9 +35,9 @@ const getErrorMessage = (error) => {
 };
 
 const sendEmail = async ({ toEmail, subject, html }) => {
-  const api = getTransactionalApi();
+  const client = getBrevoClient();
 
-  if (!api) {
+  if (!client) {
     return { success: false, error: 'Email service is not configured' };
   }
 
@@ -56,14 +47,14 @@ const sendEmail = async ({ toEmail, subject, html }) => {
   }
 
   try {
-    const payload = new Brevo.SendSmtpEmail();
-    payload.subject = subject;
-    payload.htmlContent = html;
-    payload.sender = { email: SENDER_EMAIL, name: SENDER_NAME };
-    payload.to = [{ email: toEmail }];
+    const response = await client.transactionalEmails.sendTransacEmail({
+      subject,
+      htmlContent: html,
+      sender: { email: SENDER_EMAIL, name: SENDER_NAME },
+      to: [{ email: toEmail }],
+    });
 
-    const response = await api.sendTransacEmail(payload);
-    const messageId = response?.body?.messageId || null;
+    const messageId = response?.data?.messageId || response?.messageId || null;
 
     return { success: true, messageId };
   } catch (error) {
