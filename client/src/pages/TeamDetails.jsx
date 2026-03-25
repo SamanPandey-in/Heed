@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useEffect, useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Button, Chip, Skeleton, Tooltip } from '@mui/material';
+import { Button, Chip, Skeleton, TextField, Tooltip } from '@mui/material';
 import { ArrowLeft, Check, Copy, FolderOpen, Share2, ShieldAlert, UserPlus, UsersIcon } from 'lucide-react';
+import toast from 'react-hot-toast';
 
-import { InviteMemberDialog, ConfirmDialog } from '../components';
+import { InviteMemberDialog, ConfirmDialog, TeamMessagesPanel } from '../components';
 import { useRemoveTeamMemberMutation } from '../store/slices/apiSlice';
 
 import {
@@ -14,6 +15,7 @@ import {
     selectTeamById,
     selectTeamMembers,
     selectTeamsLoading,
+    updateTeamName,
 } from '../store';
 
 const normalizeStatus = (status) => {
@@ -28,6 +30,7 @@ const normalizeStatus = (status) => {
 const TeamDetails = () => {
     const { teamId } = useParams();
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const currentUserId = useSelector(selectCurrentUserId);
     const [removeTeamMember] = useRemoveTeamMemberMutation();
 
@@ -38,11 +41,59 @@ const TeamDetails = () => {
     const teamsLoading = useSelector(selectTeamsLoading);
 
     const [statusFilter, setStatusFilter] = useState('all');
+    const [activeTab, setActiveTab] = useState('overview');
     const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
     const [isLeaving, setIsLeaving] = useState(false);
     const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
     const [leaveError, setLeaveError] = useState('');
+    const [renameValue, setRenameValue] = useState('');
+    const [descriptionValue, setDescriptionValue] = useState('');
+    const [renameError, setRenameError] = useState('');
+    const [isRenaming, setIsRenaming] = useState(false);
     const [codeCopied, setCodeCopied] = useState(false);
+
+    useEffect(() => {
+        setRenameValue(team?.name || '');
+        setDescriptionValue(team?.description || '');
+    }, [team?.name, team?.description]);
+
+    const handleRenameTeam = async () => {
+        if (!teamId) return;
+
+        const trimmedName = renameValue.trim();
+        if (!trimmedName) {
+            setRenameError('Team name is required');
+            return;
+        }
+
+        const trimmedDescription = descriptionValue.trim();
+        const currentDescription = (team?.description || '').trim();
+        const isNameUnchanged = trimmedName === team?.name;
+        const isDescriptionUnchanged = trimmedDescription === currentDescription;
+
+        if (isNameUnchanged && isDescriptionUnchanged) {
+            setRenameError('');
+            return;
+        }
+
+        setIsRenaming(true);
+        setRenameError('');
+
+        try {
+            await dispatch(
+                updateTeamName({
+                    teamId,
+                    name: trimmedName,
+                    description: trimmedDescription,
+                })
+            ).unwrap();
+            toast.success('Team details updated successfully');
+        } catch (error) {
+            setRenameError(error || 'Failed to update team');
+        } finally {
+            setIsRenaming(false);
+        }
+    };
 
     const handleLeaveTeamConfirm = async () => {
         if (!teamId || !currentUserId) return;
@@ -139,7 +190,42 @@ const TeamDetails = () => {
                 <Link to="/teams" className="text-sm text-zinc-600 dark:text-zinc-400 inline-flex items-center gap-2">
                     <ArrowLeft className="size-4" /> Teams
                 </Link>
-                <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mt-1">{team.name}</h1>
+                <div className="mt-3 flex flex-col sm:flex-row sm:items-end gap-2 max-w-xl">
+                    <TextField
+                        fullWidth
+                        label="Team Name"
+                        value={renameValue}
+                        onChange={(event) => setRenameValue(event.target.value)}
+                        size="small"
+                        disabled={isRenaming}
+                    />
+                </div>
+                <div className="mt-2 max-w-xl">
+                    <TextField
+                        fullWidth
+                        label="Team Description"
+                        value={descriptionValue}
+                        onChange={(event) => setDescriptionValue(event.target.value)}
+                        size="small"
+                        multiline
+                        minRows={2}
+                        disabled={isRenaming}
+                    />
+                </div>
+                <Button
+                    type="button"
+                    variant="contained"
+                    onClick={handleRenameTeam}
+                    disabled={
+                        isRenaming
+                        || !renameValue.trim()
+                        || (renameValue.trim() === team.name && descriptionValue.trim() === (team.description || '').trim())
+                    }
+                    sx={{ mt: 1 }}
+                >
+                    {isRenaming ? 'Saving...' : 'Save Changes'}
+                </Button>
+                {renameError && <p className="text-sm text-red-500 mt-2">{renameError}</p>}
                 <p className="text-gray-500 dark:text-zinc-400 text-sm">{team.description || 'No description'}</p>
 
                 {team.inviteCode && (
@@ -190,7 +276,26 @@ const TeamDetails = () => {
                 {leaveError && <p className="text-sm text-red-500 mt-2">{leaveError}</p>}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex overflow-x-auto no-scrollbar border border-zinc-200 dark:border-zinc-800 rounded divide-x divide-zinc-200 dark:divide-zinc-800">
+                {[
+                    { key: 'overview', label: 'Overview' },
+                    { key: 'notes', label: 'Notes' },
+                    { key: 'chat', label: 'Chat' },
+                ].map((tabItem) => (
+                    <Button
+                        key={tabItem.key}
+                        size="small"
+                        variant={activeTab === tabItem.key ? 'contained' : 'text'}
+                        onClick={() => setActiveTab(tabItem.key)}
+                        className="flex-1 min-w-25 flex items-center justify-center gap-2 rounded-none py-2.5"
+                    >
+                        {tabItem.label}
+                    </Button>
+                ))}
+            </div>
+
+            {activeTab === 'overview' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <section className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-5">
                     <div className="flex items-center gap-2 mb-4">
                         <UsersIcon className="size-4" />
@@ -275,7 +380,16 @@ const TeamDetails = () => {
                         </div>
                     )}
                 </section>
-            </div>
+                </div>
+            )}
+
+            {activeTab === 'notes' && (
+                <TeamMessagesPanel teamId={teamId} mode="notes" />
+            )}
+
+            {activeTab === 'chat' && (
+                <TeamMessagesPanel teamId={teamId} mode="chat" />
+            )}
 
             <InviteMemberDialog
                 isDialogOpen={isInviteDialogOpen}

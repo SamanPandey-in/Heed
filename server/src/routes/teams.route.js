@@ -9,6 +9,10 @@ import {
   removeTeamMember,
   joinByInviteCode,
   deleteTeam,
+  getTeamNotesMessages,
+  createTeamNotesMessage,
+  getTeamChatMessages,
+  createTeamChatMessage,
 } from "../controllers/teams.controller.js";
 
 const router = Router();
@@ -17,9 +21,13 @@ router.use(authenticate);
 
 router.get("/", getTeams);
 router.get("/:teamId", getTeamById);
+router.get('/:teamId/notes/messages', getTeamNotesMessages);
+router.get('/:teamId/chat/messages', getTeamChatMessages);
 router.post("/", createTeam);
 router.patch('/:teamId', updateTeam);
 router.post('/join', joinByInviteCode);
+router.post('/:teamId/notes/messages', createTeamNotesMessage);
+router.post('/:teamId/chat/messages', createTeamChatMessage);
 router.post('/:teamId/members', addTeamMember);
 router.delete('/:teamId/members/:userId', removeTeamMember);
 router.delete("/:teamId", deleteTeam);

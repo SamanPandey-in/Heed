@@ -18,7 +18,7 @@ export const apiSlice = createApi({
       return headers;
     },
   }),
-  tagTypes: ['Team', 'Project', 'Task', 'User', 'Comment', 'Notification', 'Search', 'ProjectNoteMessage'],
+  tagTypes: ['Team', 'Project', 'Task', 'User', 'Comment', 'Notification', 'Search', 'ProjectNoteMessage', 'TeamNoteMessage', 'TeamChatMessage'],
   endpoints: (builder) => ({
     getTeams: builder.query({
       query: () => '/teams',
@@ -124,6 +124,108 @@ export const apiSlice = createApi({
         { type: 'Team', id: teamId },
         { type: 'Team', id: 'LIST' },
       ],
+    }),
+
+    getTeamNotesMessages: builder.query({
+      query: (teamId) => `/teams/${teamId}/notes/messages`,
+      providesTags: (result, error, teamId) => [
+        { type: 'TeamNoteMessage', id: `team-notes-${teamId}` },
+      ],
+      transformResponse: (response) => response,
+      async onCacheEntryAdded(teamId, { cacheDataLoaded, cacheEntryRemoved, updateCachedData }) {
+        if (!teamId) return;
+
+        await cacheDataLoaded;
+
+        const socket = acquireChatSocket();
+
+        const handleMessageCreated = (payload) => {
+          if (payload?.teamId !== teamId || !payload?.noteMessage) return;
+
+          updateCachedData((draft) => {
+            if (!Array.isArray(draft.messages)) {
+              draft.messages = [];
+            }
+
+            const alreadyExists = draft.messages.some((item) => item.id === payload.noteMessage.id);
+            if (!alreadyExists) {
+              draft.messages.push(payload.noteMessage);
+            }
+          });
+        };
+
+        socket.on('teamNotes:message:created', handleMessageCreated);
+        socket.emit('teamNotes:join', { teamId });
+
+        await cacheEntryRemoved;
+
+        socket.off('teamNotes:message:created', handleMessageCreated);
+        socket.emit('teamNotes:leave', { teamId });
+        releaseChatSocket();
+      },
+    }),
+
+    createTeamNotesMessage: builder.mutation({
+      query: ({ teamId, content }) => ({
+        url: `/teams/${teamId}/notes/messages`,
+        method: 'POST',
+        body: { content },
+      }),
+      invalidatesTags: (result, error, { teamId }) => [
+        { type: 'TeamNoteMessage', id: `team-notes-${teamId}` },
+      ],
+      transformResponse: (response) => response,
+    }),
+
+    getTeamChatMessages: builder.query({
+      query: (teamId) => `/teams/${teamId}/chat/messages`,
+      providesTags: (result, error, teamId) => [
+        { type: 'TeamChatMessage', id: `team-chat-${teamId}` },
+      ],
+      transformResponse: (response) => response,
+      async onCacheEntryAdded(teamId, { cacheDataLoaded, cacheEntryRemoved, updateCachedData }) {
+        if (!teamId) return;
+
+        await cacheDataLoaded;
+
+        const socket = acquireChatSocket();
+
+        const handleMessageCreated = (payload) => {
+          if (payload?.teamId !== teamId || !payload?.chatMessage) return;
+
+          updateCachedData((draft) => {
+            if (!Array.isArray(draft.messages)) {
+              draft.messages = [];
+            }
+
+            const alreadyExists = draft.messages.some((item) => item.id === payload.chatMessage.id);
+            if (!alreadyExists) {
+              draft.messages.push(payload.chatMessage);
+            }
+          });
+        };
+
+        socket.on('teamChat:message:created', handleMessageCreated);
+        socket.emit('teamChat:join', { teamId });
+
+        await cacheEntryRemoved;
+
+        socket.off('teamChat:message:created', handleMessageCreated);
+        socket.emit('teamChat:leave', { teamId });
+        releaseChatSocket();
+      },
+    }),
+
+    createTeamChatMessage: builder.mutation({
+      query: ({ teamId, content }) => ({
+        url: `/teams/${teamId}/chat/messages`,
+        method: 'POST',
+        body: { content },
+      }),
+      invalidatesTags: (result, error, { teamId }) => [
+        { type: 'TeamChatMessage', id: `team-chat-${teamId}` },
+      ],
+      transformResponse: (response) => response,
     }),
 
     // PROJECT ENDPOINTS
@@ -450,6 +552,10 @@ export const {
   useJoinTeamByInviteCodeMutation,
   useAddTeamMemberMutation,
   useRemoveTeamMemberMutation,
+  useGetTeamNotesMessagesQuery,
+  useCreateTeamNotesMessageMutation,
+  useGetTeamChatMessagesQuery,
+  useCreateTeamChatMessageMutation,
 
   // Projects
   useGetProjectsQuery,

@@ -28,6 +28,7 @@ export { default as InviteMemberDialog } from './team/InviteMemberDialog';
 export { default as JoinTeamButton } from './team/JoinTeamButton';
 export { default as TeamMembersSection } from './team/TeamMembersSection';
 export { default as ProjectSection } from './team/ProjectSection';
+export { default as TeamMessagesPanel } from './team/TeamMessagesPanel';
 
 export { default as SubTasksList } from './tasks/SubTasksList';
 export { default as ParentTaskSelector } from './tasks/ParentTaskSelector';

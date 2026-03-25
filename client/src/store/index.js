@@ -1,6 +1,6 @@
 export { default as store } from "./store.js";
 
-export { fetchTeams, createTeam, joinTeamByInviteCode } from "./slices/teamsSlice.js";
+export { fetchTeams, createTeam, joinTeamByInviteCode, updateTeamName } from "./slices/teamsSlice.js";
 export { fetchProjects, createProject } from "./slices/projectsSlice.js";
 export { fetchTasks } from "./slices/tasksSlice.js";
 

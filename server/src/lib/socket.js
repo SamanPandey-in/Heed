@@ -69,6 +69,22 @@ const canAccessProject = async (userId, projectId) => {
   return Boolean(membership);
 };
 
+const canAccessTeam = async (userId, teamId) => {
+  if (!teamId) return false;
+
+  const membership = await prisma.teamMember.findUnique({
+    where: {
+      teamId_userId: {
+        teamId,
+        userId,
+      },
+    },
+    select: { userId: true },
+  });
+
+  return Boolean(membership);
+};
+
 const replyAck = (ack, payload) => {
   if (typeof ack === "function") {
     ack(payload);
@@ -138,6 +154,44 @@ export const initializeSocket = (server) => {
       if (!projectId) return;
       socket.leave(`projectNotes:${projectId}`);
     });
+
+    socket.on("teamNotes:join", async ({ teamId }, ack) => {
+      try {
+        const hasAccess = await canAccessTeam(socket.userId, teamId);
+        if (!hasAccess) {
+          return replyAck(ack, { ok: false, message: "Access denied" });
+        }
+
+        socket.join(`teamNotes:${teamId}`);
+        return replyAck(ack, { ok: true });
+      } catch {
+        return replyAck(ack, { ok: false, message: "Unable to join team notes room" });
+      }
+    });
+
+    socket.on("teamNotes:leave", ({ teamId }) => {
+      if (!teamId) return;
+      socket.leave(`teamNotes:${teamId}`);
+    });
+
+    socket.on("teamChat:join", async ({ teamId }, ack) => {
+      try {
+        const hasAccess = await canAccessTeam(socket.userId, teamId);
+        if (!hasAccess) {
+          return replyAck(ack, { ok: false, message: "Access denied" });
+        }
+
+        socket.join(`teamChat:${teamId}`);
+        return replyAck(ack, { ok: true });
+      } catch {
+        return replyAck(ack, { ok: false, message: "Unable to join team chat room" });
+      }
+    });
+
+    socket.on("teamChat:leave", ({ teamId }) => {
+      if (!teamId) return;
+      socket.leave(`teamChat:${teamId}`);
+    });
   });
 
   return ioInstance;
@@ -168,5 +222,23 @@ export const emitProjectNoteMessageCreated = ({ projectId, noteMessage }) => {
     io
       .to(`projectNotes:${projectId}`)
       .emit("projectNotes:message:created", { projectId, noteMessage });
+  });
+};
+
+export const emitTeamNoteMessageCreated = ({ teamId, noteMessage }) => {
+  if (!teamId || !noteMessage) return;
+  safeEmit((io) => {
+    io
+      .to(`teamNotes:${teamId}`)
+      .emit("teamNotes:message:created", { teamId, noteMessage });
+  });
+};
+
+export const emitTeamChatMessageCreated = ({ teamId, chatMessage }) => {
+  if (!teamId || !chatMessage) return;
+  safeEmit((io) => {
+    io
+      .to(`teamChat:${teamId}`)
+      .emit("teamChat:message:created", { teamId, chatMessage });
   });
 };

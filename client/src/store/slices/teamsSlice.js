@@ -46,6 +46,40 @@ export const joinTeamByInviteCode = createAsyncThunk(
   }
 );
 
+export const updateTeamName = createAsyncThunk(
+  "teams/updateTeamName",
+  async ({ teamId, name, description }, { dispatch, rejectWithValue }) => {
+    try {
+      if (!teamId) {
+        return rejectWithValue("Team ID is required");
+      }
+
+      const hasName = typeof name === "string";
+      const hasDescription = typeof description === "string";
+
+      if (!hasName && !hasDescription) {
+        return rejectWithValue("No valid fields provided for update");
+      }
+
+      if (hasName && !name.trim()) {
+        return rejectWithValue("Team name is required");
+      }
+
+      const payload = {
+        ...(hasName ? { name: name.trim() } : {}),
+        ...(hasDescription ? { description: description.trim() } : {}),
+      };
+
+      const response = await api.patch(`/teams/${teamId}`, payload);
+
+      dispatch(fetchTeams());
+      return response.data?.team || null;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Failed to update team");
+    }
+  }
+);
+
 const initialState = teamsAdapter.getInitialState({
   loading: false,
   error: null,
@@ -105,6 +139,20 @@ const teamsSlice = createSlice({
         }
       })
       .addCase(joinTeamByInviteCode.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(updateTeamName.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateTeamName.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload?.id) {
+          teamsAdapter.upsertOne(state, action.payload);
+        }
+      })
+      .addCase(updateTeamName.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
