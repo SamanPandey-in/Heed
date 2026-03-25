@@ -1,6 +1,34 @@
 import { prisma } from "../prisma/client.js";
 import { randomBytes } from 'crypto';
 import { createNotification } from "../utils/notify.js";
+import { emitTeamChatMessageCreated, emitTeamNoteMessageCreated } from "../lib/socket.js";
+
+const ensureTeamMembership = async (teamId, userId) => {
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    select: { id: true },
+  });
+
+  if (!team) {
+    return { ok: false, status: 404, message: "Team not found" };
+  }
+
+  const membership = await prisma.teamMember.findUnique({
+    where: {
+      teamId_userId: {
+        teamId,
+        userId,
+      },
+    },
+    select: { userId: true },
+  });
+
+  if (!membership) {
+    return { ok: false, status: 403, message: "Access denied" };
+  }
+
+  return { ok: true };
+};
 
 export const getTeams = async (req, res, next) => {
   try {
@@ -497,6 +525,178 @@ export const deleteTeam = async (req, res, next) => {
     });
 
     res.json({ message: "Team deleted successfully" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getTeamNotesMessages = async (req, res, next) => {
+  try {
+    const { teamId } = req.params;
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    const access = await ensureTeamMembership(teamId, userId);
+    if (!access.ok) {
+      return res.status(access.status).json({ message: access.message });
+    }
+
+    const messages = await prisma.teamNoteMessage.findMany({
+      where: { teamId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            fullName: true,
+            avatarUrl: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    res.json({ messages });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const createTeamNotesMessage = async (req, res, next) => {
+  try {
+    const { teamId } = req.params;
+    const { content } = req.body;
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    if (!content?.trim()) {
+      return res.status(400).json({ message: "Message content is required" });
+    }
+
+    const access = await ensureTeamMembership(teamId, userId);
+    if (!access.ok) {
+      return res.status(access.status).json({ message: access.message });
+    }
+
+    const message = await prisma.teamNoteMessage.create({
+      data: {
+        teamId,
+        userId,
+        content: content.trim(),
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            fullName: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+
+    emitTeamNoteMessageCreated({
+      teamId,
+      noteMessage: message,
+    });
+
+    res.status(201).json({
+      message: "Note saved successfully",
+      noteMessage: message,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getTeamChatMessages = async (req, res, next) => {
+  try {
+    const { teamId } = req.params;
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    const access = await ensureTeamMembership(teamId, userId);
+    if (!access.ok) {
+      return res.status(access.status).json({ message: access.message });
+    }
+
+    const messages = await prisma.teamChatMessage.findMany({
+      where: { teamId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            fullName: true,
+            avatarUrl: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    res.json({ messages });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const createTeamChatMessage = async (req, res, next) => {
+  try {
+    const { teamId } = req.params;
+    const { content } = req.body;
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    if (!content?.trim()) {
+      return res.status(400).json({ message: "Message content is required" });
+    }
+
+    const access = await ensureTeamMembership(teamId, userId);
+    if (!access.ok) {
+      return res.status(access.status).json({ message: access.message });
+    }
+
+    const message = await prisma.teamChatMessage.create({
+      data: {
+        teamId,
+        userId,
+        content: content.trim(),
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            fullName: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+
+    emitTeamChatMessageCreated({
+      teamId,
+      chatMessage: message,
+    });
+
+    res.status(201).json({
+      message: "Message sent successfully",
+      chatMessage: message,
+    });
   } catch (err) {
     next(err);
   }

@@ -99,6 +99,8 @@ model User {
   activityLogs       ActivityLog[]
   notifications      Notification[]
   sentInvites        TeamInvite[]    @relation("InviteSender")
+  teamNoteMessages   TeamNoteMessage[]
+  teamChatMessages   TeamChatMessage[]
 
   @@map("users")
   @@index([email])
@@ -121,6 +123,8 @@ model Team {
   members  TeamMember[]
   projects Project[]
   invites  TeamInvite[]
+  noteMessages TeamNoteMessage[]
+  chatMessages TeamChatMessage[]
 
   @@map("teams")
   @@index([ownerId])
@@ -141,6 +145,38 @@ model TeamMember {
   @@unique([teamId, userId])
   @@map("team_members")
   @@index([teamId])
+  @@index([userId])
+}
+
+model TeamNoteMessage {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teamId    String   @map("team_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  content   String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("team_note_messages")
+  @@index([teamId, createdAt])
+  @@index([userId])
+}
+
+model TeamChatMessage {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teamId    String   @map("team_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  content   String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("team_chat_messages")
+  @@index([teamId, createdAt])
   @@index([userId])
 }
 

@@ -5,7 +5,7 @@ import { Button, Chip, Skeleton, TextField, Tooltip } from '@mui/material';
 import { ArrowLeft, Check, Copy, FolderOpen, Share2, ShieldAlert, UserPlus, UsersIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-import { InviteMemberDialog, ConfirmDialog } from '../components';
+import { InviteMemberDialog, ConfirmDialog, TeamMessagesPanel } from '../components';
 import { useRemoveTeamMemberMutation } from '../store/slices/apiSlice';
 
 import {
@@ -41,6 +41,7 @@ const TeamDetails = () => {
     const teamsLoading = useSelector(selectTeamsLoading);
 
     const [statusFilter, setStatusFilter] = useState('all');
+    const [activeTab, setActiveTab] = useState('overview');
     const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
     const [isLeaving, setIsLeaving] = useState(false);
     const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
@@ -275,7 +276,26 @@ const TeamDetails = () => {
                 {leaveError && <p className="text-sm text-red-500 mt-2">{leaveError}</p>}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex overflow-x-auto no-scrollbar border border-zinc-200 dark:border-zinc-800 rounded divide-x divide-zinc-200 dark:divide-zinc-800">
+                {[
+                    { key: 'overview', label: 'Overview' },
+                    { key: 'notes', label: 'Notes' },
+                    { key: 'chat', label: 'Chat' },
+                ].map((tabItem) => (
+                    <Button
+                        key={tabItem.key}
+                        size="small"
+                        variant={activeTab === tabItem.key ? 'contained' : 'text'}
+                        onClick={() => setActiveTab(tabItem.key)}
+                        className="flex-1 min-w-25 flex items-center justify-center gap-2 rounded-none py-2.5"
+                    >
+                        {tabItem.label}
+                    </Button>
+                ))}
+            </div>
+
+            {activeTab === 'overview' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <section className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-5">
                     <div className="flex items-center gap-2 mb-4">
                         <UsersIcon className="size-4" />
@@ -360,7 +380,16 @@ const TeamDetails = () => {
                         </div>
                     )}
                 </section>
-            </div>
+                </div>
+            )}
+
+            {activeTab === 'notes' && (
+                <TeamMessagesPanel teamId={teamId} mode="notes" />
+            )}
+
+            {activeTab === 'chat' && (
+                <TeamMessagesPanel teamId={teamId} mode="chat" />
+            )}
 
             <InviteMemberDialog
                 isDialogOpen={isInviteDialogOpen}
