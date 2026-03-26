@@ -57,7 +57,10 @@ export const getProjectPresence = async (req, res, next) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    if (req.headers.origin) {
+      res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
 
     // Connect user to presence
     joinPresence(projectId, user);

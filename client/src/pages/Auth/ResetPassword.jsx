@@ -183,6 +183,22 @@ const AuthInput = ({ label, icon, type = 'text', ...props }) => {
           sx={{
             '& .MuiOutlinedInput-root': {
               pl: 4,
+              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+              '&.Mui-focused': {
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              },
+            },
+            '& .MuiInputBase-input': {
+              color: 'white',
+            },
+            '& .MuiInputBase-input:-webkit-autofill': {
+              WebkitTextFillColor: '#ffffff',
+              WebkitBoxShadow: '0 0 0 1000px rgba(255, 255, 255, 0.03) inset',
+              transition: 'background-color 9999s ease-out 0s',
+              caretColor: '#ffffff',
+            },
+            '& .MuiOutlinedInput-root.Mui-focused .MuiInputBase-input:-webkit-autofill': {
+              WebkitBoxShadow: '0 0 0 1000px rgba(255, 255, 255, 0.05) inset',
             },
           }}
         />

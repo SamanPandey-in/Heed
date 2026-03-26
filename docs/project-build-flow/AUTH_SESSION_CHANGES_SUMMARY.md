@@ -1,5 +1,8 @@
 # Heed - Auth Session Change Summary
 
+Latest note: the current production auth model is documented in `docs/AUTH_SYSTEM.md`.
+This older summary captures the earlier migration work; the new doc is the source of truth for the single-cookie 7-day JWT session system.
+
 Date: 2026-03-17  
 Scope: Authentication migration completion, backend data APIs, Redux initialization, profile persistence, avatar sync
 
@@ -28,7 +31,7 @@ File: `client/src/context/AuthContext.jsx`
   - `logout()`
   - `forgotPassword(payload)`
   - `resetPassword({ token, newPassword })`
-  - `refreshAccessToken()`
+  - `revalidateSession()`
 - `forgotPassword` supports both call styles:
   - string email
   - object payload `{ email }`

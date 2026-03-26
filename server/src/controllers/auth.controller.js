@@ -5,36 +5,57 @@ import { prisma } from "../prisma/client.js";
 import { sendPasswordResetEmail, sendVerificationEmail } from "../utils/emailService.js";
 
 const SALT_ROUNDS = 12;
-const ACCESS_TOKEN_TTL = "15m";
-const REFRESH_TOKEN_TTL = "7d";
-const REFRESH_COOKIE = "refreshToken";
+const SESSION_TOKEN_TTL = "7d";
+const SESSION_COOKIE = "sessionToken";
 
-const signAccess = (userId) =>
-  jwt.sign({ userId }, process.env.JWT_ACCESS_SECRET, {
-    expiresIn: ACCESS_TOKEN_TTL,
+const resolveJwtSecret = () =>
+  process.env.JWT_SECRET || process.env.JWT_ACCESS_SECRET;
+
+const signSessionToken = (userId) => {
+  const secret = resolveJwtSecret();
+  if (!secret) {
+    throw new Error("JWT secret is not configured");
+  }
+
+  return jwt.sign({ userId }, secret, {
+    expiresIn: SESSION_TOKEN_TTL,
   });
+};
 
-const signRefresh = (userId) =>
-  jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET, {
-    expiresIn: REFRESH_TOKEN_TTL,
-  });
+const getCookieOptions = () => {
+  const isProd = process.env.NODE_ENV === "production";
+  let secure = process.env.COOKIE_SECURE
+    ? process.env.COOKIE_SECURE === "true"
+    : isProd;
 
-const setRefreshCookie = (res, token) =>
-  res.cookie(REFRESH_COOKIE, token, {
+  let sameSite = process.env.COOKIE_SAME_SITE || (secure ? "none" : "lax");
+
+  // Normalize invalid combinations: SameSite=None requires Secure=true in modern browsers
+  if (typeof sameSite === "string" && sameSite.toLowerCase() === "none" && !secure) {
+    secure = true;
+  }
+
+  return {
     httpOnly: true,
-    secure: true,
-    sameSite: "none",
+    secure,
+    sameSite,
     maxAge: 7 * 24 * 60 * 60 * 1000,
-    path: "/api/auth",
-  });
+    path: "/",
+  };
+};
 
-const clearRefreshCookie = (res) =>
-  res.clearCookie(REFRESH_COOKIE, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "none",
-    path: "/api/auth",
+const setSessionCookie = (res, token) =>
+  res.cookie(SESSION_COOKIE, token, getCookieOptions());
+
+const clearSessionCookie = (res) => {
+  const cookieOptions = getCookieOptions();
+  res.clearCookie(SESSION_COOKIE, {
+    httpOnly: cookieOptions.httpOnly,
+    secure: cookieOptions.secure,
+    sameSite: cookieOptions.sameSite,
+    path: cookieOptions.path,
   });
+};
 
 // Only expose safe fields to the frontend — no password hash, no tokens
 const safeUser = (u) => ({
@@ -52,6 +73,32 @@ const safeUser = (u) => ({
     ? u.teamMemberships.map((membership) => membership.teamId)
     : [],
 });
+
+const getUserWithMemberships = (userId) =>
+  prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      teamMemberships: {
+        select: { teamId: true },
+      },
+    },
+  });
+
+const verifySessionToken = (token) => {
+  const secret = resolveJwtSecret();
+  if (!secret) {
+    const error = new Error("JWT secret is not configured");
+    error.status = 500;
+    throw error;
+  }
+
+  return jwt.verify(token, secret);
+};
+
+const clearInvalidSession = (res, message) => {
+  clearSessionCookie(res);
+  return res.status(401).json({ message });
+};
 
 export const register = async (req, res, next) => {
   try {
@@ -127,6 +174,11 @@ export const login = async (req, res, next) => {
 
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
+      include: {
+        teamMemberships: {
+          select: { teamId: true },
+        },
+      },
     });
     if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
@@ -141,18 +193,21 @@ export const login = async (req, res, next) => {
       });
     }
 
-    const accessToken = signAccess(user.id);
-    const refreshToken = signRefresh(user.id);
-    await prisma.user.update({
+    const sessionToken = signSessionToken(user.id);
+    const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: {
-        refreshToken: await bcrypt.hash(refreshToken, 10),
         lastLoginAt: new Date(),
+      },
+      include: {
+        teamMemberships: {
+          select: { teamId: true },
+        },
       },
     });
 
-    setRefreshCookie(res, refreshToken);
-    res.json({ user: safeUser(user), accessToken });
+    setSessionCookie(res, sessionToken);
+    res.json({ user: safeUser(updatedUser) });
   } catch (err) {
     next(err);
   }
@@ -160,19 +215,7 @@ export const login = async (req, res, next) => {
 
 export const logout = async (req, res, next) => {
   try {
-    const token = req.cookies[REFRESH_COOKIE];
-    if (token) {
-      try {
-        const { userId } = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
-        await prisma.user.update({
-          where: { id: userId },
-          data: { refreshToken: null },
-        });
-      } catch {
-        /* invalid token — still clear cookie */
-      }
-    }
-    clearRefreshCookie(res);
+    clearSessionCookie(res);
     res.json({ message: "Logged out" });
   } catch (err) {
     next(err);
@@ -181,42 +224,30 @@ export const logout = async (req, res, next) => {
 
 export const refresh = async (req, res, next) => {
   try {
-    const token = req.cookies[REFRESH_COOKIE];
-    if (!token) return res.status(401).json({ message: "No refresh token" });
+    const token = req.cookies?.[SESSION_COOKIE];
+    if (!token) return clearInvalidSession(res, "Not authenticated");
 
     let payload;
     try {
-      payload = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
-    } catch {
-      return res
-        .status(401)
-        .json({ message: "Refresh token expired or invalid" });
+      payload = verifySessionToken(token);
+    } catch (error) {
+      if (error.name === "TokenExpiredError") {
+        return clearInvalidSession(res, "Session expired");
+      }
+
+      if (error.status === 500) {
+        throw error;
+      }
+
+      return clearInvalidSession(res, "Invalid session");
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
-      include: {
-        teamMemberships: {
-          select: { teamId: true },
-        },
-      },
-    });
-    if (!user?.refreshToken)
-      return res.status(401).json({ message: "Session revoked" });
+    const user = await getUserWithMemberships(payload.userId);
+    if (!user) {
+      return clearInvalidSession(res, "User not found");
+    }
 
-    const valid = await bcrypt.compare(token, user.refreshToken);
-    if (!valid)
-      return res.status(401).json({ message: "Invalid refresh token" });
-
-    const newAccessToken = signAccess(user.id);
-    const newRefreshToken = signRefresh(user.id);
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { refreshToken: await bcrypt.hash(newRefreshToken, 10) },
-    });
-
-    setRefreshCookie(res, newRefreshToken);
-    res.json({ accessToken: newAccessToken });
+    res.json({ user: safeUser(user) });
   } catch (err) {
     next(err);
   }
@@ -224,18 +255,16 @@ export const refresh = async (req, res, next) => {
 
 export const getMe = async (req, res, next) => {
   try {
-    const token = req.cookies[REFRESH_COOKIE];
-    if (!token) return res.status(401).json({ message: "Not authenticated" });
-
-    let payload;
-    try {
-      payload = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
-    } catch {
-      return res.status(401).json({ message: "Session expired" });
-    }
+    const userId = req.userId;
+    if (!userId) return res.status(401).json({ message: "Not authenticated" });
 
     const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
+      where: { id: userId },
+      include: {
+        teamMemberships: {
+          select: { teamId: true },
+        },
+      },
     });
     if (!user) return res.status(401).json({ message: "User not found" });
 
@@ -306,11 +335,10 @@ export const resetPassword = async (req, res, next) => {
         passwordHash,
         resetToken: null,
         resetTokenExp: null,
-        refreshToken: null,
       },
     });
 
-    clearRefreshCookie(res);
+    clearSessionCookie(res);
     res.json({ message: "Password reset successful. Please log in again." });
   } catch (err) {
     next(err);
@@ -365,11 +393,10 @@ export const changePassword = async (req, res, next) => {
       where: { id: userId },
       data: {
         passwordHash: nextPasswordHash,
-        refreshToken: null,
       },
     });
 
-    clearRefreshCookie(res);
+    clearSessionCookie(res);
     return res.json({
       message: "Password changed successfully. Please log in again.",
     });
@@ -400,7 +427,11 @@ export const verifyEmail = async (req, res, next) => {
     }
 
     if (user.isEmailVerified) {
-      return res.json({ message: "Email already verified. You can log in.", code: "ALREADY_VERIFIED" });
+      return res.json({
+        message: "Email already verified. You can log in.",
+        code: "ALREADY_VERIFIED",
+        email: user.email,
+      });
     }
 
     await prisma.user.update({
@@ -412,7 +443,11 @@ export const verifyEmail = async (req, res, next) => {
       },
     });
 
-    return res.json({ message: "Email verified successfully. You can now log in.", code: "VERIFIED" });
+    return res.json({
+      message: "Email verified successfully. You can now log in.",
+      code: "VERIFIED",
+      email: user.email,
+    });
   } catch (err) {
     next(err);
   }

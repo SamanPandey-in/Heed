@@ -28,10 +28,17 @@ export default function VerifyEmail() {
         if (result.code === "ALREADY_VERIFIED") {
           setStatus("already_verified");
           setMessage("Your email is already verified.");
+          setTimeout(
+            () => navigate("/login", { state: { emailVerified: true, email: result.email || "" } }),
+            1500,
+          );
         } else {
           setStatus("success");
           setMessage("Your email has been verified successfully!");
-          setTimeout(() => navigate("/login"), 3000);
+          setTimeout(
+            () => navigate("/login", { state: { emailVerified: true, email: result.email || "" } }),
+            3000,
+          );
         }
       } else {
         setStatus("error");

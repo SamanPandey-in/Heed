@@ -21,7 +21,7 @@ It combines:
 - a React 19 dashboard frontend,
 - an Express 5 backend API,
 - Prisma + PostgreSQL data access,
-- and secure auth with access tokens + refresh-token cookies.
+- and secure auth with a 7-day JWT session cookie.
 
 The result is a practical workspace where members can create teams, run projects, manage tasks, and collaborate through task comments.
 
@@ -31,7 +31,7 @@ The result is a practical workspace where members can create teams, run projects
 
 ### 🔐 Session-Based Authentication
 - Register, login, logout, refresh, profile bootstrap, forgot/reset password, and authenticated password change.
-- Short-lived access token + HttpOnly refresh cookie flow.
+- Single JWT session stored in an HttpOnly cookie with a 7-day expiry.
 
 ### 👥 Team Collaboration
 - Create teams, update team metadata, join by invite code.
@@ -60,7 +60,7 @@ The result is a practical workspace where members can create teams, run projects
 ┌─────────────────────────────────────────────────────────────┐
 │                         CLIENT                              │
 │ React 19 · Vite 7 · Redux Toolkit · RTK Query · MUI ·      │
-│ Tailwind v4 · React Router v7 · Axios + token refresh       │
+│ Tailwind v4 · React Router v7 · Axios + cookie sessions     │
 └──────────────────────────┬──────────────────────────────────┘
                            │ REST / JSON + cookies
 ┌──────────────────────────▼──────────────────────────────────┐
@@ -87,7 +87,7 @@ Heed/
 │   │   ├── components/             # Layout, dashboards, project/team/task UI
 │   │   ├── context/                # AuthContext
 │   │   ├── hooks/                  # App initialization + helpers
-│   │   ├── lib/                    # Axios client with auto-refresh
+│   │   ├── lib/                    # Axios client with cookie-session handling
 │   │   ├── pages/                  # Auth + app pages
 │   │   ├── store/                  # Redux slices, selectors, thunks, RTK Query
 │   │   └── theme/                  # Theme tokens/provider
@@ -199,8 +199,7 @@ DATABASE_URL=postgresql://...
 DIRECT_URL=postgresql://...
 
 # Auth
-JWT_ACCESS_SECRET=change_me_access
-JWT_REFRESH_SECRET=change_me_refresh
+JWT_SECRET=change_me_session_secret
 
 # Email (required for verification + reset flows)
 BREVO_API_KEY=your_brevo_api_key
@@ -246,7 +245,7 @@ npx prisma generate
 - Global app initialization hook for profile/team/project/task bootstrap.
 - Redux store slices for users, teams, projects, tasks, settings, and theme.
 - RTK Query API slice for normalized network access.
-- Axios interceptor for automatic token refresh and retry.
+- Axios interceptor for auth expiry detection and session revalidation.
 - ErrorBoundary wrapping app shell.
 
 ---

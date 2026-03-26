@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Button, IconButton, InputAdornment, TextField } from '@mui/material';
 import { Mail, Lock, Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, forgotPassword, resendVerification } = useAuth();
 
   const [mode, setMode] = useState('login');
@@ -17,6 +18,7 @@ export default function Login() {
   const [unverifiedEmail, setUnverifiedEmail] = useState("");
   const [resendLoading, setResendLoading] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
+  const passwordInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -26,10 +28,30 @@ export default function Login() {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const isEmailValid = (email) => email === "" || emailRegex.test(email);
 
+  useEffect(() => {
+    if (!location.state?.emailVerified) return;
+    const verifiedEmail = typeof location.state?.email === 'string' ? location.state.email : '';
+
+    setUnverifiedEmail("");
+    setResendSuccess(false);
+    setError("");
+    setSuccessMsg("Email verified successfully. You can sign in now.");
+    if (verifiedEmail) {
+      setFormData((prev) => ({ ...prev, email: verifiedEmail }));
+    }
+
+    setTimeout(() => {
+      passwordInputRef.current?.focus();
+    }, 0);
+
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
+
   /* Handle Login */
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccessMsg("");
     setUnverifiedEmail("");
     setResendSuccess(false);
     setLoading(true);
@@ -37,7 +59,7 @@ export default function Login() {
     try {
       const result = await login(formData.email, formData.password);
       if (result.success) {
-        navigate("/dashboard");
+        navigate("/dashboard", { replace: true });
       } else if (result.code === "EMAIL_NOT_VERIFIED") {
         setUnverifiedEmail(result.email || formData.email);
       } else {
@@ -143,6 +165,16 @@ export default function Login() {
               </motion.div>
             )}
 
+            {successMsg && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400"
+              >
+                {successMsg}
+              </motion.div>
+            )}
+
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               <AuthInput
                 label="Email"
@@ -155,6 +187,7 @@ export default function Login() {
                 label="Password"
                 icon={<Lock size={18} />}
                 type="password"
+                inputRef={passwordInputRef}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               />
@@ -308,6 +341,15 @@ const AuthInput = ({ label, icon, type = 'text', ...props }) => {
             color: 'white',
             fontSize: '0.875rem',
             py: 1.2,
+          },
+          '& .MuiInputBase-input:-webkit-autofill': {
+            WebkitTextFillColor: '#ffffff',
+            WebkitBoxShadow: '0 0 0 1000px rgba(255, 255, 255, 0.03) inset',
+            transition: 'background-color 9999s ease-out 0s',
+            caretColor: '#ffffff',
+          },
+          '& .MuiOutlinedInput-root.Mui-focused .MuiInputBase-input:-webkit-autofill': {
+            WebkitBoxShadow: '0 0 0 1000px rgba(255, 255, 255, 0.05) inset',
           },
         }}
       />
