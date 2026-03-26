@@ -10,11 +10,16 @@ const resolveJwtSecret = () =>
 
 const getCookieOptions = () => {
   const isProd = process.env.NODE_ENV === "production";
-  const secure = process.env.COOKIE_SECURE
+  let secure = process.env.COOKIE_SECURE
     ? process.env.COOKIE_SECURE === "true"
     : isProd;
 
   const sameSite = process.env.COOKIE_SAME_SITE || (secure ? "none" : "lax");
+
+  // Normalize invalid combinations: SameSite=None requires Secure=true in modern browsers
+  if (typeof sameSite === "string" && sameSite.toLowerCase() === "none" && !secure) {
+    secure = true;
+  }
 
   return {
     httpOnly: true,
@@ -36,16 +41,10 @@ export const authenticate = async (req, res, next) => {
     ? "cookie"
     : authHeader?.startsWith("Bearer ")
       ? "header"
-      : req.query?.token
-        ? "query"
-        : null;
+      : null;
 
-  // Support token from Authorization header OR query parameter (for SSE/EventSource)
-  let token = cookieToken || (authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null);
-  
-  if (!token && req.query?.token) {
-    token = req.query.token;
-  }
+  // Support token from cookie or Authorization header only
+  const token = cookieToken || (authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null);
 
   if (!token) return res.status(401).json({ message: "Authentication required" });
 

@@ -1,5 +1,15 @@
 import { useEffect, useState } from 'react';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+
+const buildPresenceUrl = (projectId) => {
+  const path = `/presence/${projectId}`;
+  if (API_BASE.startsWith('http')) {
+    return `${API_BASE}${path}`;
+  }
+  return new URL(`${API_BASE}${path}`, window.location.origin).toString();
+};
+
 export function useProjectPresence(projectId) {
   const [presence, setPresence] = useState({ count: 0, users: [] });
   const [isConnected, setIsConnected] = useState(false);
@@ -7,9 +17,9 @@ export function useProjectPresence(projectId) {
   useEffect(() => {
     if (!projectId) return;
 
-    const url = new URL(`/api/presence/${projectId}`, window.location.origin);
+    const url = buildPresenceUrl(projectId);
 
-    const eventSource = new EventSource(url.toString(), { withCredentials: true });
+    const eventSource = new EventSource(url, { withCredentials: true });
 
     const handleMessage = (event) => {
       try {
@@ -30,8 +40,9 @@ export function useProjectPresence(projectId) {
     eventSource.addEventListener('error', handleError);
 
     // Cleanup on unload
+    const leaveUrl = buildPresenceUrl(projectId);
     const handleBeforeUnload = () => {
-      navigator.sendBeacon(`/api/presence/${projectId}`, JSON.stringify({ action: 'leave' }));
+      navigator.sendBeacon(leaveUrl, JSON.stringify({ action: 'leave' }));
       eventSource.close();
     };
 
