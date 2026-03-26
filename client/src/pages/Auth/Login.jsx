@@ -37,7 +37,7 @@ export default function Login() {
     try {
       const result = await login(formData.email, formData.password);
       if (result.success) {
-        navigate("/dashboard");
+        navigate("/dashboard", { replace: true });
       } else if (result.code === "EMAIL_NOT_VERIFIED") {
         setUnverifiedEmail(result.email || formData.email);
       } else {

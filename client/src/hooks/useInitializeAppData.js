@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, createContext, useContext } from 'react';
 import { useDispatch } from 'react-redux';
 import { useAuth } from '../context/AuthContext';
-import api from '../lib/api';
 
 // Import Redux actions
 import { 
@@ -27,7 +26,7 @@ export const useAppLoading = () => useContext(AppLoadingContext);
  */
 export const useInitializeAppData = () => {
   const dispatch = useDispatch();
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, loading: authLoading, user } = useAuth();
   const [isAppLoading, setIsAppLoading] = useState(authLoading);
   const initializeRef = useRef(false);
 
@@ -57,11 +56,8 @@ export const useInitializeAppData = () => {
         dispatch(setUserLoading(true));
         dispatch(setUserError(null));
 
-        // Fetch user profile and trigger other thunks
-        const profileResult = await api.get('/auth/me');
-        
-        if (profileResult.data?.user) {
-          const backendUser = profileResult.data.user;
+        if (user) {
+          const backendUser = user;
           dispatch(setUser({
             ...backendUser,
             teamIds: backendUser.teamIds || [],
@@ -92,7 +88,7 @@ export const useInitializeAppData = () => {
     };
 
     initializeAppData();
-  }, [isAuthenticated, authLoading, dispatch]);
+  }, [isAuthenticated, authLoading, dispatch, user]);
 
   return isAppLoading;
 };

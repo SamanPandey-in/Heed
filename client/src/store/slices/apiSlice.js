@@ -10,13 +10,6 @@ export const apiSlice = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: API_URL,
     credentials: 'include',
-    prepareHeaders: (headers) => {
-      const token = localStorage.getItem('accessToken');
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
   }),
   tagTypes: ['Team', 'Project', 'Task', 'User', 'Comment', 'Notification', 'Search', 'ProjectNoteMessage', 'TeamNoteMessage', 'TeamChatMessage'],
   endpoints: (builder) => ({

@@ -13,8 +13,6 @@ const resolveSocketOrigin = () => {
     return window.location.origin;
 };
 
-const getToken = () => localStorage.getItem('accessToken') || '';
-
 const ensureSocket = () => {
     if (!socketInstance) {
         socketInstance = io(resolveSocketOrigin(), {
@@ -24,7 +22,6 @@ const ensureSocket = () => {
         });
     }
 
-    socketInstance.auth = { token: getToken() };
     return socketInstance;
 };
 

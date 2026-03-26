@@ -1,211 +1,157 @@
-# App Data Initialization & API Integration
+# Heed Data Fetching API
 
-## Overview
-After user authentication, the app automatically fetches all required data (teams, projects, tasks) and syncs it to Redux store. This provides real-time access to user's workspace data across the application.
+Date: 2026-03-26
 
-## Client-Side Architecture
+## Purpose
 
-### 1. **Authentication Flow** (`useAuth` hook)
-```
-User Login/Signup
-  ↓
-AuthContext validates credentials
-  ↓
-Sets `isAuthenticated = true`
-```
+This document explains how authenticated workspace data is loaded after a user signs in.
 
-### 2. **Data Initialization** (`useInitializeAppData` hook)
-Located in: [client/src/hooks/useInitializeAppData.js](../client/src/hooks/useInitializeAppData.js)
+The current auth model is cookie-based:
 
-```
-isAuthenticated = true
-  ↓
-useInitializeAppData hook triggered (in AppInitializer component)
-  ↓
-Parallel API requests:
-  - GET /api/teams
-  - GET /api/projects
-  - GET /api/tasks
-  ↓
-Redux Dispatch:
-  - dispatch(setTeams(response.teams))
-  - dispatch(setProjects(response.projects))
-  - dispatch(setTasks(response.tasks))
-  ↓
-Store updated with user's workspace data
-  ↓
-Components can access data via useSelector
+- login sets an HttpOnly `sessionToken` cookie
+- app startup validates the cookie with `GET /api/auth/me`
+- protected API calls rely on the browser sending the cookie automatically
+
+For the full auth architecture, see `docs/AUTH_SYSTEM.md`.
+
+## Startup Flow
+
+```text
+App loads
+  -> AuthProvider validates session with GET /api/auth/me
+  -> Route guards wait for authChecked/loading to settle
+  -> AppInitializer runs after authentication succeeds
+  -> Redux thunks fetch teams, projects, and tasks
+  -> Dashboard and workspace pages render from Redux state
 ```
 
-### 3. **Redux Store State**
-```
-store/
-├── users: { currentUserId, currentTeamId, teamIds, ... }
-├── teams: { teams: {}, teamIds: [], ... }
-├── projects: { projects: {}, projectIds: [], ... }
-├── tasks: { tasks: {}, taskIds: [], ... }
-├── settings: { userSettings: {}, ... }
-└── theme: { mode: 'light/dark' }
-```
+## Auth Bootstrap
 
-### 4. **Component Usage**
-```javascript
-import { useSelector } from 'react-redux';
+### Session restore
 
-function Dashboard() {
-  const teams = useSelector(state => state.teams.teamIds.map(id => state.teams.teams[id]));
-  const projects = useSelector(state => state.projects.projectIds);
-  const tasks = useSelector(state => state.tasks.taskIds);
-  
-  return (
-    // Render teams, projects, tasks
-  );
-}
-```
+`GET /api/auth/me`
 
-## Server-Side API
+- Auth: Required via HttpOnly session cookie
+- Returns: `{ user }`
+- Purpose: validate the current session without extending it
 
-### New Endpoints
+### Compatibility session validation
 
-#### **Teams** (`POST /api/auth/authenticate` → `/api/teams`)
-```
-GET /api/teams
-  └─ Returns: { teams: [...] }
-  └─ Auth: Required (Bearer token)
-  └─ Returns all teams where user is member
+`POST /api/auth/refresh`
 
-GET /api/teams/:teamId
-  └─ Returns: { team: {...} }
-  └─ Auth: Required
-  
-POST /api/teams
-  └─ Body: { name, description }
-  └─ Auth: Required
-  └─ Creates new team
+- Auth: Required via HttpOnly session cookie
+- Returns: `{ user }`
+- Purpose: compatibility endpoint for session revalidation
+- Note: this does not mint a new JWT
 
-DELETE /api/teams/:teamId
-  └─ Auth: Required (team owner only)
-```
+## Workspace APIs
 
-#### **Projects** (`/api/projects`)
-```
-GET /api/projects
-  └─ Returns: { projects: [...] }
-  └─ Auth: Required
-  └─ Returns all projects in user's teams
+### Teams
 
-GET /api/projects/:projectId
-  └─ Returns: { project: {...} }
-  └─ Auth: Required
+`GET /api/teams`
 
-POST /api/projects
-  └─ Body: { name, description, teamId, status }
-  └─ Auth: Required
-  
-DELETE /api/projects/:projectId
-  └─ Auth: Required (project creator only)
-```
+- Auth: Required via HttpOnly session cookie
+- Returns: `{ teams }`
+- Scope: teams where the authenticated user is a member
 
-#### **Tasks** (`/api/tasks`)
-```
-GET /api/tasks
-  └─ Returns: { tasks: [...] }
-  └─ Auth: Required
-  └─ Returns all tasks in user's projects
+`GET /api/teams/:teamId`
 
-GET /api/tasks/project/:projectId
-  └─ Returns: { tasks: [...] }
-  └─ Auth: Required
+- Auth: Required
+- Returns: `{ team }`
 
-POST /api/tasks
-  └─ Body: { title, description, projectId, assigneeId, priority, dueDate }
-  └─ Auth: Required
-  
-PUT /api/tasks/:taskId
-  └─ Body: { title, description, status, priority, assigneeId, dueDate }
-  └─ Auth: Required
+`POST /api/teams`
 
-DELETE /api/tasks/:taskId
-  └─ Auth: Required (task creator only)
-```
+- Auth: Required
+- Body: `{ name, description }`
+
+`DELETE /api/teams/:teamId`
+
+- Auth: Required
+- Restriction: team owner only
+
+### Projects
+
+`GET /api/projects`
+
+- Auth: Required
+- Returns: `{ projects }`
+- Scope: projects in the authenticated user's teams
+
+`GET /api/projects/:projectId`
+
+- Auth: Required
+- Returns: `{ project }`
+
+`POST /api/projects`
+
+- Auth: Required
+- Body: `{ name, description, teamId, status }`
+
+`DELETE /api/projects/:projectId`
+
+- Auth: Required
+- Restriction: project creator only
+
+### Tasks
+
+`GET /api/tasks`
+
+- Auth: Required
+- Returns: `{ tasks }`
+- Scope: tasks in the authenticated user's accessible projects
+
+`GET /api/tasks/project/:projectId`
+
+- Auth: Required
+- Returns: `{ tasks }`
+
+`POST /api/tasks`
+
+- Auth: Required
+- Body: `{ title, description, projectId, assigneeId, priority, dueDate }`
+
+`PUT /api/tasks/:taskId`
+
+- Auth: Required
+- Body: `{ title, description, status, priority, assigneeId, dueDate }`
+
+`DELETE /api/tasks/:taskId`
+
+- Auth: Required
+- Restriction: task creator only
 
 ## Data Flow Example
 
-### Scenario: User logs in and views dashboard
+```text
+1. Login form submits credentials
+   -> POST /api/auth/login
+   -> backend sets HttpOnly sessionToken cookie
+   -> AuthContext stores authenticated user state
 
-```
-1. Login Form submitted
-   ├─ api.post('/auth/login', { email, password })
-   └─ AuthContext sets: isAuthenticated = true
+2. AppInitializer sees isAuthenticated = true
+   -> useInitializeAppData starts
 
-2. AppInitializer detects authentication
-   └─ useInitializeAppData hook triggers
+3. Parallel workspace requests run
+   -> GET /api/teams
+   -> GET /api/projects
+   -> GET /api/tasks
 
-3. Parallel API calls made:
-   ├─ api.get('/api/teams')
-   ├─ api.get('/api/projects')
-   └─ api.get('/api/tasks')
+4. Redux is hydrated
+   -> teams slice updated
+   -> projects slice updated
+   -> tasks slice updated
 
-4. Responses received:
-   ├─ Teams data: [{ id: 'team_1', name: 'Frontend', members: [...] }, ...]
-   ├─ Projects data: [{ id: 'proj_1', name: 'Dashboard', teamId: 'team_1', ... }, ...]
-   └─ Tasks data: [{ id: 'task_1', title: 'Implement Auth', projectId: 'proj_1', ... }, ...]
-
-5. Redux store updated:
-   ├─ dispatch(setTeams([...]))
-   ├─ dispatch(setProjects([...]))
-   └─ dispatch(setTasks([...]))
-
-6. Dashboard component renders:
-   └─ useSelector pulls data from Redux store
-   └─ Displays teams, projects, and tasks
-
-7. User interacts (creates task, updates project, etc.)
-   └─ API call made to update backend
-   └─ Redux store updated optimistically or after response
+5. Dashboard and workspace pages render from Redux selectors
 ```
 
-## Error Handling
+## Failure Behavior
 
-### Client-Side
-```javascript
-// In useInitializeAppData
-try {
-  const [teamsRes, projectsRes, tasksRes] = await Promise.all([...])
-  // Dispatch actions...
-} catch (error) {
-  // Graceful fallback - app continues with cached/fallback data
-  dispatch(setTasksError(error.response?.data?.message))
-}
-```
+- If `/api/auth/me` returns `401`, the app treats the user as signed out.
+- If a protected workspace request returns `401`, the frontend revalidates the current session.
+- If revalidation fails, auth state is cleared and the user is redirected to login.
 
-### Server-Side
-```javascript
-// All endpoints include:
-- Authentication middleware check
-- Team/Project access validation
-- Error handling with appropriate status codes:
-  - 401: Not authenticated
-  - 403: Access denied
-  - 404: Resource not found
-  - 400: Invalid request
-```
+## Notes
 
-## Performance Optimizations
-
-1. **Parallel Requests**: All data fetched simultaneously with `Promise.all()`
-2. **Normalized Redux State**: Entities stored by ID for O(1) lookups
-3. **Selective Include**: Only necessary fields returned from API
-4. **Auth Middleware**: Shared across routes for consistent validation
-5. **Error Recovery**: App remains functional even if one endpoint fails
-
-## Testing Checklist
-
-- [ ] User can login
-- [ ] Teams load after authentication
-- [ ] Projects load for each team
-- [ ] Tasks load for each project
-- [ ] Real-time updates work (create/update/delete)
-- [ ] Access control enforced (can't access other team's data)
-- [ ] Error states handled gracefully
-- [ ] Logout clears Redux store
+- SSE and socket clients still use cookies and compatible token extraction helpers.
+- The frontend does not read JWTs directly.
+- No `localStorage` token persistence is used in the current auth system.

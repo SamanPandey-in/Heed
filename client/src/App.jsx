@@ -1,6 +1,4 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import { store } from './store/store';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider, Layout, ErrorBoundary } from './components';
@@ -18,23 +16,19 @@ const LoadingScreen = () => (
 );
 
 const NO_SKELETON_APP_ROUTES = ['/', '/login', '/auth', '/signup'];
-const NO_SKELETON_PUBLIC_ROUTES = ['/login', '/auth', '/signup'];
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-  if (loading) return <AuthScreenSkeleton />;
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  const { isAuthenticated, loading, authChecked } = useAuth();
+  if (loading || !authChecked) return <AuthScreenSkeleton />;
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-  const { pathname } = useLocation();
+  const { isAuthenticated, loading, authChecked } = useAuth();
 
-  if (loading && !NO_SKELETON_PUBLIC_ROUTES.includes(pathname)) {
-    return <AuthScreenSkeleton />;
-  }
+  if (loading || !authChecked) return <AuthScreenSkeleton />;
 
-  return !isAuthenticated ? children : <Navigate to="/dashboard" />;
+  return !isAuthenticated ? children : <Navigate to="/dashboard" replace />;
 };
 
 function AppInitializer() {
@@ -79,17 +73,15 @@ function AppRoutes() {
 
 function App() {
   return (
-    <Provider store={store}>
-      <Router>
-        <AuthProvider>
-          <ThemeProvider>
-            <ErrorBoundary>
-              <AppInitializer />
-            </ErrorBoundary>
-          </ThemeProvider>
-        </AuthProvider>
-      </Router>
-    </Provider>
+    <Router>
+      <AuthProvider>
+        <ThemeProvider>
+          <ErrorBoundary>
+            <AppInitializer />
+          </ErrorBoundary>
+        </ThemeProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 

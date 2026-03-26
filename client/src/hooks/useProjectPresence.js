@@ -7,13 +7,9 @@ export function useProjectPresence(projectId) {
   useEffect(() => {
     if (!projectId) return;
 
-    const token = localStorage.getItem('accessToken');
     const url = new URL(`/api/presence/${projectId}`, window.location.origin);
-    if (token) {
-      url.searchParams.append('token', token);
-    }
 
-    const eventSource = new EventSource(url.toString());
+    const eventSource = new EventSource(url.toString(), { withCredentials: true });
 
     const handleMessage = (event) => {
       try {

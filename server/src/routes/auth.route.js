@@ -26,7 +26,7 @@ router.post("/register", authLimiter, register);
 router.post("/login", authLimiter, login);
 router.post("/logout", logout);
 router.post("/refresh", refresh);
-router.get("/me", getMe);
+router.get("/me", authenticate, getMe);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 router.post("/change-password", authenticate, changePassword);

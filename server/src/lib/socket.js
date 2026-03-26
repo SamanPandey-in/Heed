@@ -4,8 +4,33 @@ import { Server } from "socket.io";
 import { prisma } from "../prisma/client.js";
 
 let ioInstance;
+const SESSION_COOKIE = "sessionToken";
+
+const resolveJwtSecret = () =>
+  process.env.JWT_SECRET || process.env.JWT_ACCESS_SECRET || process.env.JWT_REFRESH_SECRET;
+
+const parseCookieHeader = (cookieHeader = "") => {
+  return cookieHeader
+    .split(";")
+    .map((pair) => pair.trim())
+    .filter(Boolean)
+    .reduce((acc, pair) => {
+      const separatorIndex = pair.indexOf("=");
+      if (separatorIndex === -1) return acc;
+
+      const key = pair.slice(0, separatorIndex).trim();
+      const value = pair.slice(separatorIndex + 1).trim();
+      acc[key] = decodeURIComponent(value);
+      return acc;
+    }, {});
+};
 
 const getTokenFromSocket = (socket) => {
+  const cookieHeader = socket.handshake.headers?.cookie;
+  const parsedCookies = parseCookieHeader(cookieHeader);
+  const cookieToken = parsedCookies[SESSION_COOKIE];
+  if (cookieToken) return cookieToken;
+
   const authToken = socket.handshake.auth?.token;
   if (authToken) return authToken;
 
@@ -108,7 +133,12 @@ export const initializeSocket = (server) => {
         return next(new Error("Authentication required"));
       }
 
-      const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+      const jwtSecret = resolveJwtSecret();
+      if (!jwtSecret) {
+        return next(new Error("JWT secret is not configured"));
+      }
+
+      const payload = jwt.verify(token, jwtSecret);
       socket.userId = payload.userId;
       return next();
     } catch {
