@@ -119,9 +119,15 @@ const replyAck = (ack, payload) => {
 export const initializeSocket = (server) => {
   if (ioInstance) return ioInstance;
 
+  const rawOrigins = process.env.CORS_ORIGIN || "http://localhost:5173";
+  const allowedOrigins = rawOrigins
+    .split(",")
+    .map((origin) => origin.trim().replace(/\/+$/, ""))
+    .filter(Boolean);
+
   ioInstance = new Server(server, {
     cors: {
-      origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+      origin: allowedOrigins.length === 1 ? allowedOrigins[0] : allowedOrigins,
       credentials: true,
     },
   });

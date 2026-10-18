@@ -67,7 +67,7 @@ export const MacbookScroll = ({
     return (
         <div
             ref={ref}
-            className="flex min-h-[200vh] shrink-0 scale-[0.35] transform flex-col items-center justify-start py-0 [perspective:800px] sm:scale-50 md:scale-100 md:py-80"
+            className="relative flex min-h-[200vh] shrink-0 scale-[0.35] transform flex-col items-center justify-start py-0 [perspective:800px] sm:scale-50 md:scale-100 md:py-80"
         >
             <motion.h2
                 style={{
@@ -172,7 +172,7 @@ export const Trackpad = ({ trackpadRef }) => {
     return (
         <div
             ref={trackpadRef}
-            className="mx-auto my-1 h-32 w-[40%] rounded-xl"
+            className="relative mx-auto my-1 h-32 w-[40%] rounded-xl"
             style={{
                 boxShadow: "0px 0px 1px 1px #00000020 inset",
             }}

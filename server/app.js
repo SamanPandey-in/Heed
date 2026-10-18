@@ -16,19 +16,34 @@ import presenceRoutes from "./src/routes/presence.route.js";
 
 const app = express();
 
+// Trust reverse proxy hops (e.g. Render, AWS ELB, Nginx).
+// Default to 1 (first reverse proxy hop) so req.ip and express-rate-limit correctly identify clients.
+const trustProxySetting = process.env.TRUST_PROXY
+  ? (Number.isNaN(Number(process.env.TRUST_PROXY))
+      ? process.env.TRUST_PROXY
+      : Number(process.env.TRUST_PROXY))
+  : 1;
+app.set("trust proxy", trustProxySetting);
+
 app.use(helmet());
 
-const allowedOrigins = [process.env.CORS_ORIGIN || "http://localhost:5173"];
+const rawOrigins = process.env.CORS_ORIGIN || "http://localhost:5173";
+const allowedOrigins = rawOrigins
+  .split(",")
+  .map((origin) => origin.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
+
 const corsOptions = {
   origin: function (origin, callback) {
     // allow requests with no origin (like mobile apps, curl)
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
+    const normalizedOrigin = origin.trim().replace(/\/+$/, "");
+    if (allowedOrigins.includes(normalizedOrigin)) {
       return callback(null, true);
     }
 
-    return callback(new Error("Not allowed by CORS"));
+    return callback(new Error(`Not allowed by CORS: ${origin}`));
   },
   credentials: true,
 };
@@ -42,8 +57,8 @@ app.use(cookieParser());
 
 app.use(
   rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 200,
+    windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
+    max: Number(process.env.RATE_LIMIT_MAX_REQUESTS) || 200,
     standardHeaders: true,
     legacyHeaders: false,
   }),

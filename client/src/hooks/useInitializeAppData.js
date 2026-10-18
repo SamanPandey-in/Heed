@@ -75,9 +75,10 @@ export const useInitializeAppData = () => {
         const failed = results.filter((r) => r.status === 'rejected');
         if (failed.length) {
           dispatch(setUserError('Some data failed to load'));
+          console.warn(`[App] App data init finished with ${failed.length} failed fetch(es)`);
+        } else {
+          console.log('[App] Initialized user profile, teams, projects, and tasks via thunks');
         }
-
-        console.log('[App] Initialized user profile, teams, projects, and tasks via thunks');
       } catch (error) {
         console.error('[App] Failed to initialize app data:', error);
         dispatch(setUserError(error.response?.data?.message || 'Failed to load user profile'));

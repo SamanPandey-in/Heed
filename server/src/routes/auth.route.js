@@ -18,8 +18,10 @@ const router = Router();
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: Number(process.env.AUTH_RATE_LIMIT_MAX) || 20,
   message: { message: "Too many auth attempts, please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 router.post("/register", authLimiter, register);
